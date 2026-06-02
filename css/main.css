@@ -76,9 +76,6 @@ body {
 
 body.in-scene .zone-field {
   padding-top: 2.1rem;
-}
-
-body.in-scene .zone-field {
   background: linear-gradient(165deg, #3d2c5c 0%, #2b2140 55%, #1a1528 100%);
 }
 
