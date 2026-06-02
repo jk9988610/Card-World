@@ -34,7 +34,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.13.1";
+const APP_VERSION = "0.13.2";
 
 const SETTINGS_MENU_SLUGS = new Set([
   "founders.language_settings",
@@ -1046,6 +1046,43 @@ function migrateWorldLayoutIfNeeded() {
     ]);
     state.field = [...cloneInstList(starterSnapshot.field), ...doorOnField];
     state.fieldStash = [];
+  }
+}
+
+/** Scenes that intentionally hide the world hand (desktop UI). */
+function sceneExpectsEmptyHand(sceneId) {
+  const scene = sceneId ? scenes[sceneId] : null;
+  return !!(scene && Array.isArray(scene.hand) && scene.hand.length === 0);
+}
+
+/** After migrations, restore starter hand when the world deck was wiped (e.g. old console cards). */
+function ensureWorldHandNotEmpty() {
+  if (!starterSnapshot?.hand?.length || state.hand.length > 0) return;
+  if (state.currentSceneId && state.sceneStack.length) {
+    popScene();
+    if (state.hand.length > 0) return;
+  }
+  if (state.currentSceneId && sceneExpectsEmptyHand(state.currentSceneId)) return;
+  state.hand = patchHandWithMissingStarters(cloneInstList(starterSnapshot.hand));
+  AppLogger.warn("Hand was empty after load; restored starter hand");
+}
+
+/** Unknown or stale scene id in save — return to world so hand/field are playable. */
+function reconcilePersistedSceneOnInit() {
+  if (!state.currentSceneId) return;
+  if (REMOVED_SCENE_IDS.has(state.currentSceneId)) return;
+  if (!scenes[state.currentSceneId]) {
+    AppLogger.warn("Unknown scene in save; returning to world", state.currentSceneId);
+    state.currentSceneId = null;
+    state.sceneStack = [];
+    ensureWorldHandNotEmpty();
+    return;
+  }
+  if (sceneExpectsEmptyHand(state.currentSceneId) && state.sceneStack.length) return;
+  if (sceneExpectsEmptyHand(state.currentSceneId) && !state.sceneStack.length) {
+    AppLogger.info("Exiting desktop scene without saved world stack");
+    state.currentSceneId = null;
+    ensureWorldHandNotEmpty();
   }
 }
 
@@ -2835,6 +2872,8 @@ async function init() {
     migrateExitRemovedScenesIfNeeded();
     migrateMissingStarterCardsIfNeeded();
     migrateWorldLayoutIfNeeded();
+    reconcilePersistedSceneOnInit();
+    ensureWorldHandNotEmpty();
     ensureSettingsMenuInner();
     updateSceneChrome();
     renderAll();
@@ -2842,12 +2881,23 @@ async function init() {
     AppLogger.info("Ready", `locale=${currentLocale} hand=${state.hand.length} field=${state.field.length}`);
   } catch (err) {
     AppLogger.error("Init failed", err?.message || err);
-    state.field.push({
-      instanceId: "inst_err",
-      definitionSlug: "founders.tutorial",
-      localeKey: "load_error",
-      text: String(err.message),
-    });
+    const msg = String(err?.message || err);
+    if (!state.hand.length) {
+      state.hand.push({
+        instanceId: "inst_err_hand",
+        definitionSlug: "founders.tutorial",
+        localeKey: "load_error",
+        text: msg,
+      });
+    }
+    if (!state.field.length) {
+      state.field.push({
+        instanceId: "inst_err_field",
+        definitionSlug: "founders.tutorial",
+        localeKey: "load_error",
+        text: msg,
+      });
+    }
     renderAll();
   }
 
