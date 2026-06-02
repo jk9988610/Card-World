@@ -4,9 +4,9 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | native drag (mouse) | long-press drag (touch)
  */
 
-const APP_VERSION = "0.5.3";
-/** Shorter than browser default (~500–700ms) for touch drag */
-const LONG_PRESS_MS = 320;
+const APP_VERSION = "0.5.4";
+/** Touch: hold before drag starts (ms) */
+const LONG_PRESS_MS = 550;
 const LONG_PRESS_CANCEL_PX = 12;
 const TAP_MAX_PX = 12;
 const TAP_MAX_MS = 450;
