@@ -98,7 +98,15 @@
     },
     "art_tool_pixel": {
       "title": "Pixel Board",
-      "text": "Recall to Hand, double-tap to open the editor. Tap Apply to save art on this card."
+      "text": "Recall to Hand, double-tap to edit. Export to Works, or Apply to save on this card."
+    },
+    "art_tool_gallery": {
+      "title": "Works Gallery",
+      "text": "Double-tap — view exported works and upload to Supabase art bucket."
+    },
+    "art_work": {
+      "title": "Artwork",
+      "text": "Created in the art console."
     }
   },
   "scenes": {
@@ -108,7 +116,7 @@
   },
   "art_editor": {
     "title": "Pixel Board",
-    "hint": "Brush, eraser, fill, eyedropper. Tap Apply to save art onto the Pixel Board card.",
+    "hint": "Canvas 7:5 matches the card frame. Export → name & text → Works gallery. Apply only updates the board card.",
     "apply": "Apply",
     "apply_color": "Apply",
     "tools": {
@@ -117,5 +125,27 @@
       "fill": "Fill",
       "picker": "Pick"
     }
+  },
+  "art_export": {
+    "open": "Export",
+    "title": "Export work",
+    "name_label": "Title",
+    "text_label": "Text",
+    "default_title": "My work",
+    "default_text": "",
+    "cancel": "Cancel",
+    "confirm": "Export work"
+  },
+  "art_works": {
+    "open": "Works",
+    "title": "Works gallery",
+    "hint": "Exported works stay on this device. Configure Supabase to upload to the art bucket.",
+    "empty": "No works yet — paint and tap Export.",
+    "upload": "Upload to library",
+    "uploading": "Uploading…",
+    "uploaded": "Uploaded",
+    "upload_error": "Upload failed: ",
+    "no_config": "Copy js/supabase-config.example.js to js/supabase-config.js and add your project URL and anon key.",
+    "delete": "Delete"
   }
 }

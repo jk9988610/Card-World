@@ -11,6 +11,10 @@
     {
       "definitionSlug": "art.tool.pixel",
       "instanceId": "inst_art_pixel_1"
+    },
+    {
+      "definitionSlug": "art.tool.gallery",
+      "instanceId": "inst_art_gallery_1"
     }
   ],
   "field": []

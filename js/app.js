@@ -1,10 +1,12 @@
+import { uploadArtPng, isArtStorageConfigured } from "./art-storage.js";
 import { clearSave, loadSave, writeSave } from "./storage.js";
+import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
 
 /**
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.7.8";
+const APP_VERSION = "0.8.0";
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -126,6 +128,17 @@ const els = {
   artColorApply: document.getElementById("art-color-apply"),
   artBrushPreview: document.getElementById("art-brush-preview"),
   artExportBtn: document.getElementById("art-export-btn"),
+  artApplyBtn: document.getElementById("art-apply-btn"),
+  artGalleryBtn: document.getElementById("art-gallery-btn"),
+  artExportModal: document.getElementById("art-export-modal"),
+  artExportTitle: document.getElementById("art-export-title"),
+  artExportText: document.getElementById("art-export-text"),
+  artExportPreview: document.getElementById("art-export-preview"),
+  artExportConfirm: document.getElementById("art-export-confirm"),
+  artExportCancel: document.getElementById("art-export-cancel"),
+  artWorksGallery: document.getElementById("art-works-gallery"),
+  artWorksList: document.getElementById("art-works-list"),
+  artWorksClose: document.getElementById("art-works-close"),
   appVersion: document.getElementById("app-version"),
 };
 
@@ -281,36 +294,48 @@ function drawPixelImage(ctx, img, destW, destH, opts = {}) {
   const px = img.pixels || [];
   let x0 = 0;
   let y0 = 0;
-  let dw = destW;
-  let dh = destH;
+  let scale = destW / pw;
   if (fit) {
     if (background) {
       ctx.fillStyle = background;
       ctx.fillRect(0, 0, destW, destH);
     }
-    const r = fitPixelRect(destW, destH, pw, ph);
-    x0 = r.x;
-    y0 = r.y;
-    dw = r.w;
-    dh = r.h;
+    scale = Math.min(destW / pw, destH / ph);
+    const drawW = pw * scale;
+    const drawH = ph * scale;
+    x0 = (destW - drawW) / 2;
+    y0 = (destH - drawH) / 2;
+  } else {
+    scale = Math.min(destW / pw, destH / ph);
   }
-  const cellW = dw / pw;
-  const cellH = dh / ph;
   for (let y = 0; y < ph; y++) {
     for (let x = 0; x < pw; x++) {
       const idx = px[y * pw + x] ?? 0;
       ctx.fillStyle = pal[idx] ?? pal[0];
-      ctx.fillRect(x0 + x * cellW, y0 + y * cellH, Math.ceil(cellW), Math.ceil(cellH));
+      ctx.fillRect(x0 + x * scale, y0 + y * scale, Math.ceil(scale), Math.ceil(scale));
     }
   }
+}
+
+/** Size card-image canvas buffer to exact 7:5 so pixels are not stretched in the frame. */
+function cardImageBufferSize(parent) {
+  const boxW = Math.max(1, parent.clientWidth);
+  const boxH = Math.max(1, parent.clientHeight);
+  const frameAspect = IMAGE_FRAME_W / IMAGE_FRAME_H;
+  const boxAspect = boxW / boxH;
+  if (boxAspect > frameAspect) {
+    const h = boxH;
+    return { w: Math.max(1, Math.round(h * frameAspect)), h };
+  }
+  const w = boxW;
+  return { w, h: Math.max(1, Math.round(w / frameAspect)) };
 }
 
 function drawCardSwatch(canvas, tags, large = false, pixelImage = null) {
   const paint = () => {
     const parent = canvas.parentElement;
     if (!parent) return;
-    const w = Math.max(1, Math.floor(parent.clientWidth));
-    const h = Math.max(1, Math.floor(parent.clientHeight));
+    const { w, h } = cardImageBufferSize(parent);
     if (w < 2 || h < 2) {
       requestAnimationFrame(paint);
       return;
@@ -579,8 +604,7 @@ function migrateObsoleteCardsIfNeeded() {
     list.filter(
       (i) =>
         i.definitionSlug !== "founders.world_controller" &&
-        i.definitionSlug !== "art.tool.export" &&
-        i.definitionSlug !== "art.work.blank"
+        i.definitionSlug !== "art.tool.export"
     );
   state.hand = drop(state.hand);
   state.field = drop(state.field);
@@ -851,7 +875,201 @@ function applyArtToGame() {
   artEditor.targetInstanceId = id;
   renderAll();
   persistSave();
+}
+
+function pixelImageToPngBlob(img, scale = 8) {
+  const pw = img.w || ART_GRID_W;
+  const ph = img.h || ART_GRID_H;
+  const pal = img.palette || [ART_BG];
+  const px = img.pixels || [];
+  const out = document.createElement("canvas");
+  out.width = pw * scale;
+  out.height = ph * scale;
+  const ctx = out.getContext("2d");
+  if (!ctx) return Promise.resolve(null);
+  for (let y = 0; y < ph; y++) {
+    for (let x = 0; x < pw; x++) {
+      const idx = px[y * pw + x] ?? 0;
+      ctx.fillStyle = pal[idx] ?? pal[0];
+      ctx.fillRect(x * scale, y * scale, scale, scale);
+    }
+  }
+  return new Promise((resolve) => {
+    out.toBlob((blob) => resolve(blob), "image/png");
+  });
+}
+
+function drawExportPreview() {
+  const canvas = els.artExportPreview;
+  if (!canvas) return;
+  const img = artPixelImageFromEditor();
+  const scale = 6;
+  canvas.width = img.w * scale;
+  canvas.height = img.h * scale;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  drawPixelImage(ctx, img, canvas.width, canvas.height, { fit: false });
+}
+
+function applyExportModalI18n() {
+  const t = locales[currentLocale]?.art_export || locales.en?.art_export || {};
+  for (const el of document.querySelectorAll("[data-i18n-export]")) {
+    const k = el.dataset.i18nExport;
+    if (t[k]) el.textContent = t[k];
+  }
+  if (els.artExportCancel) els.artExportCancel.textContent = t.cancel || "Cancel";
+  if (els.artExportConfirm) els.artExportConfirm.textContent = t.confirm || "Export";
+}
+
+function applyWorksGalleryI18n() {
+  const t = locales[currentLocale]?.art_works || locales.en?.art_works || {};
+  const titleEl = document.getElementById("art-works-title");
+  const hintEl = document.getElementById("art-works-hint");
+  if (titleEl) titleEl.textContent = t.title || "Works";
+  if (hintEl) hintEl.textContent = t.hint || "";
+}
+
+function openArtExportModal() {
+  applyExportModalI18n();
+  const t = locales[currentLocale]?.art_export || locales.en?.art_export || {};
+  if (els.artExportTitle) els.artExportTitle.value = t.default_title || "";
+  if (els.artExportText) els.artExportText.value = t.default_text || "";
+  drawExportPreview();
+  els.artExportModal?.classList.remove("hidden");
+  els.artExportModal?.setAttribute("aria-hidden", "false");
+}
+
+function closeArtExportModal() {
+  els.artExportModal?.classList.add("hidden");
+  els.artExportModal?.setAttribute("aria-hidden", "true");
+}
+
+function spawnExportedWorkCard(title, text, image) {
+  const inst = createInstance("art.work.blank", "hand");
+  inst.title = title;
+  inst.text = text;
+  inst.image = image;
+  return inst;
+}
+
+async function confirmArtExport() {
+  const t = locales[currentLocale]?.art_export || locales.en?.art_export || {};
+  const title = (els.artExportTitle?.value || "").trim() || t.default_title || "Artwork";
+  const text = (els.artExportText?.value || "").trim() || t.default_text || "";
+  const image = artPixelImageFromEditor();
+  const workId = `work_${Date.now().toString(36)}`;
+  addWork({
+    id: workId,
+    title,
+    text,
+    image,
+    createdAt: new Date().toISOString(),
+    uploadedAt: null,
+    storagePath: null,
+    publicUrl: null,
+  });
+  spawnExportedWorkCard(title, text, image);
+  applyArtToGame();
+  closeArtExportModal();
   closeArtEditor();
+  renderAll();
+  persistSave();
+}
+
+function renderWorksGallery() {
+  if (!els.artWorksList) return;
+  const t = locales[currentLocale]?.art_works || locales.en?.art_works || {};
+  const works = loadWorks();
+  els.artWorksList.innerHTML = "";
+  if (!works.length) {
+    const empty = document.createElement("p");
+    empty.className = "art-works-empty";
+    empty.textContent = t.empty || "No works yet.";
+    els.artWorksList.appendChild(empty);
+    return;
+  }
+  for (const work of works) {
+    const row = document.createElement("article");
+    row.className = "art-work-row";
+    const preview = document.createElement("canvas");
+    preview.className = "art-work-preview";
+    preview.width = 84;
+    preview.height = 60;
+    const pctx = preview.getContext("2d");
+    if (pctx && work.image) drawPixelImage(pctx, work.image, 84, 60, { fit: true, background: "#e9ecef" });
+
+    const meta = document.createElement("div");
+    meta.className = "art-work-meta";
+    const h = document.createElement("h3");
+    h.textContent = work.title;
+    const p = document.createElement("p");
+    p.textContent = work.text;
+    meta.append(h, p);
+
+    const actions = document.createElement("div");
+    actions.className = "art-work-actions";
+    const uploadBtn = document.createElement("button");
+    uploadBtn.type = "button";
+    uploadBtn.className = "art-editor-btn art-editor-btn-small";
+    uploadBtn.textContent = work.publicUrl ? t.uploaded || "Uploaded" : t.upload || "Upload";
+    uploadBtn.disabled = !!work.publicUrl;
+    uploadBtn.addEventListener("click", () => uploadWorkToSupabase(work.id, uploadBtn));
+
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "art-editor-btn art-editor-btn-icon";
+    delBtn.textContent = "×";
+    delBtn.title = t.delete || "Delete";
+    delBtn.addEventListener("click", () => {
+      removeWork(work.id);
+      renderWorksGallery();
+    });
+
+    actions.append(uploadBtn, delBtn);
+    row.append(preview, meta, actions);
+    els.artWorksList.appendChild(row);
+  }
+}
+
+async function uploadWorkToSupabase(workId, btn) {
+  const t = locales[currentLocale]?.art_works || locales.en?.art_works || {};
+  const work = loadWorks().find((w) => w.id === workId);
+  if (!work?.image) return;
+  const configured = await isArtStorageConfigured();
+  if (!configured) {
+    alert(t.no_config || "Copy js/supabase-config.example.js to js/supabase-config.js first.");
+    return;
+  }
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = t.uploading || "Uploading…";
+  }
+  try {
+    const blob = await pixelImageToPngBlob(work.image, 12);
+    if (!blob) throw new Error("PNG failed");
+    const { path, publicUrl } = await uploadArtPng(blob, { workId, title: work.title });
+    updateWork(workId, { storagePath: path, publicUrl, uploadedAt: new Date().toISOString() });
+    renderWorksGallery();
+  } catch (e) {
+    console.error(e);
+    alert((t.upload_error || "Upload failed: ") + (e.message || e));
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = t.upload || "Upload";
+    }
+  }
+}
+
+function openWorksGallery() {
+  applyWorksGalleryI18n();
+  renderWorksGallery();
+  els.artWorksGallery?.classList.remove("hidden");
+  els.artWorksGallery?.setAttribute("aria-hidden", "false");
+}
+
+function closeWorksGallery() {
+  els.artWorksGallery?.classList.add("hidden");
+  els.artWorksGallery?.setAttribute("aria-hidden", "true");
 }
 
 async function openArtEditor(instanceId) {
@@ -866,7 +1084,11 @@ async function openArtEditor(instanceId) {
   if (els.artEditorTitle) els.artEditorTitle.textContent = t.title || "Pixel Board";
   if (els.artEditorHint) els.artEditorHint.textContent = t.hint || "";
   if (els.artColorApply) els.artColorApply.textContent = t.apply_color || "Apply";
-  if (els.artExportBtn) els.artExportBtn.textContent = t.apply || "Apply";
+  const ex = locales[currentLocale]?.art_export || locales.en?.art_export || {};
+  const wk = locales[currentLocale]?.art_works || locales.en?.art_works || {};
+  if (els.artExportBtn) els.artExportBtn.textContent = ex.open || "Export";
+  if (els.artApplyBtn) els.artApplyBtn.textContent = t.apply || "Apply";
+  if (els.artGalleryBtn) els.artGalleryBtn.textContent = wk.open || "Works";
   rebuildArtToolUI();
   document.body.classList.add("art-editor-open");
   els.artEditor?.classList.remove("hidden");
@@ -930,7 +1152,21 @@ function setupArtEditor() {
   });
 
   els.artEditorClose?.addEventListener("click", () => closeArtEditor());
-  els.artExportBtn?.addEventListener("click", applyArtToGame);
+  els.artExportBtn?.addEventListener("click", () => openArtExportModal());
+  els.artApplyBtn?.addEventListener("click", () => {
+    applyArtToGame();
+    closeArtEditor();
+  });
+  els.artGalleryBtn?.addEventListener("click", () => openWorksGallery());
+  els.artExportCancel?.addEventListener("click", () => closeArtExportModal());
+  els.artExportConfirm?.addEventListener("click", () => confirmArtExport());
+  els.artWorksClose?.addEventListener("click", () => closeWorksGallery());
+  els.artExportModal?.addEventListener("click", (e) => {
+    if (e.target === els.artExportModal) closeArtExportModal();
+  });
+  els.artWorksGallery?.addEventListener("click", (e) => {
+    if (e.target === els.artWorksGallery) closeWorksGallery();
+  });
   els.artColorPicker?.addEventListener("input", (e) => {
     setArtBrushColor(e.target.value);
   });
@@ -1351,10 +1587,17 @@ function setLocale(code) {
   applyZoneLabels();
   if (artEditor.open) {
     const t = locales[currentLocale]?.art_editor || locales.en?.art_editor || {};
+    const ex = locales[currentLocale]?.art_export || locales.en?.art_export || {};
+    const wk = locales[currentLocale]?.art_works || locales.en?.art_works || {};
     if (els.artEditorHint) els.artEditorHint.textContent = t.hint || "";
     if (els.artColorApply) els.artColorApply.textContent = t.apply_color || "Apply";
-    if (els.artExportBtn) els.artExportBtn.textContent = t.apply || "Apply";
+    if (els.artExportBtn) els.artExportBtn.textContent = ex.open || "Export";
+    if (els.artApplyBtn) els.artApplyBtn.textContent = t.apply || "Apply";
+    if (els.artGalleryBtn) els.artGalleryBtn.textContent = wk.open || "Works";
     rebuildArtToolUI();
+  }
+  if (els.artWorksGallery && !els.artWorksGallery.classList.contains("hidden")) {
+    renderWorksGallery();
   }
   renderAll();
   persistSave();
@@ -1451,6 +1694,9 @@ function runProgram(programId, ctx) {
         break;
       case "art_editor_open":
         openArtEditor(ctx?.instanceId);
+        break;
+      case "art_gallery_open":
+        openWorksGallery();
         break;
       default:
         break;

@@ -1,0 +1,5 @@
+{
+  "id": "art.gallery.open",
+  "entry": "n0",
+  "nodes": [{ "id": "n0", "op": "art_gallery_open" }]
+}

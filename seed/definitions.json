@@ -670,12 +670,29 @@
       }
     },
     {
+      "slug": "art.tool.gallery",
+      "localeKey": "art_tool_gallery",
+      "titleKey": "cards.art_tool_gallery",
+      "textKey": "cards.art_tool_gallery",
+      "title": "Works Gallery",
+      "text": "View exported works and upload to Supabase.",
+      "tags": ["art", "tool", "reusable"],
+      "programs": { "on_play": "art.gallery.open" },
+      "image": {
+        "type": "pixel/v1",
+        "w": 8,
+        "h": 8,
+        "palette": ["#1a1a2e", "#339af0", "#ffd43b"],
+        "pixels": [0, 1, 1, 0, 1, 2, 2, 1, 0, 1, 1, 0, 1, 2, 2, 1]
+      }
+    },
+    {
       "slug": "art.tool.pixel",
       "localeKey": "art_tool_pixel",
       "titleKey": "cards.art_tool_pixel",
       "textKey": "cards.art_tool_pixel",
       "title": "Pixel Board",
-      "text": "8×8 pixel editor.",
+      "text": "7:5 pixel editor.",
       "tags": ["art", "tool", "reusable"],
       "programs": { "on_play": "art.editor.open" },
       "image": {

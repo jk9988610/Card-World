@@ -98,7 +98,15 @@
     },
     "art_tool_pixel": {
       "title": "像素画板",
-      "text": "收回手牌后双击打开画板；画完点「应用」，图案会显示在本卡图像区。"
+      "text": "收回手牌后双击打开画板；画完可「导出」到作品仓库，或「应用」写回本卡。"
+    },
+    "art_tool_gallery": {
+      "title": "作品仓库",
+      "text": "双击打开 — 查看已导出作品，可上传到美术素材库（Supabase）。"
+    },
+    "art_work": {
+      "title": "作品",
+      "text": "在美术控制台创作。"
     }
   },
   "scenes": {
@@ -108,7 +116,7 @@
   },
   "art_editor": {
     "title": "像素画板",
-    "hint": "画笔/橡皮/填充/取色器；画板 7:5（宽>高）与卡牌图像框一致。点「应用」写回像素画板卡。",
+    "hint": "画板 7:5 与卡牌图像框一致，避免拉高变形。导出 → 命名与正文 → 作品仓库；应用仅写回画板卡。",
     "apply": "应用",
     "apply_color": "应用",
     "tools": {
@@ -117,5 +125,27 @@
       "fill": "填充",
       "picker": "取色"
     }
+  },
+  "art_export": {
+    "open": "导出",
+    "title": "导出作品",
+    "name_label": "作品名",
+    "text_label": "正文",
+    "default_title": "我的作品",
+    "default_text": "",
+    "cancel": "取消",
+    "confirm": "导出作品"
+  },
+  "art_works": {
+    "open": "作品仓库",
+    "title": "作品仓库",
+    "hint": "导出后的作品保存在本机。配置 Supabase 后可上传到 art 存储桶。",
+    "empty": "还没有作品，先在画板点「导出」。",
+    "upload": "上传素材库",
+    "uploading": "上传中…",
+    "uploaded": "已上传",
+    "upload_error": "上传失败：",
+    "no_config": "请先将 js/supabase-config.example.js 复制为 js/supabase-config.js 并填入项目 URL 与 anon key。",
+    "delete": "删除"
   }
 }

@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache" />
   <title>Card World</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="css/main.css?v=0.7.8" />
+  <link rel="stylesheet" href="css/main.css?v=0.8.0" />
 </head>
 <body>
   <div id="app-version" class="app-version" aria-label="Version"></div>
@@ -47,14 +47,44 @@
       </div>
       <footer class="art-editor-foot">
         <p id="art-editor-hint" class="art-editor-hint"></p>
-        <button type="button" id="art-export-btn" class="art-editor-btn art-editor-btn-primary"></button>
+        <div class="art-editor-foot-actions">
+          <button type="button" id="art-gallery-btn" class="art-editor-btn"></button>
+          <button type="button" id="art-apply-btn" class="art-editor-btn"></button>
+          <button type="button" id="art-export-btn" class="art-editor-btn art-editor-btn-primary"></button>
+        </div>
       </footer>
+    </div>
+  </div>
+  <div id="art-export-modal" class="art-modal hidden" aria-hidden="true">
+    <div class="art-modal-panel" role="dialog" aria-labelledby="art-export-modal-title">
+      <h2 id="art-export-modal-title" class="art-modal-title" data-i18n-export="title">Export work</h2>
+      <label class="art-modal-label" for="art-export-title" data-i18n-export="name_label">Title</label>
+      <input type="text" id="art-export-title" class="art-modal-input" maxlength="80" />
+      <label class="art-modal-label" for="art-export-text" data-i18n-export="text_label">Text</label>
+      <textarea id="art-export-text" class="art-modal-textarea" rows="4" maxlength="500"></textarea>
+      <div class="art-export-preview-wrap">
+        <canvas id="art-export-preview" width="252" height="180"></canvas>
+      </div>
+      <div class="art-modal-actions">
+        <button type="button" id="art-export-cancel" class="art-editor-btn"></button>
+        <button type="button" id="art-export-confirm" class="art-editor-btn art-editor-btn-primary"></button>
+      </div>
+    </div>
+  </div>
+  <div id="art-works-gallery" class="art-modal hidden" aria-hidden="true">
+    <div class="art-modal-panel art-works-panel" role="dialog" aria-labelledby="art-works-title">
+      <header class="art-works-header">
+        <h2 id="art-works-title" class="art-modal-title"></h2>
+        <button type="button" id="art-works-close" class="art-editor-btn art-editor-btn-icon" aria-label="Close">×</button>
+      </header>
+      <p class="art-works-hint" id="art-works-hint"></p>
+      <div id="art-works-list" class="art-works-list"></div>
     </div>
   </div>
   <div id="card-zoom" class="card-zoom hidden" aria-hidden="true">
     <div class="card-zoom-backdrop" id="zoom-backdrop"></div>
     <div class="card-zoom-slot" id="zoom-slot"></div>
   </div>
-  <script type="module" src="js/app.js?v=0.7.8"></script>
+  <script type="module" src="js/app.js?v=0.8.0"></script>
 </body>
 </html>
