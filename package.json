@@ -1,0 +1,11 @@
+{
+  "name": "card-world",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "export-program": "node tools/export-program.mjs",
+    "validate-seed": "node tools/validate-seed.mjs",
+    "build-seed": "node tools/build-seed.mjs"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "version": "0.1.0",
+  "hand": [{ "definitionSlug": "seed.starter_deck", "instanceId": "inst_starter_deck_1" }],
+  "field": [
+    { "definitionSlug": "founders.world_controller", "instanceId": "inst_world_ctrl_1" },
+    { "definitionSlug": "founders.guide", "instanceId": "inst_guide_1" }
+  ]
+}
