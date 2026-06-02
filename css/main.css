@@ -2,8 +2,13 @@
   --felt: #1e4d3a;
   --felt-light: #2a6b52;
   --hand-bg: #152238;
-  /* Same size everywhere; smaller for landscape */
-  --card-w: clamp(88px, 13vw, 128px);
+  /* Same size everywhere; 2/3 scale keeps 5:7 ratio */
+  --card-scale: 0.6666667;
+  --card-w: clamp(
+    calc(88px * var(--card-scale)),
+    calc(13vw * var(--card-scale)),
+    calc(128px * var(--card-scale))
+  );
   --card-h: calc(var(--card-w) * 7 / 5);
 }
 
@@ -126,7 +131,7 @@ body {
 
 .card-title {
   height: 14%;
-  min-height: 1.35rem;
+  min-height: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -140,7 +145,7 @@ body {
 
 .card-image {
   height: 23%;
-  min-height: 1.35rem;
+  min-height: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -186,8 +191,8 @@ body {
 .card-zoom-slot .card {
   position: relative;
   z-index: 1;
-  width: min(72vw, 300px) !important;
-  height: calc(min(72vw, 300px) * 7 / 5) !important;
+  width: min(72vw, calc(300px * var(--card-scale))) !important;
+  height: calc(min(72vw, calc(300px * var(--card-scale))) * 7 / 5) !important;
 }
 
 .card-zoom-slot .card-image {
