@@ -24,7 +24,7 @@
       "id": "n2",
       "op": "spawn",
       "label": "Spawn door",
-      "params": { "definitionSlug": "content.door", "zone": "field" }
+      "params": { "definitionSlug": "content.door", "zone": "hand" }
     }
   ]
 }

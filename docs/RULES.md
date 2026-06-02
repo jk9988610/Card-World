@@ -51,25 +51,20 @@ Meta-rules are **not** hard-coded gameplay. They are defaults the VM provides; *
 | **Take** | Field → Hand | Move only |
 | **Inspect** | Tap | Zoom only |
 
-### C.3 Container (planned — your example)
+### C.3 Backpack / container (v0.5 — built-in)
 
-**Container card** carries `inner: [instanceIds]` in save state.
+**Backpack** cards (`container` + `deck` tags) carry `inner: [instances]` in save state.
 
 | Action | Trigger | Effect |
 |--------|---------|--------|
-| **Unload** | Play container on Field | All inner cards → Hand; container stays on Field (empty) or moves to Field empty |
-| **Store** | Drag card Hand/Field → drop on container | Card leaves zone → `inner.push` |
-| **Recall container** | Drag container Field → Hand | Container moves; inner cards stay nested (hidden) |
-| **Store while holding** | Container in Hand + drag A onto container | A → inner |
+| **Recall** | Drag backpack Field → Hand | All other field cards → `fieldStash`; field clears; backpack in hand |
+| **Pour** | Drag backpack Hand → Field (empty field) | All `inner` → field; backpack stays in hand |
+| **Take** | Drag spilled item Field → Hand | Pick up item |
+| **Close** | Drag backpack Hand → Field (after pour) | Unpicked field cards → `inner`; backpack → field; `fieldStash` restored |
 
-Example flow you described:
+Meta cards (settings, language, tutorial, guide, controller, programming) use **play from hand** only: reusable cards run `on_play` without leaving the hand.
 
-1. Play **Box** container → A and B appear in Hand (`unload` program).
-2. Drag **A** to Field → A’s `on_play` runs (effect happens).
-3. Drag **Box** to Hand (recall).
-4. Drag **A** onto **Box** in Hand → **Store** (收纳).
-
-### C.4 Programming cards for containers
+### C.4 Programming cards for containers (programs)
 
 | Programming card | IR / op |
 |------------------|---------|

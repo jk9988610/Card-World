@@ -139,13 +139,18 @@ body {
 }
 
 .card-image {
-  height: 46%;
-  min-height: 2.75rem;
+  height: 23%;
+  min-height: 1.35rem;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #e9ecef;
   border-bottom: 2px solid #dee2e6;
+}
+
+.card-image canvas {
+  max-width: 50%;
+  max-height: 50%;
 }
 
 .card-text {
@@ -183,6 +188,16 @@ body {
   z-index: 1;
   width: min(72vw, 300px) !important;
   height: calc(min(72vw, 300px) * 7 / 5) !important;
+}
+
+.card-zoom-slot .card-image {
+  height: 46%;
+  min-height: 2.75rem;
+}
+
+.card-zoom-slot .card-image canvas {
+  max-width: none;
+  max-height: none;
 }
 
 .card-zoom-slot .card-title {
