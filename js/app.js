@@ -24,14 +24,15 @@ import {
 } from "./art-storage.js";
 import { isCloudEnabled } from "./cloud-config.js";
 import { MUSIC_EMBED_SLUG_TO_MODE, MUSIC_PROD_URL, musicEmbedUrl } from "./music-config.js";
-import { clearSave, loadSave, writeSave } from "./storage.js";
+import { initAppVersionUI } from "./app-version.js";
+import { clearAllCardWorldStorage, clearSave, loadSave, writeSave } from "./storage.js";
 import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
 
 /**
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.12.1";
+const APP_VERSION = "0.12.2";
 
 const SETTINGS_MENU_SLUGS = new Set([
   "founders.language_settings",
@@ -210,7 +211,9 @@ const els = {
   musicConsoleTitle: document.getElementById("music-console-title"),
   musicConsoleHint: document.getElementById("music-console-hint"),
   musicConsoleClose: document.getElementById("music-console-close"),
-  appVersion: document.getElementById("app-version"),
+  appChrome: document.getElementById("app-chrome"),
+  btnClearStorage: document.getElementById("btn-clear-storage"),
+  btnUpdate: document.getElementById("btn-update"),
 };
 
 function localeKeyForDef(def) {
@@ -2442,10 +2445,33 @@ function setupAutoFullscreenOnLoad() {
 
 function applyZoneLabels() {
   const ui = locales[currentLocale]?.ui || locales.en?.ui || {};
-  for (const el of document.querySelectorAll(".zone-label[data-i18n]")) {
+  for (const el of document.querySelectorAll("[data-i18n]")) {
     const key = el.dataset.i18n;
     if (ui[key]) el.textContent = ui[key];
   }
+}
+
+function setupAppChrome() {
+  initAppVersionUI();
+
+  if (!els.btnClearStorage) return;
+
+  els.btnClearStorage.addEventListener("click", () => {
+    const ui = locales[currentLocale]?.ui || locales.en?.ui || {};
+    const msg =
+      ui.clear_storage_confirm ||
+      "Clear all Card World data in this browser (save, art drafts, works)? The page will reload.";
+    if (!confirm(msg)) return;
+    abortPointerDrag();
+    closeZoom();
+    closeArtEditor();
+    closeMusicEmbed();
+    clearAllCardWorldStorage();
+    const url = new URL(location.href);
+    url.searchParams.set("v", APP_VERSION);
+    url.searchParams.set("_", String(Date.now()));
+    location.replace(url.toString());
+  });
 }
 
 function setLocale(code) {
@@ -2651,7 +2677,7 @@ function applyStarter(bundle) {
 }
 
 async function init() {
-  if (els.appVersion) els.appVersion.textContent = `v${APP_VERSION}`;
+  setupAppChrome();
   setupDropZone(els.zoneHand, "hand");
   setupDropZone(els.zoneField, "field");
   els.zoomBackdrop.addEventListener("click", closeZoom);

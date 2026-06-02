@@ -8,12 +8,23 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#0d1117" />
   <meta http-equiv="Cache-Control" content="no-cache" />
+  <meta name="cw-app-version" content="0.12.2" />
+  <meta name="cw-app-build" content="0.12.2" />
   <title>Card World</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="css/main.css?v=0.12.1" />
+  <link rel="stylesheet" href="css/main.css?v=0.12.2" />
 </head>
 <body>
-  <div id="app-version" class="app-version" aria-label="Version"></div>
+  <header id="app-chrome" class="app-chrome" aria-label="App toolbar">
+    <div class="app-chrome-brand">
+      <span class="app-chrome-title">Card World</span>
+      <span class="app-chrome-version">v<span class="app-version-value">—</span></span>
+    </div>
+    <div class="app-chrome-actions">
+      <button type="button" id="btn-clear-storage" class="chrome-btn" data-i18n="clear_storage">Clear save</button>
+      <button type="button" id="btn-update" class="chrome-btn chrome-btn-accent" data-i18n="update_app">Update</button>
+    </div>
+  </header>
   <header id="scene-bar" class="scene-bar hidden" aria-live="polite">
     <span id="scene-title" class="scene-title"></span>
   </header>
@@ -106,6 +117,6 @@
     <div class="card-zoom-backdrop" id="zoom-backdrop"></div>
     <div class="card-zoom-slot" id="zoom-slot"></div>
   </div>
-  <script type="module" src="js/app.js?v=0.12.1"></script>
+  <script type="module" src="js/app.js?v=0.12.2"></script>
 </body>
 </html>

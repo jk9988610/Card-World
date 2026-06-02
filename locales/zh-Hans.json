@@ -1,7 +1,10 @@
 {
   "ui": {
     "zone_field": "场",
-    "zone_hand": "手牌"
+    "zone_hand": "手牌",
+    "clear_storage": "清存档",
+    "update_app": "更新",
+    "clear_storage_confirm": "清除本浏览器内所有 Card World 数据（存档、绘画草稿、作品仓库）并刷新页面？"
   },
   "cards": {
     "tutorial": {

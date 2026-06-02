@@ -31,10 +31,13 @@ jobs:
       - name: Build seed bundle
         run: node tools/build-seed.mjs
 
+      - name: Write version manifest
+        run: node tools/write-version.mjs
+
       - name: Prepare site
         run: |
           mkdir -p _site
-          cp index.html manifest.webmanifest .nojekyll _site/
+          cp index.html manifest.webmanifest version.json .nojekyll _site/
           cp -r css js dist locales _site/
 
       - name: Setup Pages

@@ -1,7 +1,10 @@
 {
   "ui": {
     "zone_field": "Field",
-    "zone_hand": "Hand"
+    "zone_hand": "Hand",
+    "clear_storage": "Clear save",
+    "update_app": "Update",
+    "clear_storage_confirm": "Clear all Card World data in this browser (save, art drafts, works)? The page will reload."
   },
   "cards": {
     "tutorial": {
