@@ -85,8 +85,8 @@ body {
   display: flex;
   flex-direction: column;
   cursor: grab;
-  touch-action: none;
   user-select: none;
+  -webkit-user-drag: element;
   color: #212529;
   box-shadow: calc(2px * var(--card-scale)) calc(4px * var(--card-scale)) calc(10px * var(--card-scale))
     rgba(0, 0, 0, 0.45);

@@ -1,15 +1,10 @@
 import { clearSave, loadSave, writeSave } from "./storage.js";
 
 /**
- * Card World — tap zoom | unified pointer drag (document-level)
+ * Card World — tap zoom | native drag (smooth on iPad) | backpack flow
  */
 
-const APP_VERSION = "0.5.5";
-/** Touch / pen: hold before drag (ms). Mouse drags immediately. */
-const LONG_PRESS_MS = 550;
-const LONG_PRESS_CANCEL_PX = 14;
-const TAP_MAX_PX = 14;
-const TAP_MAX_MS = 450;
+const APP_VERSION = "0.5.6";
 
 const SWATCH_BY_TAG = [
   ["programming", "#6f42c1"],
@@ -43,12 +38,6 @@ const state = {
 
 let instanceCounter = 0;
 let drag = null;
-let pointerDrag = null;
-let dragGhost = null;
-/** Single active pointer session (avoids per-card timer / global state clashes) */
-let activePointer = null;
-let suppressTapUntil = 0;
-let documentPointerBound = false;
 let starterSnapshot = null;
 let fullscreenTried = false;
 
@@ -400,202 +389,6 @@ function resetWorld() {
   persistSave();
 }
 
-function zoneAtPoint(clientX, clientY) {
-  for (const el of document.elementsFromPoint(clientX, clientY)) {
-    if (el.classList?.contains("drag-ghost")) continue;
-    if (el.closest?.(".dragging-source")) continue;
-    if (els.zoneHand.contains(el)) return "hand";
-    if (els.zoneField.contains(el)) return "field";
-  }
-  return null;
-}
-
-function highlightDropZone(zone) {
-  const from = pointerDrag?.from;
-  els.zoneHand.classList.toggle("zone-drop-target", zone === "hand" && from !== "hand");
-  els.zoneField.classList.toggle("zone-drop-target", zone === "field" && from !== "field");
-}
-
-function clearDropHighlight() {
-  els.zoneHand.classList.remove("zone-drop-target");
-  els.zoneField.classList.remove("zone-drop-target");
-}
-
-function beginPointerDrag(clientX, clientY) {
-  if (!pointerDrag) return;
-  pointerDrag.active = true;
-  drag = { id: pointerDrag.id, from: pointerDrag.from, moved: false };
-  const loc = findInstance(pointerDrag.id);
-  if (!loc) return;
-  dragGhost = buildCardEl(loc.instance, pointerDrag.from);
-  dragGhost.classList.add("drag-ghost");
-  dragGhost.style.left = `${clientX}px`;
-  dragGhost.style.top = `${clientY}px`;
-  document.body.appendChild(dragGhost);
-  const source = pointerDrag.sourceEl;
-  source.classList.add("dragging-source");
-  source.style.pointerEvents = "none";
-  document.body.classList.add("card-dragging");
-}
-
-function movePointerDrag(clientX, clientY) {
-  if (!dragGhost) return;
-  dragGhost.style.left = `${clientX}px`;
-  dragGhost.style.top = `${clientY}px`;
-  highlightDropZone(zoneAtPoint(clientX, clientY));
-}
-
-function endPointerDragVisual() {
-  dragGhost?.remove();
-  dragGhost = null;
-  const source = pointerDrag?.sourceEl;
-  if (source) {
-    source.classList.remove("dragging-source");
-    source.style.pointerEvents = "";
-  }
-  document.body.classList.remove("card-dragging");
-  clearDropHighlight();
-  setTimeout(() => {
-    drag = null;
-  }, 50);
-}
-
-function cancelActivePointer() {
-  if (!activePointer) return;
-  if (activePointer.timer) {
-    clearTimeout(activePointer.timer);
-    activePointer.timer = null;
-  }
-  activePointer.el?.classList.remove("long-press-armed");
-  if (activePointer.phase === "dragging") {
-    endPointerDragVisual();
-    pointerDrag = null;
-    suppressTapUntil = Date.now() + 400;
-  }
-  activePointer = null;
-}
-
-function startDragSession(clientX, clientY) {
-  if (!activePointer || activePointer.phase !== "pending") return;
-  activePointer.phase = "dragging";
-  activePointer.el.classList.add("long-press-armed");
-  try {
-    activePointer.el.setPointerCapture(activePointer.pointerId);
-  } catch (_) {}
-  pointerDrag = {
-    id: activePointer.instanceId,
-    from: activePointer.zone,
-    sourceEl: activePointer.el,
-    active: false,
-  };
-  beginPointerDrag(clientX, clientY);
-}
-
-function onDocumentPointerMove(e) {
-  if (!activePointer || e.pointerId !== activePointer.pointerId) return;
-  activePointer.lastX = e.clientX;
-  activePointer.lastY = e.clientY;
-
-  if (activePointer.phase === "pending") {
-    const dx = e.clientX - activePointer.startX;
-    const dy = e.clientY - activePointer.startY;
-    const dist = Math.hypot(dx, dy);
-    if (dist < LONG_PRESS_CANCEL_PX) return;
-    // Let horizontal pans scroll the hand strip instead of fighting long-press
-    if (activePointer.zone === "hand" && Math.abs(dx) > Math.abs(dy) * 1.15) {
-      cancelActivePointer();
-      return;
-    }
-    cancelActivePointer();
-    return;
-  }
-
-  if (activePointer.phase === "dragging") {
-    e.preventDefault();
-    movePointerDrag(e.clientX, e.clientY);
-  }
-}
-
-function onDocumentPointerEnd(e) {
-  if (!activePointer || e.pointerId !== activePointer.pointerId) return;
-
-  if (activePointer.timer) {
-    clearTimeout(activePointer.timer);
-    activePointer.timer = null;
-  }
-
-  const session = activePointer;
-  activePointer = null;
-
-  session.el.classList.remove("long-press-armed");
-  try {
-    session.el.releasePointerCapture(e.pointerId);
-  } catch (_) {}
-
-  if (session.phase === "dragging") {
-    const toZone = zoneAtPoint(e.clientX, e.clientY);
-    if (toZone && toZone !== session.zone) {
-      drag = { id: session.instanceId, from: session.zone, moved: true };
-      handleZoneDrop(session.instanceId, session.zone, toZone);
-    }
-    endPointerDragVisual();
-    pointerDrag = null;
-    suppressTapUntil = Date.now() + 400;
-    return;
-  }
-
-  const dist = Math.hypot(e.clientX - session.startX, e.clientY - session.startY);
-  const dt = Date.now() - session.startedAt;
-  if (dist < TAP_MAX_PX && dt < TAP_MAX_MS && Date.now() >= suppressTapUntil) {
-    openZoom(session.inst);
-  }
-}
-
-function setupDocumentPointerHandlers() {
-  if (documentPointerBound) return;
-  documentPointerBound = true;
-  document.addEventListener("pointermove", onDocumentPointerMove, { passive: false });
-  document.addEventListener("pointerup", onDocumentPointerEnd);
-  document.addEventListener("pointercancel", onDocumentPointerEnd);
-}
-
-function onCardPointerDown(e, inst, zone, el) {
-  if (e.pointerType === "mouse" && e.button !== 0) return;
-  cancelActivePointer();
-
-  const isTouchLike = e.pointerType === "touch" || e.pointerType === "pen";
-  activePointer = {
-    instanceId: inst.instanceId,
-    zone,
-    el,
-    inst,
-    pointerId: e.pointerId,
-    startX: e.clientX,
-    startY: e.clientY,
-    lastX: e.clientX,
-    lastY: e.clientY,
-    startedAt: Date.now(),
-    phase: "pending",
-    isTouchLike,
-    timer: null,
-  };
-
-  if (!isTouchLike) {
-    startDragSession(e.clientX, e.clientY);
-    return;
-  }
-
-  activePointer.timer = setTimeout(() => {
-    if (!activePointer || activePointer.phase !== "pending") return;
-    startDragSession(activePointer.lastX, activePointer.lastY);
-  }, LONG_PRESS_MS);
-}
-
-function setupCardInteraction(el, inst, zone) {
-  el.draggable = false;
-  el.addEventListener("pointerdown", (e) => onCardPointerDown(e, inst, zone, el));
-}
-
 function shouldHint(slug, zone) {
   if (!state.highlightOn || zone !== "hand") return false;
   if (state.hintTarget && slug === state.hintTarget) return true;
@@ -615,7 +408,17 @@ function buildCardEl(inst, zone, opts = {}) {
   if (!forZoom && shouldHint(r.definitionSlug, zone)) el.classList.add("hint");
 
   if (!forZoom) {
-    setupCardInteraction(el, inst, zone);
+    el.draggable = true;
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (drag?.moved) return;
+      openZoom(inst);
+    });
+    el.addEventListener("dragstart", (e) => {
+      drag = { id: inst.instanceId, from: zone, moved: false };
+      e.dataTransfer.setData("text/plain", inst.instanceId);
+    });
+    el.addEventListener("dragend", () => setTimeout(() => { drag = null; }, 50));
   }
 
   const title = document.createElement("div");
@@ -668,6 +471,22 @@ function moveInstance(id, toZone) {
   state[toZone].push(loc.instance);
   renderAll();
   persistSave();
+}
+
+function setupDropZone(container, zoneName) {
+  container.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  });
+  container.addEventListener("drop", (e) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData("text/plain");
+    if (!id || !drag) return;
+    const from = drag.from;
+    drag.moved = true;
+    if (from === zoneName) return;
+    handleZoneDrop(id, from, zoneName);
+  });
 }
 
 function tryAutoFullscreen() {
@@ -839,7 +658,8 @@ function applyStarter(bundle) {
 }
 
 async function init() {
-  setupDocumentPointerHandlers();
+  setupDropZone(els.zoneHand, "hand");
+  setupDropZone(els.zoneField, "field");
   els.zoomBackdrop.addEventListener("click", closeZoom);
 
   try {
