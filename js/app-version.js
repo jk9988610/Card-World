@@ -130,7 +130,7 @@ export async function applyUpdate(remote) {
 
 export function initAppVersionUI() {
   syncVersionLabels();
-  hydrateFromManifest();
+  /* Offline-first: check version.json only when user taps Update */
 
   const btnUpdate = document.getElementById("btn-update");
   if (!btnUpdate) return;

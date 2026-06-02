@@ -32,7 +32,17 @@ const BeatBattleCloud = (() => {
     return { url: "", anonKey: "" };
   }
 
+  function isCloudOptIn() {
+    try {
+      return localStorage.getItem("cardworld_cloud_opt_in") === "1";
+    } catch {
+      return false;
+    }
+  }
+
   function isCloudEnabled() {
+    if (!isCloudOptIn()) return false;
+    if (typeof navigator !== "undefined" && navigator.onLine === false) return false;
     const c = getCloudConfig();
     return Boolean(c.url && c.anonKey);
   }
@@ -61,7 +71,7 @@ const BeatBattleCloud = (() => {
 
   async function loadSupabase() {
     const { createClient } = await import(
-      "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/+esm"
+      new URL("../../../vendor/supabase-js.mjs", import.meta.url).href
     );
     return createClient;
   }

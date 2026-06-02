@@ -1,7 +1,8 @@
 /**
- * 与 Beat-Battle 相同：内置 Supabase，打开即用，无需手填。
- * 仅使用 anon public key。
+ * Supabase credentials (used only when cloud opt-in is on and device is online).
  */
+import { isCloudOptIn } from "./net-policy.js";
+
 export const DEFAULT_CLOUD_CONFIG = {
   url: "https://yjqkotqmglxjhlrhynsu.supabase.co",
   anonKey:
@@ -30,6 +31,7 @@ export function getCloudConfig() {
 }
 
 export function isCloudEnabled() {
+  if (!isCloudOptIn()) return false;
   const c = getCloudConfig();
   return Boolean(c.url && c.anonKey);
 }

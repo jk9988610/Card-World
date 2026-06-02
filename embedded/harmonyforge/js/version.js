@@ -154,16 +154,7 @@ const AppVersion = (() => {
     const logDialog = document.getElementById("logDialog");
     const logContent = document.getElementById("logContent");
 
-    hydrateFromManifest().then((remote) => {
-      const bundled = getBundled();
-      if (remote) {
-        AppLogger.info("运行版本", `v${bundled.version} · build ${bundled.build}`);
-        if (isNewer(remote) && document.getElementById("statusText")) {
-          document.getElementById("statusText").textContent =
-            `有新版本 v${remote.version} 可用 — 点击「更新」`;
-        }
-      }
-    });
+    /* Offline-first: version.json only when user taps Update */
 
     if (btnLogs && logDialog) {
       btnLogs.addEventListener("click", () => {

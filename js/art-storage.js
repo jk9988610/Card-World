@@ -1,47 +1,14 @@
 /**
  * Supabase art 桶：美术商店（对标 Beat-Battle 制作库 + audio 桶）
  */
-import { ART_BUCKET, ART_STORE_PREFIX, getCloudConfig, isCloudEnabled } from "./cloud-config.js";
+import { ART_BUCKET, ART_STORE_PREFIX, isCloudEnabled } from "./cloud-config.js";
+import { shouldUseCloud } from "./net-policy.js";
+import { getSupabaseClient } from "./supabase-client.js";
 import { formatSupabaseError } from "./supabase-error.js";
 
-let supabaseClient = null;
-let clientInitPromise = null;
-let supabaseLibPromise = null;
-
-const SUPABASE_CDN_URLS = [
-  "https://esm.sh/@supabase/supabase-js@2.49.1?bundle",
-  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/+esm",
-];
-
-async function importSupabaseLib() {
-  if (!supabaseLibPromise) {
-    supabaseLibPromise = (async () => {
-      let lastErr;
-      for (const url of SUPABASE_CDN_URLS) {
-        try {
-          return await import(url);
-        } catch (e) {
-          lastErr = e;
-        }
-      }
-      throw lastErr || new Error("Supabase SDK 无法加载");
-    })();
-  }
-  return supabaseLibPromise;
-}
-
 export async function getArtClient() {
-  if (!isCloudEnabled()) return null;
-  if (supabaseClient) return supabaseClient;
-  if (!clientInitPromise) {
-    clientInitPromise = (async () => {
-      const { createClient } = await importSupabaseLib();
-      const { url, anonKey } = getCloudConfig();
-      supabaseClient = createClient(url, anonKey);
-      return supabaseClient;
-    })();
-  }
-  return clientInitPromise;
+  if (!isCloudEnabled() || !shouldUseCloud()) return null;
+  return getSupabaseClient();
 }
 
 export async function isArtStorageConfigured() {
@@ -55,9 +22,15 @@ export async function getArtPublicUrl(path) {
   return data?.publicUrl || null;
 }
 
+function assertCloudReady() {
+  if (!isCloudEnabled()) throw new Error("Cloud sync is off. Enable Cloud in the top bar when online.");
+  if (!shouldUseCloud()) throw new Error("Cloud sync requires network and Cloud to be enabled.");
+}
+
 export async function publishToArtShop({ id, title, text, image, pngBlob }) {
+  assertCloudReady();
   const sb = await getArtClient();
-  if (!sb) throw new Error("云同步未配置");
+  if (!sb) throw new Error("Cloud client failed to load");
 
   const workId = id || crypto.randomUUID();
   const base = `${ART_STORE_PREFIX}/${workId}`;

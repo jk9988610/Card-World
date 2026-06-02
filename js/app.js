@@ -23,6 +23,13 @@ import {
   uploadArtPng,
 } from "./art-storage.js";
 import { isCloudEnabled } from "./cloud-config.js";
+import {
+  canUseNetwork,
+  isCloudOptIn,
+  setCloudOptIn,
+  shouldUseCloud,
+} from "./net-policy.js";
+import { resetSupabaseClient } from "./supabase-client.js";
 import { MUSIC_EMBED_SLUG_TO_MODE, MUSIC_PROD_URL, musicEmbedUrl } from "./music-config.js";
 import { AppLogger } from "./app-logger.js";
 import { initAppVersionUI } from "./app-version.js";
@@ -33,7 +40,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.12.4";
+const APP_VERSION = "0.13.0";
 
 const SETTINGS_MENU_SLUGS = new Set([
   "founders.language_settings",
@@ -215,6 +222,7 @@ const els = {
   appChrome: document.getElementById("app-chrome"),
   btnClearStorage: document.getElementById("btn-clear-storage"),
   btnUpdate: document.getElementById("btn-update"),
+  btnCloud: document.getElementById("btn-cloud"),
   btnLogs: document.getElementById("btn-logs"),
   btnCopyLogs: document.getElementById("btn-copy-logs"),
   logDialog: document.getElementById("log-dialog"),
@@ -1860,7 +1868,16 @@ function closeMusicEmbed() {
 
 function openExternalUrl(url) {
   if (!url) return;
-  window.open(url, "_blank", "noopener,noreferrer");
+  try {
+    const u = new URL(url, location.href);
+    if (u.origin !== location.origin) {
+      AppLogger.warn("Blocked external URL (offline-first)", u.href);
+      return;
+    }
+    window.open(u.href, "_blank", "noopener,noreferrer");
+  } catch (e) {
+    AppLogger.warn("Invalid URL", String(url));
+  }
 }
 
 function setupMusicConsole() {
@@ -2462,6 +2479,7 @@ function applyZoneLabels() {
     const key = el.dataset.i18nLog;
     if (logDlg[key]) el.textContent = logDlg[key];
   }
+  syncCloudToggleUi();
 }
 
 function refreshLogPanel() {
@@ -2489,8 +2507,40 @@ async function copyLogsToClipboard(feedbackBtn) {
   return ok;
 }
 
+function syncCloudToggleUi() {
+  if (!els.btnCloud) return;
+  const on = isCloudOptIn();
+  els.btnCloud.classList.toggle("chrome-btn-accent", on);
+  els.btnCloud.setAttribute("aria-pressed", on ? "true" : "false");
+  const ui = locales[currentLocale]?.ui || locales.en?.ui || {};
+  els.btnCloud.textContent = on ? ui.cloud_on || "Cloud on" : ui.cloud_off || "Cloud off";
+}
+
 function setupAppChrome() {
   initAppVersionUI();
+  syncCloudToggleUi();
+
+  window.addEventListener("online", () => {
+    AppLogger.info("Network online");
+    syncCloudToggleUi();
+  });
+  window.addEventListener("offline", () => {
+    AppLogger.warn("Network offline — cloud sync paused");
+    syncCloudToggleUi();
+  });
+
+  els.btnCloud?.addEventListener("click", () => {
+    const ui = locales[currentLocale]?.ui || locales.en?.ui || {};
+    const next = !isCloudOptIn();
+    if (next && !canUseNetwork()) {
+      alert(ui.cloud_need_network || "Cloud sync needs a network connection.");
+      return;
+    }
+    setCloudOptIn(next);
+    resetSupabaseClient();
+    syncCloudToggleUi();
+    AppLogger.info(next ? "Cloud sync enabled" : "Cloud sync disabled (offline-first)");
+  });
 
   els.btnLogs?.addEventListener("click", () => openLogDialog());
   els.btnCopyLogs?.addEventListener("click", () => copyLogsToClipboard(els.btnCopyLogs));
@@ -2723,8 +2773,22 @@ function applyStarter(bundle) {
   for (const inst of [...state.hand, ...state.field]) bumpCounterFromInst(inst);
 }
 
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator) || !location.protocol.startsWith("http")) return;
+  const swUrl = new URL("sw.js", location.href);
+  navigator.serviceWorker.register(swUrl, { scope: "./" }).then(
+    () => AppLogger.info("Service worker registered", swUrl.pathname),
+    (e) => AppLogger.warn("Service worker registration failed", e?.message || e)
+  );
+}
+
 async function init() {
   AppLogger.info("Card World starting", `v${APP_VERSION}`);
+  AppLogger.info(
+    "Offline-first mode",
+    `cloud=${isCloudOptIn() ? "on" : "off"} online=${canUseNetwork()}`
+  );
+  registerServiceWorker();
   setupAppChrome();
   setupDropZone(els.zoneHand, "hand");
   setupDropZone(els.zoneField, "field");
