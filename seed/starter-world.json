@@ -1,8 +1,11 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "hand": [{ "definitionSlug": "seed.starter_deck", "instanceId": "inst_starter_deck_1" }],
   "field": [
     { "definitionSlug": "founders.world_controller", "instanceId": "inst_world_ctrl_1" },
-    { "definitionSlug": "founders.guide", "instanceId": "inst_guide_1" }
+    { "definitionSlug": "founders.guide", "instanceId": "inst_guide_1" },
+    { "definitionSlug": "founders.log", "instanceId": "inst_log_1", "text": "Log ready." },
+    { "definitionSlug": "founders.version", "instanceId": "inst_version_1" },
+    { "definitionSlug": "founders.copy_log", "instanceId": "inst_copy_log_1" }
   ]
 }

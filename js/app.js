@@ -1,26 +1,14 @@
-import { initI18n, applyI18n, t } from './i18n.js';
-
 /**
- * Card World — Phase 0 playable demo
+ * Card World — minimal UI: Field, Hand, Cards only.
  */
 
-function basePath() {
-  const parts = location.pathname.split("/").filter(Boolean);
-  if (parts.length > 0 && !parts[parts.length - 1].includes(".")) {
-    return `/${parts.join("/")}/`;
-  }
-  if (parts.length > 1) {
-    return `/${parts.slice(0, -1).join("/")}/`;
-  }
-  return "/";
-}
+export const APP_VERSION = "0.2.0";
 
-const BASE = basePath();
-const BUNDLE_URL = `${BASE}dist/seed-bundle.json`;
 const MAX_STEPS = 200;
+const LOG_INSTANCE_ID = "inst_log_1";
 
 /** @type {Map<string, object>} */
-let defBySlug = new Map();
+const defBySlug = new Map();
 /** @type {Record<string, object>} */
 let programs = {};
 /** @type {Record<string, object>} */
@@ -32,33 +20,17 @@ const state = {
   bootstrapDone: false,
 };
 
+const logLines = [];
 let instanceCounter = 0;
 let drag = null;
-let sceneStack = null;
+let inScene = false;
 
 const els = {
   hand: document.getElementById("hand-cards"),
   field: document.getElementById("field-cards"),
-  log: document.getElementById("log"),
-  overlay: document.getElementById("scene-overlay"),
-  sceneTitle: document.getElementById("scene-title"),
+  sceneZone: document.getElementById("zone-scene"),
   sceneField: document.getElementById("scene-field-cards"),
-  sceneClose: document.getElementById("scene-close"),
 };
-
-function log(msg) {
-  const li = document.createElement("li");
-  li.textContent = msg;
-  els.log.prepend(li);
-  while (els.log.children.length > 12) {
-    els.log.lastChild.remove();
-  }
-}
-
-function nextInstanceId() {
-  instanceCounter += 1;
-  return `inst_${instanceCounter}_${Date.now().toString(36)}`;
-}
 
 function getDef(slug) {
   return defBySlug.get(slug);
@@ -66,7 +38,16 @@ function getDef(slug) {
 
 function resolveInstance(inst) {
   const def = getDef(inst.definitionSlug);
-  if (!def) return { ...inst, title: "?", text: "?", image: null, tags: [] };
+  if (!def) {
+    return {
+      ...inst,
+      title: "?",
+      text: "Missing definition",
+      image: null,
+      tags: [],
+      programs: {},
+    };
+  }
   return {
     ...inst,
     title: inst.title ?? def.title,
@@ -80,19 +61,42 @@ function resolveInstance(inst) {
 }
 
 function findInstance(id) {
-  for (const z of ["hand", "field"]) {
-    const found = state[z].find((i) => i.instanceId === id);
+  const zones = inScene ? ["scene"] : ["hand", "field"];
+  for (const z of zones) {
+    const list = z === "scene" ? getSceneInstances() : state[z];
+    const found = list.find((i) => i.instanceId === id);
     if (found) return { instance: found, zone: z };
   }
   return null;
 }
 
+function getSceneInstances() {
+  return Array.from(els.sceneField.querySelectorAll(".card")).map((el) => ({
+    instanceId: el.dataset.instanceId,
+    definitionSlug: el.dataset.definitionSlug,
+    title: el.querySelector(".card-title")?.textContent,
+    text: el.querySelector(".card-text")?.textContent,
+  }));
+}
+
+function nextInstanceId() {
+  instanceCounter += 1;
+  return `inst_${instanceCounter}_${Date.now().toString(36)}`;
+}
+
+function appendLog(msg) {
+  logLines.push(msg);
+  if (logLines.length > 12) logLines.shift();
+  const loc = findInstance(LOG_INSTANCE_ID);
+  if (loc) {
+    loc.instance.text = logLines.join("\n");
+    renderAll();
+  }
+}
+
 function createInstance(definitionSlug, zone) {
-  const inst = {
-    instanceId: nextInstanceId(),
-    definitionSlug,
-    zone,
-  };
+  const inst = { instanceId: nextInstanceId(), definitionSlug, zone };
+  if (zone === "scene") return inst;
   state[zone].push(inst);
   return inst;
 }
@@ -106,28 +110,29 @@ function drawPixel(canvas, payload) {
   canvas.height = h;
   const pal = payload.palette || ["#000", "#fff"];
   const px = payload.pixels || [];
-  const parent = canvas.parentElement;
-  const cw = parent?.clientWidth || 242;
-  const ch = parent?.clientHeight || 168;
   ctx.imageSmoothingEnabled = false;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      const i = px[y * w + x] ?? px[(y * w + x) % px.length] ?? 0;
+      const i = px[y * w + x] ?? px[(y * w + x) % Math.max(px.length, 1)] ?? 0;
       ctx.fillStyle = pal[i] ?? pal[0];
       ctx.fillRect(x, y, 1, 1);
     }
   }
-  const scale = Math.min(cw / w, ch / h);
+  const parent = canvas.parentElement;
+  const cw = parent?.clientWidth || 242;
+  const ch = parent?.clientHeight || 168;
+  const scale = Math.min(cw / w, ch / h, 8);
   canvas.style.width = `${w * scale}px`;
   canvas.style.height = `${h * scale}px`;
 }
 
 function tagClass(tags) {
   if (tags.includes("programming")) return "tag-programming";
+  if (tags.includes("log")) return "tag-log";
   if (tags.includes("guide")) return "tag-guide";
   if (tags.includes("controller")) return "tag-controller";
-  if (tags.includes("computer")) return "tag-computer";
   if (tags.includes("content")) return "tag-content";
+  if (tags.includes("version") || tags.includes("utility")) return "tag-meta";
   return "";
 }
 
@@ -136,13 +141,15 @@ function buildCardEl(inst, zone) {
   const el = document.createElement("article");
   el.className = `card ${tagClass(r.tags)}`;
   el.dataset.instanceId = inst.instanceId;
-  el.draggable = true;
+  el.dataset.definitionSlug = inst.definitionSlug;
+  el.draggable = !inScene || zone === "scene";
 
   if (
     !state.bootstrapDone &&
-    r.definitionSlug === "founders.world_controller"
+    r.definitionSlug === "founders.world_controller" &&
+    !inScene
   ) {
-    el.classList.add("playable-hint");
+    el.classList.add("hint");
   }
 
   const title = document.createElement("div");
@@ -161,7 +168,7 @@ function buildCardEl(inst, zone) {
 
   el.append(title, imageWrap, text);
 
-  el.addEventListener("click", (e) => {
+  el.addEventListener("click", () => {
     if (drag?.moved) return;
     playCard(inst.instanceId);
   });
@@ -181,26 +188,30 @@ function buildCardEl(inst, zone) {
   return el;
 }
 
-function renderZone(zoneName, container) {
+function renderZone(zoneName, container, instances) {
   container.innerHTML = "";
-  for (const inst of state[zoneName]) {
+  for (const inst of instances) {
     container.appendChild(buildCardEl(inst, zoneName));
   }
 }
 
 function renderAll() {
-  renderZone("hand", els.hand);
-  renderZone("field", els.field);
+  if (inScene) {
+    return;
+  }
+  renderZone("field", els.field, state.field);
+  renderZone("hand", els.hand, state.hand);
 }
 
 function moveInstance(id, toZone) {
+  if (inScene) return;
   const loc = findInstance(id);
   if (!loc || loc.zone === toZone) return;
   state[loc.zone] = state[loc.zone].filter((i) => i.instanceId !== id);
   loc.instance.zone = toZone;
   state[toZone].push(loc.instance);
   renderAll();
-  log(`Moved ${resolveInstance(loc.instance).title} → ${toZone}`);
+  appendLog(`Moved ${resolveInstance(loc.instance).title} → ${toZone}`);
 }
 
 function setupDropZone(container, zoneName) {
@@ -225,7 +236,7 @@ function getNode(program, nodeId) {
 function runProgram(programId, ctx) {
   const program = programs[programId];
   if (!program) {
-    log(`No program: ${programId}`);
+    appendLog(`No program: ${programId}`);
     return;
   }
   let steps = 0;
@@ -238,57 +249,53 @@ function runProgram(programId, ctx) {
       case "sequence":
         for (const child of node.children || []) exec(child);
         break;
-      case "deal": {
-        const cards = node.params?.cards || [];
-        for (const slug of cards) {
+      case "deal":
+        for (const slug of node.params?.cards || []) {
           createInstance(slug, node.params?.toZone || "hand");
-          log(`Dealt ${getDef(slug)?.title || slug} to Hand`);
+          appendLog(`Dealt ${getDef(slug)?.title || slug}`);
         }
         renderAll();
         break;
-      }
       case "spawn": {
         const slug = node.params?.definitionSlug;
         const zone = node.params?.zone || "field";
         createInstance(slug, zone);
-        log(`Spawned ${getDef(slug)?.title || slug} on Field`);
+        appendLog(`Spawned ${getDef(slug)?.title || slug}`);
         renderAll();
         break;
       }
       case "set_slot": {
-        const targetId =
-          node.params?.targetInstanceId || ctx?.instanceId;
+        const targetId = node.params?.targetInstanceId || ctx?.instanceId;
         const loc = findInstance(targetId);
         if (loc) {
-          const slot = node.params?.slot || "text";
-          if (slot === "text") loc.instance.text = node.params?.value;
-          if (slot === "title") loc.instance.title = node.params?.value;
-          log(`Set ${resolveInstance(loc.instance).title} text`);
+          if (node.params?.slot === "title") loc.instance.title = node.params?.value;
+          else loc.instance.text = node.params?.value;
           renderAll();
         }
         break;
       }
-      case "scene_push": {
-        const sceneId = node.params?.sceneId;
-        openScene(sceneId);
+      case "scene_push":
+        openScene(node.params?.sceneId);
         break;
-      }
+      case "scene_pop":
+        closeScene();
+        break;
       default:
-        log(`Op not implemented: ${node.op}`);
+        appendLog(`Op pending: ${node.op}`);
     }
   };
-
   exec(program.entry);
 }
 
 function openScene(sceneId) {
   const scene = scenes[sceneId];
   if (!scene) {
-    log(`Unknown scene: ${sceneId}`);
+    appendLog(`Unknown scene: ${sceneId}`);
     return;
   }
-  sceneStack = sceneId;
-  els.sceneTitle.textContent = scene.title || sceneId;
+  inScene = true;
+  els.sceneZone.classList.remove("hidden");
+  els.sceneZone.setAttribute("aria-hidden", "false");
   els.sceneField.innerHTML = "";
   for (const ref of scene.field || []) {
     const inst = {
@@ -297,16 +304,26 @@ function openScene(sceneId) {
     };
     els.sceneField.appendChild(buildCardEl(inst, "scene"));
   }
-  els.overlay.classList.remove("hidden");
-  els.overlay.setAttribute("aria-hidden", "false");
-  log(`Entered ${scene.title || sceneId}`);
+  appendLog(`Scene: ${scene.title || sceneId}`);
 }
 
 function closeScene() {
-  sceneStack = null;
-  els.overlay.classList.add("hidden");
-  els.overlay.setAttribute("aria-hidden", "true");
-  log("Returned to table");
+  inScene = false;
+  els.sceneZone.classList.add("hidden");
+  els.sceneZone.setAttribute("aria-hidden", "true");
+  els.sceneField.innerHTML = "";
+  renderAll();
+  appendLog("Back to table");
+}
+
+async function copyLogToClipboard() {
+  const text = logLines.join("\n") || "(empty log)";
+  try {
+    await navigator.clipboard.writeText(text);
+    appendLog("Log copied to clipboard");
+  } catch {
+    appendLog("Copy failed — select Log card text");
+  }
 }
 
 function playCard(instanceId) {
@@ -314,36 +331,59 @@ function playCard(instanceId) {
   if (!loc) return;
 
   const r = resolveInstance(loc.instance);
-  log(`Played: ${r.title}`);
+  appendLog(`Played: ${r.title}`);
+
+  if (r.definitionSlug === "founders.copy_log") {
+    copyLogToClipboard();
+    if (loc.instance) {
+      loc.instance.text = "Copied.\n" + (logLines.slice(-3).join("\n") || "");
+      renderAll();
+    }
+    return;
+  }
 
   if (r.definitionSlug === "seed.starter_deck") {
-    log("Tip: Play World Controller on the Field first.");
+    appendLog("Play World Controller on the Field");
     return;
   }
 
   const programId = r.programs?.on_play;
-  if (!programId) {
-    if (r.tags?.includes("programming")) {
-      log(`Programming card: ${r.title} — use in Program Desk (coming soon).`);
-    }
-    return;
-  }
+  if (!programId) return;
 
   runProgram(programId, { instanceId });
 
   if (programId === "world.bootstrap") {
     state.bootstrapDone = true;
-    document.querySelectorAll(".playable-hint").forEach((el) => {
-      el.classList.remove("playable-hint");
-    });
+    document.querySelectorAll(".hint").forEach((el) => el.classList.remove("hint"));
+    const guide = findInstance("inst_guide_1");
+    if (guide) {
+      guide.instance.text =
+        "1. Door spawned.\n2. Play Door.\n3. Drag cards.\n4. Play Copy Log to export log.";
+      renderAll();
+    }
   }
 }
 
 async function loadBundle() {
-  const res = await fetch(BUNDLE_URL);
-  if (!res.ok) throw new Error(`Failed to load ${BUNDLE_URL}`);
-  const bundle = await res.json();
+  const candidates = [
+    new URL("../dist/seed-bundle.json", import.meta.url).href,
+    `${location.pathname.replace(/\/[^/]*$/, "/")}dist/seed-bundle.json`,
+    "dist/seed-bundle.json",
+  ];
+  let lastErr;
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return res.json();
+      lastErr = new Error(`${url} → ${res.status}`);
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error("seed-bundle not found");
+}
 
+function applyStarter(bundle) {
   for (const d of bundle.definitions?.definitions || []) {
     defBySlug.set(d.slug, d);
   }
@@ -354,6 +394,12 @@ async function loadBundle() {
   state.hand = (start.hand || []).map((i) => ({ ...i }));
   state.field = (start.field || []).map((i) => ({ ...i }));
 
+  const ver = state.field.find((i) => i.definitionSlug === "founders.version");
+  if (ver) ver.text = `Card World\nversion ${APP_VERSION}`;
+
+  const logInst = state.field.find((i) => i.instanceId === LOG_INSTANCE_ID);
+  if (logInst && !logInst.text) logInst.text = "Log ready.";
+
   for (const inst of [...state.hand, ...state.field]) {
     const n = parseInt(inst.instanceId?.replace(/\D/g, "") || "0", 10);
     if (n > instanceCounter) instanceCounter = n;
@@ -361,22 +407,37 @@ async function loadBundle() {
 }
 
 async function init() {
-  await initI18n(BASE);
-  applyI18n();
-  document.title = t("ui.pageTitle");
+  if (!els.hand || !els.field) {
+    console.error("Zone elements missing");
+    return;
+  }
+
   setupDropZone(els.hand, "hand");
   setupDropZone(els.field, "field");
-  els.sceneClose.addEventListener("click", closeScene);
 
-  loadBundle()
-    .then(() => {
-      renderAll();
-      log(t("ui.welcomeLog"));
-    })
-    .catch((err) => {
-      log(t("ui.loadError", { message: err.message }));
-      console.error(err);
+  els.sceneField.addEventListener("click", (e) => {
+    const card = e.target.closest(".card");
+    if (!card) return;
+    playCard(card.dataset.instanceId);
+  });
+
+  try {
+    const bundle = await loadBundle();
+    applyStarter(bundle);
+    renderAll();
+    appendLog(`Card World v${APP_VERSION} loaded`);
+    appendLog("Play World Controller on the Field");
+  } catch (err) {
+    console.error(err);
+    appendLog(`Load failed: ${err.message}`);
+    state.field.push({
+      instanceId: "inst_err_1",
+      definitionSlug: "founders.guide",
+      title: "Load Error",
+      text: String(err.message),
     });
+    renderAll();
+  }
 }
 
 init();

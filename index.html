@@ -7,53 +7,15 @@
   <link rel="stylesheet" href="css/main.css" />
 </head>
 <body>
-  <header class="header">
-    <h1 data-i18n="ui.pageTitle">Card World</h1>
-    <p class="tagline" data-i18n-html="ui.tagline">Everything is a card. Click a card to <strong>Play</strong> it.</p>
-    <p class="lang-switch">
-      <a href="?lang=en">EN</a> · <a href="?lang=zh-Hans">中文</a>
-    </p>
-  </header>
-
-  <aside class="guide" id="guide-panel">
-    <h2 data-i18n="ui.guideTitle">Start here</h2>
-    <ol>
-      <li data-i18n="ui.guideStep1">On the Field, click World Controller.</li>
-      <li data-i18n="ui.guideStep2">Programming cards in Hand; Door on Field.</li>
-      <li data-i18n="ui.guideStep3">Click the Door — text becomes Open.</li>
-      <li data-i18n="ui.guideStep4">Drag between Hand and Field; click to Play.</li>
-    </ol>
-    <p class="guide-note" data-i18n="ui.guideNote">You are the first Binder.</p>
-  </aside>
-
-  <main class="table-wrap">
-    <section class="zone zone-field" aria-label="Field">
-      <h2 class="zone-label" data-i18n="ui.zoneField">Field</h2>
-      <div class="zone-cards" id="field-cards"></div>
-    </section>
-    <section class="zone zone-hand" aria-label="Hand">
-      <h2 class="zone-label" data-i18n="ui.zoneHand">Hand</h2>
-      <div class="zone-cards" id="hand-cards"></div>
-    </section>
-  </main>
-
-  <aside class="log-panel" aria-label="Event log">
-    <h2 data-i18n="ui.logTitle">Log</h2>
-    <ul id="log"></ul>
-  </aside>
-
-  <div class="overlay hidden" id="scene-overlay" aria-hidden="true">
-    <div class="overlay-inner">
-      <header>
-        <h2 id="scene-title">Scene</h2>
-        <button type="button" id="scene-close" data-i18n="ui.sceneBack">Back to Table</button>
-      </header>
-      <div class="zone zone-field overlay-field">
-        <div class="zone-cards" id="scene-field-cards"></div>
-      </div>
-    </div>
+  <div class="zone zone-field" id="zone-field">
+    <div class="zone-cards" id="field-cards"></div>
   </div>
-
+  <div class="zone zone-hand" id="zone-hand">
+    <div class="zone-cards" id="hand-cards"></div>
+  </div>
+  <div class="zone zone-scene hidden" id="zone-scene" aria-hidden="true">
+    <div class="zone-cards" id="scene-field-cards"></div>
+  </div>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

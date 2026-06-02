@@ -1,6 +1,9 @@
 {
   "id": "scene.computer.desktop",
   "title": "Computer Desktop",
-  "field": [{ "definitionSlug": "prog.export", "instanceId": "inst_desk_export" }],
+  "field": [
+    { "definitionSlug": "founders.back", "instanceId": "inst_back_1" },
+    { "definitionSlug": "founders.computer", "instanceId": "inst_desk_computer_1" }
+  ],
   "hand": []
 }
