@@ -2,7 +2,7 @@
  * Card World v0.3 — tap zoom | drag Hand→Field play | Field→Hand take
  */
 
-const APP_VERSION = "0.3.0";
+const APP_VERSION = "0.3.1";
 
 const defBySlug = new Map();
 let programs = {};
@@ -14,6 +14,7 @@ const state = {
   field: [],
   bootstrapDone: false,
   highlightOn: true,
+  hintTarget: "founders.world_controller",
 };
 
 let instanceCounter = 0;
@@ -27,12 +28,6 @@ const els = {
   zoomBackdrop: document.getElementById("zoom-backdrop"),
   zoomSlot: document.getElementById("zoom-slot"),
 };
-
-const HIGHLIGHT_SLUGS = new Set([
-  "founders.world_controller",
-  "founders.settings",
-  "founders.tutorial",
-]);
 
 function getDef(slug) {
   return defBySlug.get(slug);
@@ -117,16 +112,23 @@ function tagClass(tags) {
   if (tags.includes("tutorial") || tags.includes("guide")) return "tag-guide";
   if (tags.includes("controller")) return "tag-controller";
   if (tags.includes("content")) return "tag-content";
+  if (tags.includes("container")) return "tag-container";
   if (tags.includes("programming")) return "tag-programming";
   return "";
 }
 
+function setHintTarget(slug) {
+  state.hintTarget = slug || null;
+}
+
 function shouldHint(slug, zone) {
   if (!state.highlightOn) return false;
-  if (slug === "founders.world_controller" && zone === "hand" && !state.bootstrapDone) return true;
-  if (slug === "founders.settings" && zone === "field") return true;
-  if (slug === "founders.tutorial" && zone === "field") return true;
-  return HIGHLIGHT_SLUGS.has(slug) && zone === "hand";
+  if (state.hintTarget && slug === state.hintTarget) return true;
+  if (!state.bootstrapDone) {
+    if (slug === "founders.world_controller" && zone === "hand") return true;
+    if ((slug === "founders.tutorial" || slug === "founders.settings" || slug === "founders.guide_weave_1") && zone === "field") return true;
+  }
+  return false;
 }
 
 function buildCardEl(inst, zone, opts = {}) {
@@ -336,6 +338,16 @@ function playCard(instanceId) {
   runProgram(programId, { instanceId });
   if (programId === "world.bootstrap") {
     state.bootstrapDone = true;
+    setHintTarget("content.door");
+    renderAll();
+  } else if (programId === "settings.open") {
+    setHintTarget("founders.language_settings");
+    renderAll();
+  } else if (programId === "language.open") {
+    setHintTarget("founders.lang_zh");
+    renderAll();
+  } else if (programId === "language.set_zh" || programId === "language.set_en") {
+    setHintTarget(null);
     renderAll();
   }
 }

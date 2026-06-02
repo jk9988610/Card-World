@@ -2,11 +2,9 @@
   --felt: #1e4d3a;
   --felt-light: #2a6b52;
   --hand-bg: #152238;
-  --card-w-field: clamp(140px, 22vw, 200px);
-  --card-h-field: calc(var(--card-w-field) * 7 / 5);
-  --card-w-hand: clamp(120px, 18vw, 170px);
-  --card-h-hand: calc(var(--card-w-hand) * 7 / 5);
-  --hand-bar: clamp(130px, 42dvh, 38vh);
+  /* Same size everywhere; smaller for landscape */
+  --card-w: clamp(88px, 13vw, 128px);
+  --card-h: calc(var(--card-w) * 7 / 5);
 }
 
 * {
@@ -24,10 +22,10 @@ body {
   touch-action: manipulation;
 }
 
-/* Landscape: Field = top, Hand = bottom bar */
+/* Landscape: Field 2/3 height, Hand 1/3 (~half of field height) */
 body {
   display: grid;
-  grid-template-rows: 1fr var(--hand-bar);
+  grid-template-rows: 2fr 1fr;
   grid-template-columns: 1fr;
   width: 100vw;
   height: 100dvh;
@@ -41,7 +39,7 @@ body {
   min-width: 0;
   background: linear-gradient(165deg, var(--felt-light) 0%, var(--felt) 100%);
   overflow: auto;
-  padding: 0.5rem;
+  padding: 0.4rem;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -49,54 +47,44 @@ body {
   grid-row: 2;
   grid-column: 1;
   min-height: 0;
+  min-width: 0;
   background: var(--hand-bg);
   border-top: 4px solid #4dabf7;
   overflow: hidden;
-  padding: 0.35rem 0.5rem;
+  padding: 0.35rem 0.45rem;
 }
 
-.zone-field .zone-cards {
+.zone-field .zone-cards,
+.zone-hand .zone-cards {
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
-  gap: 0.35rem;
+  gap: 0.3rem;
   width: 100%;
 }
 
 .zone-hand .zone-cards {
-  display: flex;
-  flex-direction: row;
   flex-wrap: nowrap;
-  align-items: flex-start;
-  gap: 0.35rem;
-  height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
+  height: 100%;
+  align-items: flex-start;
   -webkit-overflow-scrolling: touch;
-  padding: 2px 0;
 }
 
 .card {
   flex-shrink: 0;
+  width: var(--card-w);
+  height: var(--card-h);
   background: #f8f9fa;
   border: 3px solid #212529;
-  border-radius: 10px;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   cursor: grab;
   user-select: none;
   color: #212529;
-  box-shadow: 3px 5px 12px rgba(0, 0, 0, 0.45);
-}
-
-.zone-field .card {
-  width: var(--card-w-field);
-  height: var(--card-h-field);
-}
-
-.zone-hand .card {
-  width: var(--card-w-hand);
-  height: var(--card-h-hand);
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.45);
 }
 
 .card.tag-settings {
@@ -120,35 +108,39 @@ body {
   border-color: #22b8cf;
 }
 
+.card.tag-container {
+  border-color: #ae3ec9;
+}
+
 .card.hint {
   animation: pulse 2s ease-in-out infinite;
   border-color: #ffd43b !important;
-  box-shadow: 0 0 0 3px rgba(255, 212, 59, 0.5), 3px 5px 12px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 0 3px rgba(255, 212, 59, 0.55), 2px 4px 10px rgba(0, 0, 0, 0.45);
 }
 
 @keyframes pulse {
   50% {
-    box-shadow: 0 0 0 5px rgba(255, 212, 59, 0.65), 3px 5px 12px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 0 0 5px rgba(255, 212, 59, 0.7), 2px 4px 10px rgba(0, 0, 0, 0.45);
   }
 }
 
 .card-title {
   height: 14%;
-  min-height: 1.75rem;
+  min-height: 1.35rem;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: clamp(0.85rem, 2.8vw, 1.1rem);
+  font-size: clamp(0.65rem, 2.4vw, 0.85rem);
   border-bottom: 2px solid #dee2e6;
-  padding: 0 6px;
+  padding: 0 4px;
   text-align: center;
-  line-height: 1.15;
+  line-height: 1.1;
 }
 
 .card-image {
   height: 46%;
-  min-height: 3.5rem;
+  min-height: 2.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -158,9 +150,9 @@ body {
 
 .card-text {
   flex: 1;
-  padding: 6px 8px;
-  font-size: clamp(0.7rem, 2.2vw, 0.9rem);
-  line-height: 1.35;
+  padding: 4px 6px;
+  font-size: clamp(0.58rem, 1.9vw, 0.75rem);
+  line-height: 1.3;
   overflow-y: auto;
   white-space: pre-wrap;
   word-break: break-word;
@@ -173,7 +165,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem;
+  padding: 0.5rem;
 }
 
 .card-zoom.hidden {
@@ -183,27 +175,20 @@ body {
 .card-zoom-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.88);
 }
 
 .card-zoom-slot .card {
   position: relative;
   z-index: 1;
-  width: min(78vw, 360px) !important;
-  height: calc(min(78vw, 360px) * 7 / 5) !important;
-  cursor: default;
+  width: min(72vw, 300px) !important;
+  height: calc(min(72vw, 300px) * 7 / 5) !important;
 }
 
 .card-zoom-slot .card-title {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
 }
 
 .card-zoom-slot .card-text {
-  font-size: 1rem;
-}
-
-@media (orientation: portrait) {
-  body {
-    grid-template-rows: 1fr 32vh;
-  }
+  font-size: 0.95rem;
 }
