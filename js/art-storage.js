@@ -61,12 +61,15 @@ export async function publishToArtShop({ id, title, text, image, pngBlob }) {
 
   const workId = id || crypto.randomUUID();
   const base = `${ART_STORE_PREFIX}/${workId}`;
+  const titleTrim = (title || "Work").trim();
+  const bodyTrim = (text || "").trim();
+  const publishedAt = new Date().toISOString();
   const meta = {
     id: workId,
-    title: (title || "作品").trim(),
-    text: (text || "").trim(),
+    title: titleTrim,
+    text: bodyTrim,
     image,
-    publishedAt: new Date().toISOString(),
+    publishedAt,
   };
 
   const metaPath = `${base}/meta.json`;
@@ -84,6 +87,20 @@ export async function publishToArtShop({ id, title, text, image, pngBlob }) {
     upsert: true,
   });
   if (e2) throw new Error(formatSupabaseError(e2, ART_BUCKET));
+
+  const row = {
+    id: workId,
+    title: titleTrim,
+    body: bodyTrim,
+    png_path: pngPath,
+    meta_path: metaPath,
+    pixel_image: image,
+    published_at: publishedAt,
+  };
+  const { error: dbErr } = await sb.from("art_shop_works").upsert(row, { onConflict: "id" });
+  if (dbErr) {
+    console.warn("art_shop_works upsert (run supabase/schema-card-world-art.sql):", dbErr.message);
+  }
 
   const publicUrl = await getArtPublicUrl(pngPath);
   return { id: workId, metaPath, pngPath, publicUrl, ...meta };
@@ -106,6 +123,34 @@ export async function uploadArtPng(blob, { workId, title }) {
 export async function listArtShopItems() {
   const sb = await getArtClient();
   if (!sb) return [];
+
+  const { data: rows, error: dbError } = await sb
+    .from("art_shop_works")
+    .select("id,title,body,png_path,meta_path,pixel_image,published_at")
+    .order("published_at", { ascending: false })
+    .limit(100);
+
+  if (!dbError && rows?.length) {
+    const items = [];
+    for (const row of rows) {
+      const pngPath = row.png_path;
+      items.push({
+        id: row.id,
+        title: row.title,
+        text: row.body,
+        image: row.pixel_image,
+        publishedAt: row.published_at,
+        pngPath,
+        previewUrl: await getArtPublicUrl(pngPath),
+      });
+    }
+    return items;
+  }
+
+  if (dbError) {
+    console.warn("art_shop_works list fallback to storage:", dbError.message);
+  }
+
   const { data: folders, error } = await sb.storage.from(ART_BUCKET).list(ART_STORE_PREFIX, {
     limit: 100,
     sortBy: { column: "created_at", order: "desc" },
@@ -119,12 +164,12 @@ export async function listArtShopItems() {
     try {
       const { data: blob, error: dlErr } = await sb.storage.from(ART_BUCKET).download(metaPath);
       if (dlErr) continue;
-      const text = await blob.text();
-      const meta = JSON.parse(text);
+      const meta = JSON.parse(await blob.text());
       const pngPath = `${ART_STORE_PREFIX}/${workId}/image.png`;
       items.push({
         ...meta,
         id: meta.id || workId,
+        text: meta.text ?? "",
         pngPath,
         previewUrl: await getArtPublicUrl(pngPath),
       });
@@ -138,9 +183,33 @@ export async function listArtShopItems() {
 
 export async function downloadArtShopMeta(workId) {
   const sb = await getArtClient();
-  if (!sb) throw new Error("云同步未配置");
+  if (!sb) throw new Error("Cloud not configured");
+
+  const { data: row, error: dbError } = await sb
+    .from("art_shop_works")
+    .select("id,title,body,pixel_image,published_at")
+    .eq("id", workId)
+    .maybeSingle();
+
+  if (!dbError && row) {
+    return {
+      id: row.id,
+      title: row.title,
+      text: row.body,
+      image: row.pixel_image,
+      publishedAt: row.published_at,
+    };
+  }
+
   const metaPath = `${ART_STORE_PREFIX}/${workId}/meta.json`;
   const { data, error } = await sb.storage.from(ART_BUCKET).download(metaPath);
   if (error) throw new Error(formatSupabaseError(error, ART_BUCKET));
-  return JSON.parse(await data.text());
+  const meta = JSON.parse(await data.text());
+  return {
+    id: meta.id || workId,
+    title: meta.title,
+    text: meta.text ?? "",
+    image: meta.image,
+    publishedAt: meta.publishedAt,
+  };
 }
