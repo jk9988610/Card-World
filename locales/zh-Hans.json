@@ -83,6 +83,40 @@
     "shop_script": {
       "title": "商店脚本",
       "text": "拖到场 — 逐张高亮提示你该打出的牌。"
+    },
+    "back": {
+      "title": "返回",
+      "text": "拖到场 — 回到世界。"
+    },
+    "art_console": {
+      "title": "美术控制台",
+      "text": "拖到场 — 进入美术工作台。"
+    },
+    "art_tool_pixel": {
+      "title": "像素画板",
+      "text": "拖到场 — 打开 8×8 像素画板。"
+    },
+    "art_tool_palette": {
+      "title": "色板",
+      "text": "拖到场 — 切换画笔颜色（也可在画板里点色块）。"
+    },
+    "art_tool_export": {
+      "title": "导出作品",
+      "text": "拖到场 — 将当前画作导出为一张卡牌。"
+    },
+    "art_work": {
+      "title": "作品",
+      "text": "在美术控制台创作。"
     }
+  },
+  "scenes": {
+    "art_console": {
+      "title": "美术控制台"
+    }
+  },
+  "art_editor": {
+    "title": "像素画板",
+    "hint": "点格上色。选色后拖拽绘制。",
+    "export": "导出作品卡"
   }
 }

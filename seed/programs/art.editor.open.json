@@ -1,0 +1,5 @@
+{
+  "id": "art.editor.open",
+  "entry": "n0",
+  "nodes": [{ "id": "n0", "op": "art_editor_open" }]
+}

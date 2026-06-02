@@ -4,7 +4,7 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | native drag (mouse) | short long-press drag (touch)
  */
 
-const APP_VERSION = "0.5.8";
+const APP_VERSION = "0.6.0";
 /** Touch drag: ~half of Safari default long-press (~500ms → ~250ms) */
 const TOUCH_DRAG_HOLD_MS = 250;
 const TOUCH_MOVE_CANCEL_PX = 14;
@@ -23,13 +23,44 @@ const SWATCH_BY_TAG = [
   ["content", "#2f9e44"],
   ["container", "#ae3ec9"],
   ["deck", "#9c36b5"],
+  ["art", "#cc5de8"],
+  ["tool", "#868e96"],
 ];
 
-const META_TAGS = new Set(["settings", "language", "tutorial", "guide", "controller", "programming"]);
+const META_TAGS = new Set([
+  "settings",
+  "language",
+  "tutorial",
+  "guide",
+  "controller",
+  "programming",
+  "art",
+  "tool",
+]);
 
 const defBySlug = new Map();
 let programs = {};
+let scenes = {};
 let locales = { en: {} };
+
+const ART_PALETTE = [
+  "#1a1a2e",
+  "#f8f9fa",
+  "#e03131",
+  "#ffd43b",
+  "#2f9e44",
+  "#339af0",
+  "#cc5de8",
+  "#ff922b",
+];
+
+const artEditor = {
+  open: false,
+  w: 8,
+  h: 8,
+  pixels: new Array(64).fill(0),
+  colorIndex: 2,
+};
 let currentLocale = "en";
 
 const state = {
@@ -41,6 +72,8 @@ const state = {
   hintTarget: "founders.world_controller",
   guideQueue: [],
   guideIndex: 0,
+  sceneStack: [],
+  currentSceneId: null,
 };
 
 let instanceCounter = 0;
@@ -59,6 +92,16 @@ const els = {
   zoom: document.getElementById("card-zoom"),
   zoomBackdrop: document.getElementById("zoom-backdrop"),
   zoomSlot: document.getElementById("zoom-slot"),
+  sceneBar: document.getElementById("scene-bar"),
+  sceneTitle: document.getElementById("scene-title"),
+  artEditor: document.getElementById("art-editor"),
+  artEditorBackdrop: document.getElementById("art-editor-backdrop"),
+  artEditorClose: document.getElementById("art-editor-close"),
+  artEditorTitle: document.getElementById("art-editor-title"),
+  artEditorHint: document.getElementById("art-editor-hint"),
+  artPixelCanvas: document.getElementById("art-pixel-canvas"),
+  artPalette: document.getElementById("art-palette"),
+  artExportBtn: document.getElementById("art-export-btn"),
 };
 
 function localeKeyForDef(def) {
@@ -78,6 +121,8 @@ function persistSave() {
     hand: state.hand,
     field: state.field,
     fieldStash: state.fieldStash,
+    sceneStack: state.sceneStack,
+    currentSceneId: state.currentSceneId,
   });
 }
 
@@ -98,7 +143,14 @@ function applySaved(save) {
   if (Array.isArray(save.hand) && save.hand.length) state.hand = save.hand;
   if (Array.isArray(save.field) && save.field.length) state.field = save.field;
   if (Array.isArray(save.fieldStash)) state.fieldStash = save.fieldStash;
+  if (Array.isArray(save.sceneStack)) state.sceneStack = save.sceneStack;
+  if (save.currentSceneId !== undefined) state.currentSceneId = save.currentSceneId;
   for (const inst of [...state.hand, ...state.field, ...state.fieldStash]) bumpCounterFromInst(inst);
+  for (const frame of state.sceneStack) {
+    for (const inst of [...(frame.hand || []), ...(frame.field || []), ...(frame.fieldStash || [])]) {
+      bumpCounterFromInst(inst);
+    }
+  }
 }
 
 function getDef(slug) {
@@ -107,6 +159,11 @@ function getDef(slug) {
 
 function localeCard(key) {
   return locales[currentLocale]?.cards?.[key] || locales.en?.cards?.[key];
+}
+
+function localeScene(key) {
+  const k = (key || "").replace(/^scenes\./, "");
+  return locales[currentLocale]?.scenes?.[k] || locales.en?.scenes?.[k];
 }
 
 function resolveInstance(inst) {
@@ -127,11 +184,12 @@ function resolveInstance(inst) {
   if (innerN > 0 && isBackpack(def)) {
     text = `${text}\n(${innerN} inside)`;
   }
+  const image = inst.image ?? def.image;
   return {
     ...inst,
     title,
     text,
-    image: inst.image ?? def.image,
+    image,
     tags: def.tags ?? [],
     programs: def.programs ?? {},
     localeKey: key,
@@ -174,7 +232,23 @@ function swatchColor(tags = []) {
   return "#495057";
 }
 
-function drawCardSwatch(canvas, tags, large = false) {
+function drawPixelImage(ctx, img, destW, destH) {
+  const pw = img.w || 8;
+  const ph = img.h || 8;
+  const pal = img.palette || ["#1a1a2e", "#f8f9fa"];
+  const px = img.pixels || [];
+  const cellW = destW / pw;
+  const cellH = destH / ph;
+  for (let y = 0; y < ph; y++) {
+    for (let x = 0; x < pw; x++) {
+      const idx = px[y * pw + x] ?? 0;
+      ctx.fillStyle = pal[idx] ?? pal[0];
+      ctx.fillRect(x * cellW, y * cellH, Math.ceil(cellW), Math.ceil(cellH));
+    }
+  }
+}
+
+function drawCardSwatch(canvas, tags, large = false, pixelImage = null) {
   const parent = canvas.parentElement;
   const cw = parent?.clientWidth || (large ? 300 : 80);
   const ch = parent?.clientHeight || (large ? 200 : 50);
@@ -184,8 +258,12 @@ function drawCardSwatch(canvas, tags, large = false) {
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d");
-  ctx.fillStyle = swatchColor(tags);
-  ctx.fillRect(0, 0, w, h);
+  if (pixelImage?.type === "pixel/v1") {
+    drawPixelImage(ctx, pixelImage, w, h);
+  } else {
+    ctx.fillStyle = swatchColor(tags);
+    ctx.fillRect(0, 0, w, h);
+  }
   canvas.style.width = `${w}px`;
   canvas.style.height = `${h}px`;
 }
@@ -198,6 +276,7 @@ function tagClass(tags) {
   if (tags.includes("content")) return "tag-content";
   if (tags.includes("container") || tags.includes("deck")) return "tag-container";
   if (tags.includes("programming")) return "tag-programming";
+  if (tags.includes("art")) return "tag-art";
   return "";
 }
 
@@ -381,10 +460,189 @@ function captureStarterSnapshot() {
   };
 }
 
+function worldSlice() {
+  return {
+    hand: cloneInstList(state.hand),
+    field: cloneInstList(state.field),
+    fieldStash: cloneInstList(state.fieldStash),
+  };
+}
+
+function applyWorldSlice(slice) {
+  state.hand = cloneInstList(slice.hand || []);
+  state.field = cloneInstList(slice.field || []);
+  state.fieldStash = cloneInstList(slice.fieldStash || []);
+}
+
+function updateSceneChrome() {
+  const scene = state.currentSceneId ? scenes[state.currentSceneId] : null;
+  if (scene) {
+    document.body.classList.add("in-scene");
+    document.body.classList.toggle("scene-art", scene.kind === "art");
+    els.sceneBar?.classList.remove("hidden");
+    const locTitle = localeScene(scene.titleKey);
+    if (els.sceneTitle) {
+      els.sceneTitle.textContent = locTitle?.title || scene.title || state.currentSceneId;
+    }
+  } else {
+    document.body.classList.remove("in-scene", "scene-art");
+    els.sceneBar?.classList.add("hidden");
+    if (els.sceneTitle) els.sceneTitle.textContent = "";
+  }
+}
+
+function pushScene(sceneId) {
+  const scene = scenes[sceneId];
+  if (!scene) return;
+  state.sceneStack.push({
+    sceneId: state.currentSceneId,
+    ...worldSlice(),
+  });
+  state.currentSceneId = sceneId;
+  applyWorldSlice({
+    hand: scene.hand || [],
+    field: scene.field || [],
+    fieldStash: [],
+  });
+  updateSceneChrome();
+  renderAll();
+  persistSave();
+}
+
+function popScene() {
+  if (!state.sceneStack.length) return;
+  closeArtEditor();
+  const frame = state.sceneStack.pop();
+  state.currentSceneId = frame.sceneId ?? null;
+  applyWorldSlice(frame);
+  updateSceneChrome();
+  renderAll();
+  persistSave();
+}
+
+function artPixelImageFromEditor() {
+  return {
+    type: "pixel/v1",
+    w: artEditor.w,
+    h: artEditor.h,
+    palette: [...ART_PALETTE],
+    pixels: [...artEditor.pixels],
+  };
+}
+
+function paintArtPixel(cellX, cellY) {
+  if (cellX < 0 || cellY < 0 || cellX >= artEditor.w || cellY >= artEditor.h) return;
+  artEditor.pixels[cellY * artEditor.w + cellX] = artEditor.colorIndex;
+  redrawArtPixelCanvas();
+}
+
+function redrawArtPixelCanvas() {
+  const canvas = els.artPixelCanvas;
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, artEditor.w, artEditor.h);
+  drawPixelImage(ctx, artPixelImageFromEditor(), artEditor.w, artEditor.h);
+}
+
+function rebuildArtPaletteUI() {
+  if (!els.artPalette) return;
+  els.artPalette.innerHTML = "";
+  ART_PALETTE.forEach((hex, i) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `art-palette-swatch${i === artEditor.colorIndex ? " active" : ""}`;
+    btn.style.background = hex;
+    btn.title = hex;
+    btn.addEventListener("click", () => {
+      artEditor.colorIndex = i;
+      rebuildArtPaletteUI();
+    });
+    els.artPalette.appendChild(btn);
+  });
+}
+
+function openArtEditor() {
+  artEditor.open = true;
+  artEditor.pixels = new Array(64).fill(0);
+  artEditor.colorIndex = 2;
+  const t = locales[currentLocale]?.art_editor || locales.en?.art_editor || {};
+  if (els.artEditorTitle) els.artEditorTitle.textContent = t.title || "Pixel Board";
+  if (els.artEditorHint) els.artEditorHint.textContent = t.hint || "";
+  if (els.artExportBtn) els.artExportBtn.textContent = t.export || "Export work card";
+  rebuildArtPaletteUI();
+  redrawArtPixelCanvas();
+  els.artEditor?.classList.remove("hidden");
+}
+
+function closeArtEditor() {
+  artEditor.open = false;
+  els.artEditor?.classList.add("hidden");
+}
+
+function cycleArtPalette() {
+  artEditor.colorIndex = (artEditor.colorIndex + 1) % ART_PALETTE.length;
+  rebuildArtPaletteUI();
+  if (artEditor.open) redrawArtPixelCanvas();
+  renderAll();
+}
+
+function exportArtWork() {
+  const img = artPixelImageFromEditor();
+  const t = localeCard("art_work");
+  const inst = {
+    instanceId: nextInstanceId(),
+    definitionSlug: "art.work.blank",
+    title: t?.title || "Artwork",
+    text: t?.text || "",
+    image: img,
+    zone: "field",
+  };
+  state.field.push(inst);
+  closeArtEditor();
+  renderAll();
+  persistSave();
+}
+
+function setupArtEditor() {
+  const canvas = els.artPixelCanvas;
+  if (!canvas) return;
+
+  const paintAtEvent = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * artEditor.w;
+    const y = ((e.clientY - rect.top) / rect.height) * artEditor.h;
+    paintArtPixel(Math.floor(x), Math.floor(y));
+  };
+
+  canvas.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    canvas.setPointerCapture(e.pointerId);
+    paintAtEvent(e);
+  });
+  canvas.addEventListener("pointermove", (e) => {
+    if (!canvas.hasPointerCapture(e.pointerId)) return;
+    e.preventDefault();
+    paintAtEvent(e);
+  });
+  canvas.addEventListener("pointerup", (e) => {
+    try {
+      canvas.releasePointerCapture(e.pointerId);
+    } catch (_) {}
+  });
+
+  els.artEditorClose?.addEventListener("click", closeArtEditor);
+  els.artEditorBackdrop?.addEventListener("click", closeArtEditor);
+  els.artExportBtn?.addEventListener("click", exportArtWork);
+}
+
 function resetWorld() {
   if (!starterSnapshot) return;
   closeZoom();
+  closeArtEditor();
   clearSave();
+  state.sceneStack = [];
+  state.currentSceneId = null;
+  updateSceneChrome();
   state.bootstrapDone = false;
   state.highlightOn = true;
   state.hintTarget = "founders.world_controller";
@@ -600,7 +858,7 @@ function buildCardEl(inst, zone, opts = {}) {
   imageWrap.className = "card-image";
   const canvas = document.createElement("canvas");
   imageWrap.appendChild(canvas);
-  drawCardSwatch(canvas, r.tags, large || forZoom);
+  drawCardSwatch(canvas, r.tags, large || forZoom, r.image);
 
   const text = document.createElement("div");
   text.className = "card-text";
@@ -769,6 +1027,21 @@ function runProgram(programId, ctx) {
       case "reset_world":
         resetWorld();
         break;
+      case "scene_push":
+        pushScene(node.params?.sceneId);
+        break;
+      case "scene_pop":
+        popScene();
+        break;
+      case "art_editor_open":
+        openArtEditor();
+        break;
+      case "art_palette_cycle":
+        cycleArtPalette();
+        break;
+      case "art_export_work":
+        exportArtWork();
+        break;
       default:
         break;
     }
@@ -821,7 +1094,10 @@ function applyStarter(bundle) {
     defBySlug.set(d.slug, d);
   }
   programs = bundle.programs || {};
+  scenes = bundle.scenes || {};
   const start = bundle.starterWorld || {};
+  state.sceneStack = [];
+  state.currentSceneId = null;
   state.hand = (start.hand || []).map((i) => ({ ...i, inner: i.inner ? [...i.inner] : undefined }));
   state.field = (start.field || []).map((i) => ({ ...i, inner: i.inner ? [...i.inner] : undefined }));
   state.fieldStash = [];
@@ -835,6 +1111,7 @@ async function init() {
     setupDropZone(els.zoneField, "field");
   }
   els.zoomBackdrop.addEventListener("click", closeZoom);
+  setupArtEditor();
 
   try {
     await loadLocales();
@@ -842,6 +1119,7 @@ async function init() {
     applyStarter(bundle);
     captureStarterSnapshot();
     applySaved(loadSave());
+    updateSceneChrome();
     renderAll();
     persistSave();
   } catch (err) {

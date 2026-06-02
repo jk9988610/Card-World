@@ -20,6 +20,10 @@
       "instanceId": "inst_gw1"
     },
     {
+      "definitionSlug": "founders.art_console",
+      "instanceId": "inst_art_console_1"
+    },
+    {
       "definitionSlug": "seed.starter_deck",
       "instanceId": "inst_starter_deck_1",
       "inner": []

@@ -83,6 +83,40 @@
     "shop_script": {
       "title": "Shop Script",
       "text": "Drag to Field — highlights each card you should play, one at a time."
+    },
+    "back": {
+      "title": "Back",
+      "text": "Drag to Field — return to the world."
+    },
+    "art_console": {
+      "title": "Art Console",
+      "text": "Drag to Field — open the art workshop."
+    },
+    "art_tool_pixel": {
+      "title": "Pixel Board",
+      "text": "Drag to Field — open the 8×8 pixel editor."
+    },
+    "art_tool_palette": {
+      "title": "Palette",
+      "text": "Drag to Field — cycle brush color (or tap swatches in the editor)."
+    },
+    "art_tool_export": {
+      "title": "Export Work",
+      "text": "Drag to Field — export your painting as a card."
+    },
+    "art_work": {
+      "title": "Artwork",
+      "text": "Made in the art console."
     }
+  },
+  "scenes": {
+    "art_console": {
+      "title": "Art Console"
+    }
+  },
+  "art_editor": {
+    "title": "Pixel Board",
+    "hint": "Tap cells to paint. Pick a color, then drag to draw.",
+    "export": "Export work card"
   }
 }

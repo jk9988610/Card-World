@@ -5,19 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta http-equiv="Cache-Control" content="no-cache" />
   <title>Card World</title>
-  <link rel="stylesheet" href="css/main.css?v=0.5.8" />
+  <link rel="stylesheet" href="css/main.css?v=0.6.0" />
 </head>
 <body>
+  <header id="scene-bar" class="scene-bar hidden" aria-live="polite">
+    <span id="scene-title" class="scene-title"></span>
+  </header>
   <div class="zone zone-field" id="zone-field">
     <div class="zone-cards" id="field-cards"></div>
   </div>
   <div class="zone zone-hand" id="zone-hand">
     <div class="zone-cards" id="hand-cards"></div>
   </div>
+  <div id="art-editor" class="art-editor hidden" aria-hidden="true">
+    <div class="art-editor-panel">
+      <div class="art-editor-header">
+        <span id="art-editor-title" class="art-editor-title"></span>
+        <button type="button" id="art-editor-close" class="art-editor-btn">×</button>
+      </div>
+      <p id="art-editor-hint" class="art-editor-hint"></p>
+      <div class="art-editor-grid-wrap">
+        <canvas id="art-pixel-canvas" width="8" height="8"></canvas>
+      </div>
+      <div id="art-palette" class="art-palette"></div>
+      <div class="art-editor-actions">
+        <button type="button" id="art-export-btn" class="art-editor-btn art-editor-btn-primary"></button>
+      </div>
+    </div>
+    <div class="art-editor-backdrop" id="art-editor-backdrop"></div>
+  </div>
   <div id="card-zoom" class="card-zoom hidden" aria-hidden="true">
     <div class="card-zoom-backdrop" id="zoom-backdrop"></div>
     <div class="card-zoom-slot" id="zoom-slot"></div>
   </div>
-  <script type="module" src="js/app.js?v=0.5.8"></script>
+  <script type="module" src="js/app.js?v=0.6.0"></script>
 </body>
 </html>

@@ -1,0 +1,25 @@
+{
+  "id": "scene.art.console",
+  "title": "Art Console",
+  "titleKey": "scenes.art_console",
+  "kind": "art",
+  "hand": [
+    {
+      "definitionSlug": "founders.back",
+      "instanceId": "inst_art_back_1"
+    },
+    {
+      "definitionSlug": "art.tool.pixel",
+      "instanceId": "inst_art_pixel_1"
+    },
+    {
+      "definitionSlug": "art.tool.palette",
+      "instanceId": "inst_art_palette_1"
+    },
+    {
+      "definitionSlug": "art.tool.export",
+      "instanceId": "inst_art_export_1"
+    }
+  ],
+  "field": []
+}
