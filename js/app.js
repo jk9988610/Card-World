@@ -4,7 +4,7 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.7.7";
+const APP_VERSION = "0.7.8";
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -78,6 +78,7 @@ const artEditor = {
   brushColor: "#e03131",
   tool: "brush",
   painting: false,
+  targetInstanceId: null,
 };
 let currentLocale = "en";
 
@@ -815,16 +816,57 @@ function rebuildArtToolUI() {
   updateArtToolUI();
 }
 
-async function openArtEditor() {
+function findPixelBoardInstanceId() {
+  for (const zone of ["hand", "field"]) {
+    const found = state[zone].find((i) => i.definitionSlug === "art.tool.pixel");
+    if (found) return found.instanceId;
+  }
+  return null;
+}
+
+function loadArtGridFromImage(img) {
+  artEditor.w = ART_GRID_W;
+  artEditor.h = ART_GRID_H;
+  initArtGrid(ART_BG);
+  if (!img || img.type !== "pixel/v1") return;
+  const pw = img.w || ART_GRID_W;
+  const ph = img.h || ART_GRID_H;
+  const pal = img.palette || [ART_BG];
+  const px = img.pixels || [];
+  for (let y = 0; y < Math.min(ph, artEditor.h); y++) {
+    for (let x = 0; x < Math.min(pw, artEditor.w); x++) {
+      const idx = px[y * pw + x] ?? 0;
+      artEditor.grid[y * artEditor.w + x] = normalizeHex(pal[idx] ?? ART_BG);
+    }
+  }
+}
+
+function applyArtToGame() {
+  const img = artPixelImageFromEditor();
+  const id = artEditor.targetInstanceId || findPixelBoardInstanceId();
+  if (!id) return;
+  const loc = findInstance(id);
+  if (!loc) return;
+  loc.instance.image = img;
+  artEditor.targetInstanceId = id;
+  renderAll();
+  persistSave();
+  closeArtEditor();
+}
+
+async function openArtEditor(instanceId) {
   artEditor.open = true;
   artEditor.tool = "brush";
-  initArtGrid(ART_BG);
+  artEditor.targetInstanceId = instanceId || findPixelBoardInstanceId();
+  const loc = artEditor.targetInstanceId ? findInstance(artEditor.targetInstanceId) : null;
+  if (loc?.instance?.image) loadArtGridFromImage(loc.instance.image);
+  else initArtGrid(ART_BG);
   setArtBrushColor(artEditor.brushColor || "#e03131");
   const t = locales[currentLocale]?.art_editor || locales.en?.art_editor || {};
   if (els.artEditorTitle) els.artEditorTitle.textContent = t.title || "Pixel Board";
   if (els.artEditorHint) els.artEditorHint.textContent = t.hint || "";
   if (els.artColorApply) els.artColorApply.textContent = t.apply_color || "Apply";
-  if (els.artExportBtn) els.artExportBtn.textContent = t.export_png || "Export PNG";
+  if (els.artExportBtn) els.artExportBtn.textContent = t.apply || "Apply";
   rebuildArtToolUI();
   document.body.classList.add("art-editor-open");
   els.artEditor?.classList.remove("hidden");
@@ -842,35 +884,10 @@ function layoutArtCanvasFrame() {
   redrawArtPixelCanvas();
 }
 
-function exportArtPaintingPng() {
-  const scale = 12;
-  const w = artEditor.w * scale;
-  const h = artEditor.h * scale;
-  const out = document.createElement("canvas");
-  out.width = w;
-  out.height = h;
-  const ctx = out.getContext("2d");
-  if (!ctx) return;
-  for (let y = 0; y < artEditor.h; y++) {
-    for (let x = 0; x < artEditor.w; x++) {
-      ctx.fillStyle = normalizeHex(artEditor.grid[y * artEditor.w + x] || ART_BG);
-      ctx.fillRect(x * scale, y * scale, scale, scale);
-    }
-  }
-  out.toBlob((blob) => {
-    if (!blob) return;
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `card-world-${Date.now()}.png`;
-    link.click();
-    URL.revokeObjectURL(url);
-  }, "image/png");
-}
-
 async function closeArtEditor() {
   artEditor.open = false;
   artEditor.painting = false;
+  artEditor.targetInstanceId = null;
   document.body.classList.remove("art-editor-open");
   els.artEditor?.classList.add("hidden");
   els.artEditor?.setAttribute("aria-hidden", "true");
@@ -913,7 +930,7 @@ function setupArtEditor() {
   });
 
   els.artEditorClose?.addEventListener("click", () => closeArtEditor());
-  els.artExportBtn?.addEventListener("click", exportArtPaintingPng);
+  els.artExportBtn?.addEventListener("click", applyArtToGame);
   els.artColorPicker?.addEventListener("input", (e) => {
     setArtBrushColor(e.target.value);
   });
@@ -1336,7 +1353,7 @@ function setLocale(code) {
     const t = locales[currentLocale]?.art_editor || locales.en?.art_editor || {};
     if (els.artEditorHint) els.artEditorHint.textContent = t.hint || "";
     if (els.artColorApply) els.artColorApply.textContent = t.apply_color || "Apply";
-    if (els.artExportBtn) els.artExportBtn.textContent = t.export_png || "Export PNG";
+    if (els.artExportBtn) els.artExportBtn.textContent = t.apply || "Apply";
     rebuildArtToolUI();
   }
   renderAll();
@@ -1433,7 +1450,7 @@ function runProgram(programId, ctx) {
         popScene();
         break;
       case "art_editor_open":
-        openArtEditor();
+        openArtEditor(ctx?.instanceId);
         break;
       default:
         break;

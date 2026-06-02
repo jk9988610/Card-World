@@ -98,7 +98,7 @@
     },
     "art_tool_pixel": {
       "title": "Pixel Board",
-      "text": "Recall to Hand, double-tap — fullscreen 42×30 editor (7:5, matches card image frame)."
+      "text": "Recall to Hand, double-tap to open the editor. Tap Apply to save art on this card."
     }
   },
   "scenes": {
@@ -108,8 +108,8 @@
   },
   "art_editor": {
     "title": "Pixel Board",
-    "hint": "Brush, eraser, fill, eyedropper. Canvas 7:5 (wider than tall), matches card image frame. Presets or RGB.",
-    "export_png": "Export PNG",
+    "hint": "Brush, eraser, fill, eyedropper. Tap Apply to save art onto the Pixel Board card.",
+    "apply": "Apply",
     "apply_color": "Apply",
     "tools": {
       "brush": "Brush",
