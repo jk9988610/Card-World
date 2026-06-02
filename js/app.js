@@ -35,7 +35,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.10.0";
+const APP_VERSION = "0.10.1";
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -659,6 +659,22 @@ function migrateObsoleteCardsIfNeeded() {
     );
   state.hand = drop(state.hand);
   state.field = drop(state.field);
+}
+
+/** Old localStorage saves miss new starter cards (e.g. Music Console in v0.10). */
+function migrateMissingStarterCardsIfNeeded() {
+  if (!starterSnapshot?.hand?.length) return;
+  if (state.currentSceneId || state.sceneStack.length) return;
+  const have = new Set(state.hand.map((i) => i.definitionSlug));
+  for (const tmpl of starterSnapshot.hand) {
+    if (have.has(tmpl.definitionSlug)) continue;
+    state.hand.push({
+      ...tmpl,
+      instanceId: nextInstanceId(),
+      inner: tmpl.inner ? cloneInstList(tmpl.inner) : undefined,
+    });
+    have.add(tmpl.definitionSlug);
+  }
 }
 
 /** Old saves had tools on field; restore canonical hand/field split. */
@@ -2335,6 +2351,7 @@ async function init() {
     captureStarterSnapshot();
     applySaved(loadSave());
     migrateObsoleteCardsIfNeeded();
+    migrateMissingStarterCardsIfNeeded();
     migrateWorldLayoutIfNeeded();
     updateSceneChrome();
     renderAll();
