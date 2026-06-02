@@ -1,4 +1,8 @@
 {
+  "ui": {
+    "zone_field": "场",
+    "zone_hand": "手牌"
+  },
   "cards": {
     "tutorial": {
       "title": "教程",

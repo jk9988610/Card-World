@@ -938,9 +938,18 @@ async function exitFullscreen() {
   } catch (_) {}
 }
 
+function applyZoneLabels() {
+  const ui = locales[currentLocale]?.ui || locales.en?.ui || {};
+  for (const el of document.querySelectorAll(".zone-label[data-i18n]")) {
+    const key = el.dataset.i18n;
+    if (ui[key]) el.textContent = ui[key];
+  }
+}
+
 function setLocale(code) {
   if (!locales[code]) return;
   currentLocale = code;
+  applyZoneLabels();
   renderAll();
   persistSave();
   if (els.zoom && !els.zoom.classList.contains("hidden")) {

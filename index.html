@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta http-equiv="Cache-Control" content="no-cache" />
   <title>Card World</title>
-  <link rel="stylesheet" href="css/main.css?v=0.6.1" />
+  <link rel="stylesheet" href="css/main.css?v=0.6.2" />
 </head>
 <body>
   <div id="app-version" class="app-version" aria-label="Version"></div>
@@ -13,9 +13,11 @@
     <span id="scene-title" class="scene-title"></span>
   </header>
   <div class="zone zone-field" id="zone-field">
+    <div class="zone-label" data-i18n="zone_field">Field</div>
     <div class="zone-cards" id="field-cards"></div>
   </div>
   <div class="zone zone-hand" id="zone-hand">
+    <div class="zone-label" data-i18n="zone_hand">Hand</div>
     <div class="zone-cards" id="hand-cards"></div>
   </div>
   <div id="art-editor" class="art-editor hidden" aria-hidden="true">
@@ -39,6 +41,6 @@
     <div class="card-zoom-backdrop" id="zoom-backdrop"></div>
     <div class="card-zoom-slot" id="zoom-slot"></div>
   </div>
-  <script type="module" src="js/app.js?v=0.6.1"></script>
+  <script type="module" src="js/app.js?v=0.6.2"></script>
 </body>
 </html>
