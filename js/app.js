@@ -4,7 +4,7 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | native drag (mouse) | short long-press drag (touch)
  */
 
-const APP_VERSION = "0.6.0";
+const APP_VERSION = "0.6.1";
 /** Touch drag: ~half of Safari default long-press (~500ms → ~250ms) */
 const TOUCH_DRAG_HOLD_MS = 250;
 const TOUCH_MOVE_CANCEL_PX = 14;
@@ -102,6 +102,7 @@ const els = {
   artPixelCanvas: document.getElementById("art-pixel-canvas"),
   artPalette: document.getElementById("art-palette"),
   artExportBtn: document.getElementById("art-export-btn"),
+  appVersion: document.getElementById("app-version"),
 };
 
 function localeKeyForDef(def) {
@@ -1105,6 +1106,7 @@ function applyStarter(bundle) {
 }
 
 async function init() {
+  if (els.appVersion) els.appVersion.textContent = `v${APP_VERSION}`;
   if (USE_TOUCH_DRAG) ensureTouchDocListeners();
   else {
     setupDropZone(els.zoneHand, "hand");
