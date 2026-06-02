@@ -4,7 +4,7 @@ import { loadSave, writeSave } from "./storage.js";
  * Card World v0.3 — tap zoom | drag Hand→Field play | Field→Hand take
  */
 
-const APP_VERSION = "0.3.2";
+const APP_VERSION = "0.3.3";
 
 const defBySlug = new Map();
 let programs = {};
@@ -17,6 +17,8 @@ const state = {
   bootstrapDone: false,
   highlightOn: true,
   hintTarget: "founders.world_controller",
+  guideQueue: [],
+  guideIndex: 0,
 };
 
 let instanceCounter = 0;
@@ -44,6 +46,8 @@ function persistSave() {
     highlightOn: state.highlightOn,
     bootstrapDone: state.bootstrapDone,
     hintTarget: state.hintTarget,
+    guideQueue: state.guideQueue,
+    guideIndex: state.guideIndex,
     hand: state.hand,
     field: state.field,
   });
@@ -55,6 +59,8 @@ function applySaved(save) {
   if (typeof save.highlightOn === "boolean") state.highlightOn = save.highlightOn;
   if (typeof save.bootstrapDone === "boolean") state.bootstrapDone = save.bootstrapDone;
   if (save.hintTarget !== undefined) state.hintTarget = save.hintTarget;
+  if (Array.isArray(save.guideQueue)) state.guideQueue = save.guideQueue;
+  if (typeof save.guideIndex === "number") state.guideIndex = save.guideIndex;
   if (Array.isArray(save.hand) && save.hand.length) state.hand = save.hand;
   if (Array.isArray(save.field) && save.field.length) state.field = save.field;
   for (const inst of [...state.hand, ...state.field]) {
@@ -151,6 +157,76 @@ function tagClass(tags) {
   return "";
 }
 
+
+function playStyle(def) {
+  if (!def) return "consume";
+  if (def.playStyle) return def.playStyle;
+  if (def.tags?.includes("reusable")) return "reusable";
+  if (def.tags?.includes("echo")) return "echo";
+  return "consume";
+}
+
+function advanceGuide(playedSlug) {
+  if (!state.guideQueue?.length) return;
+  if (playedSlug !== state.hintTarget) return;
+  state.guideIndex += 1;
+  if (state.guideIndex < state.guideQueue.length) {
+    setHintTarget(state.guideQueue[state.guideIndex]);
+  } else {
+    state.guideQueue = [];
+    state.guideIndex = 0;
+    setHintTarget(null);
+  }
+  renderAll();
+  persistSave();
+}
+
+function runPlayEffects(programId, instanceId) {
+  runProgram(programId, { instanceId });
+  if (programId === "world.bootstrap") {
+    state.bootstrapDone = true;
+    if (!state.guideQueue.length) setHintTarget("content.door");
+  } else if (programId === "settings.open") {
+    if (!state.guideQueue.length) setHintTarget("founders.language_settings");
+  } else if (programId === "language.open") {
+    if (!state.guideQueue.length) setHintTarget("founders.lang_zh");
+  } else if (programId === "language.set_zh" || programId === "language.set_en") {
+    if (!state.guideQueue.length) setHintTarget(null);
+  } else if (programId === "guide.start") {
+    state.highlightOn = true;
+  }
+}
+
+function playFromHand(instanceId) {
+  const loc = findInstance(instanceId);
+  if (!loc || loc.zone !== "hand") return;
+  const def = getDef(loc.instance.definitionSlug);
+  const style = playStyle(def);
+  const programId = resolveInstance(loc.instance).programs?.on_play;
+
+  if (style === "reusable") {
+    if (programId) runPlayEffects(programId, instanceId);
+    advanceGuide(loc.instance.definitionSlug);
+    renderAll();
+    persistSave();
+    return;
+  }
+
+  moveInstance(instanceId, "field");
+  const after = findInstance(instanceId);
+  if (!after) return;
+
+  if (programId) {
+    runPlayEffects(programId, instanceId);
+  }
+  if (style === "echo") {
+    createInstance(loc.instance.definitionSlug, "hand");
+  }
+  advanceGuide(loc.instance.definitionSlug);
+  renderAll();
+  persistSave();
+}
+
 function setHintTarget(slug) {
   state.hintTarget = slug || null;
 }
@@ -158,6 +234,7 @@ function setHintTarget(slug) {
 function shouldHint(slug, zone) {
   if (!state.highlightOn) return false;
   if (state.hintTarget && slug === state.hintTarget) return true;
+  if (state.guideQueue.length) return false;
   if (!state.bootstrapDone) {
     if (slug === "founders.world_controller" && zone === "hand") return true;
     if ((slug === "founders.tutorial" || slug === "founders.settings" || slug === "founders.guide_weave_1") && zone === "field") return true;
@@ -253,11 +330,11 @@ function setupDropZone(container, zoneName) {
     drag.moved = true;
     if (from === zoneName) return;
     if (from === "hand" && zoneName === "field") {
-      moveInstance(id, "field");
-      playCard(id);
+      playFromHand(id);
       tryAutoFullscreen();
     } else if (from === "field" && zoneName === "hand") {
       moveInstance(id, "hand");
+      persistSave();
     }
   });
 }
@@ -355,6 +432,15 @@ function runProgram(programId, ctx) {
       case "fullscreen_exit":
         exitFullscreen();
         break;
+
+      case "guide_start":
+        state.guideQueue = [...(node.params?.steps || [])];
+        state.guideIndex = 0;
+        state.highlightOn = true;
+        if (state.guideQueue.length) setHintTarget(state.guideQueue[0]);
+        renderAll();
+        persistSave();
+        break;
       case "highlight":
         state.highlightOn = !!node.params?.on;
         renderAll();
@@ -367,26 +453,14 @@ function runProgram(programId, ctx) {
   exec(program.entry);
 }
 
-function playCard(instanceId) {
+function playCardOnField(instanceId) {
   const loc = findInstance(instanceId);
   if (!loc || loc.zone !== "field") return;
   const programId = resolveInstance(loc.instance).programs?.on_play;
   if (!programId) return;
-  runProgram(programId, { instanceId });
-  if (programId === "world.bootstrap") {
-    state.bootstrapDone = true;
-    setHintTarget("content.door");
-    renderAll();
-  } else if (programId === "settings.open") {
-    setHintTarget("founders.language_settings");
-    renderAll();
-  } else if (programId === "language.open") {
-    setHintTarget("founders.lang_zh");
-    renderAll();
-  } else if (programId === "language.set_zh" || programId === "language.set_en") {
-    setHintTarget(null);
-    renderAll();
-  }
+  runPlayEffects(programId, instanceId);
+  advanceGuide(loc.instance.definitionSlug);
+  renderAll();
   persistSave();
 }
 

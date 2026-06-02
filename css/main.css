@@ -192,3 +192,10 @@ body {
 .card-zoom-slot .card-text {
   font-size: 0.95rem;
 }
+
+/* Fullscreen: hand zone +50% taller (2:1 -> 2:1.5) */
+@media (display-mode: fullscreen) {
+  body {
+    grid-template-rows: 2fr 1.5fr;
+  }
+}

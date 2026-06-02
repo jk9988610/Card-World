@@ -1,5 +1,5 @@
 {
-  "version": "0.3.0",
+  "version": "0.3.3",
   "definitions": [
     {
       "slug": "prog.on_play",
@@ -7,7 +7,8 @@
       "title": "On Play",
       "text": "Programming.",
       "tags": [
-        "programming"
+        "programming",
+        "reusable"
       ],
       "image": {
         "type": "pixel/v1",
@@ -35,7 +36,8 @@
       "title": "Spawn",
       "text": "Programming.",
       "tags": [
-        "programming"
+        "programming",
+        "reusable"
       ],
       "image": {
         "type": "pixel/v1",
@@ -63,7 +65,8 @@
       "title": "Set Slot",
       "text": "Programming.",
       "tags": [
-        "programming"
+        "programming",
+        "reusable"
       ],
       "image": {
         "type": "pixel/v1",
@@ -141,6 +144,46 @@
           0,
           1,
           0,
+          1,
+          0
+        ]
+      }
+    },
+    {
+      "slug": "founders.shop_script",
+      "localeKey": "shop_script",
+      "title": "Shop Script",
+      "text": "Drag to Field \u2014 step-by-step play hints.",
+      "tags": [
+        "settings",
+        "guide"
+      ],
+      "programs": {
+        "on_play": "guide.start"
+      },
+      "image": {
+        "type": "pixel/v1",
+        "w": 8,
+        "h": 8,
+        "palette": [
+          "#1a1a2e",
+          "#51cf66"
+        ],
+        "pixels": [
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          1,
           1,
           0
         ]

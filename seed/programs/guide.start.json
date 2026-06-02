@@ -1,0 +1,19 @@
+{
+  "id": "guide.start",
+  "entry": "n0",
+  "nodes": [
+    {
+      "id": "n0",
+      "op": "guide_start",
+      "params": {
+        "steps": [
+          "founders.world_controller",
+          "content.door",
+          "founders.settings",
+          "founders.language_settings",
+          "founders.lang_zh"
+        ]
+      }
+    }
+  ]
+}

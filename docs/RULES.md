@@ -118,3 +118,17 @@ Dynamic `hintTarget` slug — one card pulsed at a time:
 5. `founders.lang_zh` or `founders.lang_en` (hand, after language settings played)  
 
 Toggle off with **Highlight Off** card.
+
+## G. Play styles (meta-rules + tags)
+
+| Style | Hand → Field |
+|-------|----------------|
+| **consume** (default) | Card moves to Field, `on_play` runs |
+| **reusable** | Stays in Hand, `on_play` runs |
+| **echo** | To Field + play, copy back to Hand |
+
+Tags: `reusable`, `echo`, or field `playStyle`.
+
+## H. Shop Script
+
+**Shop Script** on Field starts guided highlights — one target card at a time until you play it.

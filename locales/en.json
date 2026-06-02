@@ -1,26 +1,100 @@
 {
   "cards": {
-    "tutorial": { "title": "Tutorial", "text": "TAP — enlarge.\nDRAG Hand→Field — play.\nDRAG Field→Hand — take back.\nPlay Settings for more." },
-    "settings": { "title": "Settings", "text": "Drag to Field to open setting cards in your Hand." },
-    "fullscreen": { "title": "Fullscreen", "text": "Drag to Field — enter fullscreen." },
-    "exit_fullscreen": { "title": "Exit Fullscreen", "text": "Drag to Field — leave fullscreen." },
-    "language_settings": { "title": "Language Settings", "text": "Drag to Field — get language cards in Hand." },
-    "lang_en": { "title": "English", "text": "Drag to Field — UI and cards in English." },
-    "lang_zh": { "title": "中文", "text": "Drag to Field — display in Chinese." },
-    "highlight_on": { "title": "Highlight On", "text": "Drag to Field — show play hints on key cards." },
-    "highlight_off": { "title": "Highlight Off", "text": "Drag to Field — hide play hints." },
-    "world_controller": { "title": "World Controller", "text": "Drag to Field to bootstrap the world." },
-    "starter_deck": { "title": "Programming Starter", "text": "Programming cards. Drag to Field to play." },
-    "door": { "title": "Door", "text": "Closed" },
-    "door_open": { "title": "Door", "text": "Open" },
-    "guide_weave_1": { "title": "Weave 1", "text": "You are the first Binder. Drag World Controller to the Field." },
-    "guide_weave_2": { "title": "Weave 2", "text": "After bootstrap, drag Door to Field to play it." },
-    "guide_weave_3": { "title": "Weave 3", "text": "Use programming cards from Hand — drag each to Field." },
-    "guide_weave_4": { "title": "Weave 4", "text": "Tap any card to read it large. Take cards Field→Hand anytime." },
-    "guide_weave_5": { "title": "Weave 5", "text": "Open Settings for fullscreen, language, and highlights." },
-    "prog_on_play": { "title": "On Play", "text": "Programming card. Drag to Field with other program cards." },
-    "prog_spawn": { "title": "Spawn", "text": "Programming card. Creates a card on the table." },
-    "prog_set_slot": { "title": "Set Slot", "text": "Programming card. Changes title, image, or text." },
-    "load_error": { "title": "Load Error", "text": "Could not load game data. Check your connection and refresh." }
+    "tutorial": {
+      "title": "Tutorial",
+      "text": "TAP — enlarge.\nDRAG Hand→Field — play.\nDRAG Field→Hand — take back.\nPlay Settings for more."
+    },
+    "settings": {
+      "title": "Settings",
+      "text": "Drag to Field to open setting cards in your Hand."
+    },
+    "fullscreen": {
+      "title": "Fullscreen",
+      "text": "Drag to Field — enter fullscreen."
+    },
+    "exit_fullscreen": {
+      "title": "Exit Fullscreen",
+      "text": "Drag to Field — leave fullscreen."
+    },
+    "language_settings": {
+      "title": "Language Settings",
+      "text": "Drag to Field — get language cards in Hand."
+    },
+    "lang_en": {
+      "title": "English",
+      "text": "Drag to Field — UI and cards in English."
+    },
+    "lang_zh": {
+      "title": "中文",
+      "text": "Drag to Field — display in Chinese."
+    },
+    "highlight_on": {
+      "title": "Highlight On",
+      "text": "Drag to Field — show play hints on key cards."
+    },
+    "highlight_off": {
+      "title": "Highlight Off",
+      "text": "Drag to Field — hide play hints."
+    },
+    "world_controller": {
+      "title": "World Controller",
+      "text": "Drag to Field to bootstrap the world."
+    },
+    "starter_deck": {
+      "title": "Programming Starter",
+      "text": "Programming cards. Drag to Field to play."
+    },
+    "door": {
+      "title": "Door",
+      "text": "Closed"
+    },
+    "door_open": {
+      "title": "Door",
+      "text": "Open"
+    },
+    "guide_weave_1": {
+      "title": "Weave 1",
+      "text": "You are the first Binder. Drag World Controller to the Field."
+    },
+    "guide_weave_2": {
+      "title": "Weave 2",
+      "text": "After bootstrap, drag Door to Field to play it."
+    },
+    "guide_weave_3": {
+      "title": "Weave 3",
+      "text": "Use programming cards from Hand — drag each to Field."
+    },
+    "guide_weave_4": {
+      "title": "Weave 4",
+      "text": "Tap any card to read it large. Take cards Field→Hand anytime."
+    },
+    "guide_weave_5": {
+      "title": "Weave 5",
+      "text": "Open Settings for fullscreen, language, and highlights."
+    },
+    "prog_on_play": {
+      "title": "On Play",
+      "text": "Programming card. Drag to Field with other program cards."
+    },
+    "prog_spawn": {
+      "title": "Spawn",
+      "text": "Programming card. Creates a card on the table."
+    },
+    "prog_set_slot": {
+      "title": "Set Slot",
+      "text": "Programming card. Changes title, image, or text."
+    },
+    "load_error": {
+      "title": "Load Error",
+      "text": "Could not load game data. Check your connection and refresh."
+    },
+    "shop_script": {
+      "title": "Shop Script",
+      "text": "Drag to Field — highlights each card you should play, one at a time."
+    },
+    "play_reusable": {
+      "title": "Reusable",
+      "text": "Programming cards stay in Hand when played."
+    }
   }
 }

@@ -8,6 +8,7 @@
       "params": {
         "toZone": "hand",
         "cards": [
+          "founders.shop_script",
           "founders.fullscreen",
           "founders.exit_fullscreen",
           "founders.language_settings",
