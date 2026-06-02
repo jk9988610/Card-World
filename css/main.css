@@ -85,11 +85,20 @@ body {
   display: flex;
   flex-direction: column;
   cursor: grab;
-  touch-action: manipulation;
+  touch-action: none;
   user-select: none;
   color: #212529;
   box-shadow: calc(2px * var(--card-scale)) calc(4px * var(--card-scale)) calc(10px * var(--card-scale))
     rgba(0, 0, 0, 0.45);
+}
+
+/* Hand strip: allow horizontal scroll when swiping across cards */
+.zone-hand .card {
+  touch-action: pan-x;
+}
+
+.zone-field .card {
+  touch-action: none;
 }
 
 .card.tag-settings {
@@ -228,6 +237,7 @@ body {
 
 .card.dragging-source {
   opacity: 0.35;
+  pointer-events: none;
 }
 
 .drag-ghost {
