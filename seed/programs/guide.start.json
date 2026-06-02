@@ -7,7 +7,6 @@
       "op": "guide_start",
       "params": {
         "steps": [
-          "founders.world_controller",
           "founders.settings",
           "founders.language_settings",
           "founders.lang_zh"

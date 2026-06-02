@@ -1,10 +1,6 @@
 {
-  "version": "0.6.8",
+  "version": "0.7.3",
   "hand": [
-    {
-      "definitionSlug": "founders.world_controller",
-      "instanceId": "inst_world_ctrl_1"
-    },
     {
       "definitionSlug": "founders.settings",
       "instanceId": "inst_settings_1"

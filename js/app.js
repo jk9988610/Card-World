@@ -4,7 +4,7 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.7.2";
+const APP_VERSION = "0.7.3";
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -18,7 +18,6 @@ const TAP_ZOOM_MAX_MS = 450;
 
 const TOOL_SLUGS_ON_FIELD = [
   "founders.settings",
-  "founders.world_controller",
   "seed.starter_deck",
   "founders.art_console",
 ];
@@ -84,8 +83,8 @@ const state = {
   field: [],
   fieldStash: [],
   bootstrapDone: false,
-  highlightOn: true,
-  hintTarget: "founders.world_controller",
+  highlightOn: false,
+  hintTarget: null,
   guideQueue: [],
   guideIndex: 0,
   sceneStack: [],
@@ -538,6 +537,13 @@ function captureStarterSnapshot() {
   };
 }
 
+/** Drop removed starters (e.g. world controller) from loaded saves. */
+function migrateObsoleteCardsIfNeeded() {
+  const drop = (list) => list.filter((i) => i.definitionSlug !== "founders.world_controller");
+  state.hand = drop(state.hand);
+  state.field = drop(state.field);
+}
+
 /** Old saves had tools on field; restore canonical hand/field split. */
 function migrateWorldLayoutIfNeeded() {
   if (state.currentSceneId || state.sceneStack.length) return;
@@ -779,7 +785,6 @@ async function openArtEditor() {
   if (els.artExportBtn) els.artExportBtn.textContent = t.export || "Export work card";
   if (els.artColorApply) els.artColorApply.textContent = t.apply_color || "Apply";
   rebuildArtToolUI();
-  redrawArtPixelCanvas();
   document.body.classList.add("art-editor-open");
   els.artEditor?.classList.remove("hidden");
   els.artEditor?.setAttribute("aria-hidden", "false");
@@ -787,6 +792,13 @@ async function openArtEditor() {
     await document.documentElement.requestFullscreen();
   } catch (_) {}
   tryAutoFullscreen();
+  requestAnimationFrame(() => {
+    layoutArtCanvasFrame();
+  });
+}
+
+function layoutArtCanvasFrame() {
+  redrawArtPixelCanvas();
 }
 
 async function closeArtEditor() {
@@ -876,8 +888,8 @@ function resetWorld() {
   state.currentSceneId = null;
   updateSceneChrome();
   state.bootstrapDone = false;
-  state.highlightOn = true;
-  state.hintTarget = "founders.world_controller";
+  state.highlightOn = false;
+  state.hintTarget = null;
   state.guideQueue = [];
   state.guideIndex = 0;
   state.hand = cloneInstList(starterSnapshot.hand);
@@ -1098,11 +1110,7 @@ function setupCardDrag(el, inst, zone) {
   }
 }
 
-function shouldHint(slug, zone) {
-  if (!state.highlightOn || zone !== "hand") return false;
-  if (state.hintTarget && slug === state.hintTarget) return true;
-  if (state.guideQueue.length) return false;
-  if (!state.bootstrapDone && slug === "founders.world_controller") return true;
+function shouldHint() {
   return false;
 }
 
