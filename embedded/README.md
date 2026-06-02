@@ -16,4 +16,4 @@ via the in-app music console iframe. Edit files under this folder freely; the up
 node tools/sync-harmonyforge.mjs
 ```
 
-Then re-apply Card World–specific tweaks in `index.html` (no external Beat Battle links) if the sync overwrote them.
+Then re-apply Card World–specific tweaks in `index.html` (cloud publish via `cloud-publish.js`, no external review site links) if the sync overwrote them.
