@@ -4,7 +4,25 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | native drag (mouse) | short long-press drag (touch)
  */
 
-const APP_VERSION = "0.6.1";
+const APP_VERSION = "0.6.3";
+
+const STARTER_HAND_SLUGS = new Set([
+  "founders.guide_weave_1",
+  "founders.world_controller",
+  "founders.settings",
+  "seed.starter_deck",
+  "founders.art_console",
+]);
+
+const STARTER_FIELD_SLUGS = new Set(["founders.tutorial"]);
+
+const TOOL_SLUGS_ON_FIELD = [
+  "founders.settings",
+  "founders.world_controller",
+  "seed.starter_deck",
+  "founders.art_console",
+  "founders.guide_weave_1",
+];
 /** Touch drag: ~half of Safari default long-press (~500ms → ~250ms) */
 const TOUCH_DRAG_HOLD_MS = 250;
 const TOUCH_MOVE_CANCEL_PX = 14;
@@ -1126,6 +1144,7 @@ async function init() {
 
   try {
     await loadLocales();
+    applyZoneLabels();
     const bundle = await loadBundle();
     applyStarter(bundle);
     captureStarterSnapshot();
