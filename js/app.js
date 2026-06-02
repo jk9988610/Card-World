@@ -6,16 +6,6 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
 
 const APP_VERSION = "0.6.3";
 
-const STARTER_HAND_SLUGS = new Set([
-  "founders.guide_weave_1",
-  "founders.world_controller",
-  "founders.settings",
-  "seed.starter_deck",
-  "founders.art_console",
-]);
-
-const STARTER_FIELD_SLUGS = new Set(["founders.tutorial"]);
-
 const TOOL_SLUGS_ON_FIELD = [
   "founders.settings",
   "founders.world_controller",
