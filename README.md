@@ -2,24 +2,26 @@
 
 Everything is a card. Program the world from Hand + Field.
 
-## Docs
+## Play online
 
-- [docs/DEMO.md](docs/DEMO.md) — demo + first player playbook + tools
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — architecture
+**https://jk9988610.github.io/Card-World/**
 
-## Tools (first player / dev)
+Repo **Settings → Pages → Build and deployment** must use **GitHub Actions**.
+
+## Local
 
 ```bash
-npm run validate-seed
 npm run build-seed
-npm run export-program -- seed/programs/door.on_play.json
-npm run export-program -- seed/programs/door.on_play.json --out seed/generated/door.cards.json
+npx --yes serve . -p 3000
 ```
 
-- **`prog.export`** card: in-game export in Phase 1; use **`export-program`** script now.
+Open http://localhost:3000
 
-## Founders seed
+## Docs
 
-Built as the first player would: `seed/definitions.json`, `seed/programs/`, `seed/packs/official.*`, `seed/starter-world.json`.
+- [docs/DEMO.md](docs/DEMO.md)
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
-**Play flow (when engine exists):** Play World Controller → programming cards dealt → Door spawned → Play Door opens.
+## Demo
+
+Click **World Controller** on the Field → programming cards in Hand, Door on Field → click Door.
