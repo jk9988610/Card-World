@@ -3,8 +3,8 @@
   "title": "Computer Desktop",
   "field": [
     { "definitionSlug": "founders.back", "instanceId": "inst_back_1" },
-    { "definitionSlug": "founders.art_console", "instanceId": "inst_desk_art_1" },
-    { "definitionSlug": "founders.music_console", "instanceId": "inst_desk_music_1" }
+    { "definitionSlug": "art.tool.pixel", "instanceId": "inst_desk_pixel_1" },
+    { "definitionSlug": "music.tool.studio", "instanceId": "inst_desk_music_1" }
   ],
   "hand": []
 }

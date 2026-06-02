@@ -3,9 +3,10 @@
   "definitions": [
     {
       "slug": "seed.starter_deck",
-      "slugKey": "starter_deck",
-      "titleKey": "cards.starter_deck",
-      "textKey": "cards.starter_deck",
+      "slugKey": "backpack",
+      "localeKey": "backpack",
+      "titleKey": "cards.backpack",
+      "textKey": "cards.backpack",
       "title": "Backpack",
       "text": "Drag to hand to clear the field. Drag to field to pour or close.",
       "tags": [
@@ -653,29 +654,12 @@
       }
     },
     {
-      "slug": "founders.music_console",
-      "localeKey": "music_console",
-      "titleKey": "cards.music_console",
-      "textKey": "cards.music_console",
-      "title": "Music Console",
-      "text": "Open HarmonyForge music workshop.",
-      "tags": ["music", "tool", "controller"],
-      "programs": { "on_play": "music.console.enter" },
-      "image": {
-        "type": "pixel/v1",
-        "w": 8,
-        "h": 8,
-        "palette": ["#1a1a2e", "#51cf66", "#339af0", "#ffd43b"],
-        "pixels": [0, 2, 2, 0, 2, 3, 3, 2, 0, 2, 2, 0, 1, 1, 1, 0]
-      }
-    },
-    {
       "slug": "music.tool.studio",
       "localeKey": "music_tool_studio",
       "titleKey": "cards.music_tool_studio",
       "textKey": "cards.music_tool_studio",
       "title": "HarmonyForge",
-      "text": "Arranger workstation (step sequencer + timeline).",
+      "text": "Play — open the music production app (no review).",
       "tags": ["music", "tool", "reusable"],
       "programs": { "on_play": "music.embed.open" },
       "image": {
@@ -687,114 +671,12 @@
       }
     },
     {
-      "slug": "music.tool.works",
-      "localeKey": "music_tool_works",
-      "titleKey": "cards.music_tool_works",
-      "textKey": "cards.music_tool_works",
-      "title": "Works Repo",
-      "text": "Your published tracks (HarmonyForge header: Works Repo).",
-      "tags": ["music", "tool", "reusable"],
-      "programs": { "on_play": "music.embed.open" },
-      "image": {
-        "type": "pixel/v1",
-        "w": 8,
-        "h": 8,
-        "palette": ["#1a1a2e", "#339af0", "#ffd43b"],
-        "pixels": [0, 1, 1, 0, 1, 2, 2, 1, 0, 1, 1, 0, 0, 0, 0, 0]
-      }
-    },
-    {
-      "slug": "music.tool.store",
-      "localeKey": "music_tool_store",
-      "titleKey": "cards.music_tool_store",
-      "textKey": "cards.music_tool_store",
-      "title": "Publish Store",
-      "text": "Browse and load others' projects (HarmonyForge: Publish Store).",
-      "tags": ["music", "tool", "reusable"],
-      "programs": { "on_play": "music.embed.open" },
-      "image": {
-        "type": "pixel/v1",
-        "w": 8,
-        "h": 8,
-        "palette": ["#1a1a2e", "#cc5de8", "#f8f9fa"],
-        "pixels": [0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 2, 1, 1, 2, 1, 0]
-      }
-    },
-    {
-      "slug": "music.tool.drafts",
-      "localeKey": "music_tool_drafts",
-      "titleKey": "cards.music_tool_drafts",
-      "textKey": "cards.music_tool_drafts",
-      "title": "Draft Station",
-      "text": "Local project drafts (HarmonyForge: Draft Station).",
-      "tags": ["music", "tool", "reusable"],
-      "programs": { "on_play": "music.embed.open" },
-      "image": {
-        "type": "pixel/v1",
-        "w": 8,
-        "h": 8,
-        "palette": ["#1a1a2e", "#868e96", "#dee2e6"],
-        "pixels": [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1]
-      }
-    },
-    {
-      "slug": "music.tool.battle",
-      "localeKey": "music_tool_battle",
-      "titleKey": "cards.music_tool_battle",
-      "textKey": "cards.music_tool_battle",
-      "title": "Beat Battle",
-      "text": "Open the Beat Battle review site.",
-      "tags": ["music", "tool", "reusable"],
-      "programs": { "on_play": "music.battle.open" },
-      "image": {
-        "type": "pixel/v1",
-        "w": 8,
-        "h": 8,
-        "palette": ["#1a1a2e", "#ff922b", "#ffd43b"],
-        "pixels": [0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 1, 1, 0, 0, 0, 0]
-      }
-    },
-    {
-      "slug": "founders.art_console",
-      "localeKey": "art_console",
-      "titleKey": "cards.art_console",
-      "textKey": "cards.art_console",
-      "title": "Art Console",
-      "text": "Open the art workshop.",
-      "tags": ["art", "tool", "controller"],
-      "programs": { "on_play": "art.console.enter" },
-      "image": {
-        "type": "pixel/v1",
-        "w": 8,
-        "h": 8,
-        "palette": ["#1a1a2e", "#cc5de8", "#ffd43b"],
-        "pixels": [2, 2, 2, 2, 2, 2, 2, 2]
-      }
-    },
-    {
-      "slug": "art.tool.gallery",
-      "localeKey": "art_tool_gallery",
-      "titleKey": "cards.art_tool_gallery",
-      "textKey": "cards.art_tool_gallery",
-      "title": "Art Shop",
-      "text": "Browse art shop, download and edit works.",
-      "tags": ["art", "tool", "reusable"],
-      "programs": { "on_play": "art.gallery.open" },
-      "image": {
-        "type": "pixel/v1",
-        "w": 8,
-        "h": 8,
-        "palette": ["#1a1a2e", "#339af0", "#ffd43b"],
-        "pixels": [0, 1, 1, 0, 1, 2, 2, 1, 0, 1, 1, 0, 1, 2, 2, 1]
-      }
-    },
-    {
       "slug": "art.tool.pixel",
       "localeKey": "art_tool_pixel",
       "titleKey": "cards.art_tool_pixel",
       "textKey": "cards.art_tool_pixel",
       "title": "Pixel Board",
-      "text": "7:5 pixel editor.",
+      "text": "Play — open the 7:5 pixel editor and art shop.",
       "tags": ["art", "tool", "reusable"],
       "programs": { "on_play": "art.editor.open" },
       "image": {
@@ -828,7 +710,7 @@
       "titleKey": "cards.art_work",
       "textKey": "cards.art_work",
       "title": "Artwork",
-      "text": "Created in the art console.",
+      "text": "Created in the pixel board.",
       "tags": ["art", "content"],
       "image": {
         "type": "pixel/v1",

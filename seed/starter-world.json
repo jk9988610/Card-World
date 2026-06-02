@@ -1,5 +1,5 @@
 {
-  "version": "0.7.3",
+  "version": "0.11.0",
   "hand": [
     {
       "definitionSlug": "founders.settings",
@@ -11,12 +11,12 @@
       "inner": []
     },
     {
-      "definitionSlug": "founders.art_console",
-      "instanceId": "inst_art_console_1"
+      "definitionSlug": "art.tool.pixel",
+      "instanceId": "inst_art_pixel_1"
     },
     {
-      "definitionSlug": "founders.music_console",
-      "instanceId": "inst_music_console_1"
+      "definitionSlug": "music.tool.studio",
+      "instanceId": "inst_music_studio_1"
     }
   ],
   "field": [

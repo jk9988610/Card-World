@@ -48,9 +48,13 @@
       "title": "世界控制器",
       "text": "拖到场 — 启动世界。"
     },
+    "backpack": {
+      "title": "背包",
+      "text": "拖入手牌：场上卡牌收入背包，场面清空。拖回场上：先倒出物品，再合上并恢复场面。"
+    },
     "starter_deck": {
       "title": "背包",
-      "text": "拖入手牌：场上收起。拖回场上：先倒出物品，再合上并恢复场上。"
+      "text": "拖入手牌：场上卡牌收入背包，场面清空。拖回场上：先倒出物品，再合上并恢复场面。"
     },
     "door": {
       "title": "门",
@@ -92,70 +96,29 @@
       "title": "返回",
       "text": "拖到场 — 回到世界。"
     },
-    "art_console": {
-      "title": "美术控制台",
-      "text": "双击 — 进入美术工作台。"
-    },
-    "music_console": {
-      "title": "音乐控制台",
-      "text": "双击 — 进入 HarmonyForge 音乐工具（布局仿编曲站顶栏）。"
-    },
     "music_tool_studio": {
       "title": "HarmonyForge",
-      "text": "收回手牌后打出 — 完整编曲工作站（步进 + 时间轴）。"
-    },
-    "music_tool_works": {
-      "title": "作品仓库",
-      "text": "打出 — 内嵌编曲站；请点顶栏「作品仓库」。"
-    },
-    "music_tool_store": {
-      "title": "发布商店",
-      "text": "打出 — 内嵌编曲站；请点顶栏「发布商店」。"
-    },
-    "music_tool_drafts": {
-      "title": "草稿站",
-      "text": "打出 — 内嵌编曲站；请点顶栏「草稿站」。"
-    },
-    "music_tool_battle": {
-      "title": "Beat Battle",
-      "text": "打出 — 新标签页打开评阅站。"
+      "text": "打出 — 仅音乐制作（步进音序、时间轴、发布），不含评阅。"
     },
     "art_tool_pixel": {
       "title": "像素画板",
-      "text": "收回手牌后双击打开画板；画完可「导出」到作品仓库，或「应用」写回本卡。"
-    },
-    "art_tool_gallery": {
-      "title": "美术商店",
-      "text": "双击 — 浏览商店作品、下载与编辑；管理本地作品与草稿。"
+      "text": "打出 — 打开像素编辑器与美术商店，可导出作品（7:5 画板）。"
     },
     "art_work": {
       "title": "作品",
-      "text": "在美术控制台创作。"
+      "text": "在像素画板创作。"
     }
   },
-  "scenes": {
-    "art_console": {
-      "title": "美术控制台"
-    },
-    "music_console": {
-      "title": "音乐控制台"
-    }
-  },
+  "scenes": {},
   "music_embed": {
     "title_default": "HarmonyForge",
-    "title_studio": "HarmonyForge · 编曲",
-    "title_works": "HarmonyForge · 作品仓库",
-    "title_store": "HarmonyForge · 发布商店",
-    "title_drafts": "HarmonyForge · 草稿站",
-    "hint_default": "与 Music-production-website 同一站点。",
-    "hint_studio": "步进音序与编曲时间轴；发布/仓库/商店/草稿在顶栏。",
-    "hint_works": "内嵌页面打开后，请点击顶栏「作品仓库」。",
-    "hint_store": "内嵌页面打开后，请点击顶栏「发布商店」。",
-    "hint_drafts": "内嵌页面打开后，请点击顶栏「草稿站」。"
+    "title_studio": "HarmonyForge",
+    "hint_default": "编曲制作应用（HarmonyForge）。",
+    "hint_studio": "作曲与发布；作品仓库、发布商店等在应用顶栏。"
   },
   "art_editor": {
     "title": "像素画板",
-    "hint": "画板 35×25（7:5）与卡牌一致；每笔画自动存本地草稿，可撤回/重做。云同步已内置，无需手填 Supabase。",
+    "hint": "画板 35×25（7:5）与卡牌一致；自动草稿、撤回/重做。点「美术商店」管理作品。",
     "apply": "应用",
     "save_draft": "存草稿",
     "upload_shop": "上传商店",

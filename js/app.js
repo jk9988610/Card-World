@@ -35,7 +35,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.10.2";
+const APP_VERSION = "0.11.0";
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -50,9 +50,23 @@ const TAP_ZOOM_MAX_MS = 450;
 const TOOL_SLUGS_ON_FIELD = [
   "founders.settings",
   "seed.starter_deck",
+  "art.tool.pixel",
+  "music.tool.studio",
+];
+
+const REMOVED_CARD_SLUGS = new Set([
+  "founders.world_controller",
   "founders.art_console",
   "founders.music_console",
-];
+  "art.tool.export",
+  "art.tool.gallery",
+  "music.tool.works",
+  "music.tool.store",
+  "music.tool.drafts",
+  "music.tool.battle",
+]);
+
+const REMOVED_SCENE_IDS = new Set(["scene.art.console", "scene.music.console"]);
 
 const SWATCH_BY_TAG = [
   ["programming", "#6f42c1"],
@@ -649,16 +663,31 @@ function captureStarterSnapshot() {
   };
 }
 
-/** Drop removed starters (e.g. world controller) from loaded saves. */
+/** Drop removed card types from saves (old consoles, review tools, etc.). */
 function migrateObsoleteCardsIfNeeded() {
-  const drop = (list) =>
-    list.filter(
-      (i) =>
-        i.definitionSlug !== "founders.world_controller" &&
-        i.definitionSlug !== "art.tool.export"
-    );
+  const drop = (list) => list.filter((i) => !REMOVED_CARD_SLUGS.has(i.definitionSlug));
   state.hand = drop(state.hand);
   state.field = drop(state.field);
+  state.fieldStash = drop(state.fieldStash || []);
+  for (const frame of state.sceneStack) {
+    frame.hand = drop(frame.hand || []);
+    frame.field = drop(frame.field || []);
+    frame.fieldStash = drop(frame.fieldStash || []);
+  }
+}
+
+/** Console scenes removed — return to world with new starter hand. */
+function migrateExitRemovedScenesIfNeeded() {
+  if (!REMOVED_SCENE_IDS.has(state.currentSceneId)) return;
+  state.sceneStack = [];
+  state.currentSceneId = null;
+  closeArtEditor();
+  closeMusicEmbed();
+  if (starterSnapshot) {
+    state.hand = cloneInstList(starterSnapshot.hand);
+    state.field = cloneInstList(starterSnapshot.field);
+    state.fieldStash = [];
+  }
 }
 
 /** Ensure starter hand includes cards added in newer versions (e.g. Music Console). */
@@ -2371,6 +2400,7 @@ async function init() {
     captureStarterSnapshot();
     applySaved(loadSave());
     migrateObsoleteCardsIfNeeded();
+    migrateExitRemovedScenesIfNeeded();
     migrateMissingStarterCardsIfNeeded();
     migrateWorldLayoutIfNeeded();
     updateSceneChrome();

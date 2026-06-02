@@ -48,6 +48,10 @@
       "title": "World Controller",
       "text": "Drag to Field to bootstrap the world."
     },
+    "backpack": {
+      "title": "Backpack",
+      "text": "Recall to hand: field clears. Play to field: pour items, then close to restore."
+    },
     "starter_deck": {
       "title": "Backpack",
       "text": "Recall to hand: field clears. Play to field: pour items, then close to restore."
@@ -92,70 +96,29 @@
       "title": "Back",
       "text": "Drag to Field — return to the world."
     },
-    "art_console": {
-      "title": "Art Console",
-      "text": "Double-tap — open the art workshop."
-    },
-    "music_console": {
-      "title": "Music Console",
-      "text": "Double-tap — open HarmonyForge tools (like the music site header)."
-    },
     "music_tool_studio": {
       "title": "HarmonyForge",
-      "text": "Recall to Hand, play — full arranger (sequencer + timeline)."
-    },
-    "music_tool_works": {
-      "title": "Works Repo",
-      "text": "Play — embed HarmonyForge; use top bar «Works Repo»."
-    },
-    "music_tool_store": {
-      "title": "Publish Store",
-      "text": "Play — embed HarmonyForge; use top bar «Publish Store»."
-    },
-    "music_tool_drafts": {
-      "title": "Draft Station",
-      "text": "Play — embed HarmonyForge; use top bar «Draft Station»."
-    },
-    "music_tool_battle": {
-      "title": "Beat Battle",
-      "text": "Play — open Beat Battle review site in a new tab."
+      "text": "Play — music production only (step sequencer, timeline, publish). No review."
     },
     "art_tool_pixel": {
       "title": "Pixel Board",
-      "text": "Recall to Hand, double-tap to edit. Export to Works, or Apply to save on this card."
-    },
-    "art_tool_gallery": {
-      "title": "Art Shop",
-      "text": "Double-tap — browse shop, download, edit; manage local works and drafts."
+      "text": "Play — pixel editor, art shop, export works (7:5 canvas)."
     },
     "art_work": {
       "title": "Artwork",
-      "text": "Created in the art console."
+      "text": "Created in the pixel board."
     }
   },
-  "scenes": {
-    "art_console": {
-      "title": "Art Console"
-    },
-    "music_console": {
-      "title": "Music Console"
-    }
-  },
+  "scenes": {},
   "music_embed": {
     "title_default": "HarmonyForge",
-    "title_studio": "HarmonyForge · Studio",
-    "title_works": "HarmonyForge · Works Repo",
-    "title_store": "HarmonyForge · Publish Store",
-    "title_drafts": "HarmonyForge · Draft Station",
-    "hint_default": "Same app as Music-production-website.",
-    "hint_studio": "Arrange patterns and timeline; Publish / Works / Store / Drafts are in the top bar.",
-    "hint_works": "In the embedded app, tap «Works Repo» in the header to manage your cloud tracks.",
-    "hint_store": "In the embedded app, tap «Publish Store» to browse and load community projects.",
-    "hint_drafts": "In the embedded app, tap «Draft Station» for local draft backups."
+    "title_studio": "HarmonyForge",
+    "hint_default": "Music production app (HarmonyForge).",
+    "hint_studio": "Compose and export tracks. Works repo and publish store are in the app header."
   },
   "art_editor": {
     "title": "Pixel Board",
-    "hint": "35×25 (7:5) canvas; auto local draft; undo/redo. Cloud built-in like Beat-Battle.",
+    "hint": "35×25 (7:5) canvas; auto local draft; undo/redo. Art Shop button opens gallery.",
     "apply": "Apply",
     "save_draft": "Draft",
     "upload_shop": "Upload",
