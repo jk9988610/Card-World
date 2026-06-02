@@ -4,7 +4,7 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.7.4";
+const APP_VERSION = "0.7.5";
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -64,8 +64,11 @@ const ART_PALETTE = [
 ];
 
 const ART_BG = "#1a1a2e";
-const ART_GRID_W = 32;
-const ART_GRID_H = 32;
+/** Match TCG card image frame (5:7 portrait) so exports are not squashed on cards */
+const TCG_RATIO_W = 5;
+const TCG_RATIO_H = 7;
+const ART_GRID_W = 30;
+const ART_GRID_H = 42;
 
 const artEditor = {
   open: false,
@@ -253,18 +256,50 @@ function swatchColor(tags = []) {
   return "#495057";
 }
 
-function drawPixelImage(ctx, img, destW, destH) {
+function fitPixelRect(boxW, boxH, srcW, srcH) {
+  const srcAspect = srcW / srcH;
+  const boxAspect = boxW / boxH;
+  if (Math.abs(srcAspect - boxAspect) < 0.001) {
+    return { x: 0, y: 0, w: boxW, h: boxH };
+  }
+  if (srcAspect > boxAspect) {
+    const w = boxW;
+    const h = w / srcAspect;
+    return { x: 0, y: (boxH - h) / 2, w, h };
+  }
+  const h = boxH;
+  const w = h * srcAspect;
+  return { x: (boxW - w) / 2, y: 0, w, h };
+}
+
+function drawPixelImage(ctx, img, destW, destH, opts = {}) {
+  const { fit = false, background = null } = opts;
   const pw = img.w || 8;
   const ph = img.h || 8;
   const pal = img.palette || ["#1a1a2e", "#f8f9fa"];
   const px = img.pixels || [];
-  const cellW = destW / pw;
-  const cellH = destH / ph;
+  let x0 = 0;
+  let y0 = 0;
+  let dw = destW;
+  let dh = destH;
+  if (fit) {
+    if (background) {
+      ctx.fillStyle = background;
+      ctx.fillRect(0, 0, destW, destH);
+    }
+    const r = fitPixelRect(destW, destH, pw, ph);
+    x0 = r.x;
+    y0 = r.y;
+    dw = r.w;
+    dh = r.h;
+  }
+  const cellW = dw / pw;
+  const cellH = dh / ph;
   for (let y = 0; y < ph; y++) {
     for (let x = 0; x < pw; x++) {
       const idx = px[y * pw + x] ?? 0;
       ctx.fillStyle = pal[idx] ?? pal[0];
-      ctx.fillRect(x * cellW, y * cellH, Math.ceil(cellW), Math.ceil(cellH));
+      ctx.fillRect(x0 + x * cellW, y0 + y * cellH, Math.ceil(cellW), Math.ceil(cellH));
     }
   }
 }
@@ -285,7 +320,7 @@ function drawCardSwatch(canvas, tags, large = false, pixelImage = null) {
     canvas.style.height = "100%";
     const ctx = canvas.getContext("2d");
     if (pixelImage?.type === "pixel/v1") {
-      drawPixelImage(ctx, pixelImage, w, h);
+      drawPixelImage(ctx, pixelImage, w, h, { fit: true, background: "#e9ecef" });
     } else {
       ctx.fillStyle = swatchColor(tags);
       ctx.fillRect(0, 0, w, h);

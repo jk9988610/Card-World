@@ -98,7 +98,7 @@
     },
     "art_tool_pixel": {
       "title": "Pixel Board",
-      "text": "Recall to Hand, double-tap — fullscreen 32×32 editor with tools and RGB."
+      "text": "Recall to Hand, double-tap — fullscreen 30×42 editor (TCG 5:7, matches work card frame)."
     },
     "art_tool_export": {
       "title": "Export Work",
@@ -116,7 +116,7 @@
   },
   "art_editor": {
     "title": "Pixel Board",
-    "hint": "Brush, eraser, fill, eyedropper. Presets or custom RGB. Canvas fills the screen; auto fullscreen.",
+    "hint": "Brush, eraser, fill, eyedropper. Canvas is 5:7 like the work card image frame. Presets or RGB.",
     "export": "Export work card",
     "apply_color": "Apply",
     "tools": {
