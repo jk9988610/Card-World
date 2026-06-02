@@ -116,8 +116,8 @@
   "music_embed": {
     "title_default": "HarmonyForge",
     "title_studio": "HarmonyForge",
-    "hint_default": "Music production app (HarmonyForge).",
-    "hint_studio": "Compose and export tracks. Works repo and publish store are in the app header."
+    "hint_default": "Built-in HarmonyForge (bundled in Card World, not an external site).",
+    "hint_studio": "Local copy under embedded/harmonyforge — safe to customize without affecting upstream."
   },
   "art_editor": {
     "title": "Pixel Board",

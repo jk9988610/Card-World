@@ -8,11 +8,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#0d1117" />
   <meta http-equiv="Cache-Control" content="no-cache" />
-  <meta name="cw-app-version" content="0.12.2" />
-  <meta name="cw-app-build" content="0.12.2" />
+  <meta name="cw-app-version" content="0.12.3" />
+  <meta name="cw-app-build" content="0.12.3" />
   <title>Card World</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="css/main.css?v=0.12.2" />
+  <link rel="stylesheet" href="css/main.css?v=0.12.3" />
 </head>
 <body>
   <header id="app-chrome" class="app-chrome" aria-label="App toolbar">
@@ -98,7 +98,8 @@
         class="music-console-frame"
         title="HarmonyForge"
         allow="autoplay; fullscreen"
-        referrerpolicy="no-referrer-when-downgrade"
+        referrerpolicy="same-origin"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-downloads allow-modals allow-popups"
       ></iframe>
     </div>
   </div>
@@ -117,6 +118,6 @@
     <div class="card-zoom-backdrop" id="zoom-backdrop"></div>
     <div class="card-zoom-slot" id="zoom-slot"></div>
   </div>
-  <script type="module" src="js/app.js?v=0.12.2"></script>
+  <script type="module" src="js/app.js?v=0.12.3"></script>
 </body>
 </html>

@@ -1,0 +1,19 @@
+# Embedded apps (Card World local copies)
+
+Apps here are **vendored copies** shipped with Card World. They run on the same GitHub Pages origin as the card game, not as external iframes to other sites.
+
+## `harmonyforge/`
+
+Copy of [Music-production-website](https://github.com/jk9988610/Music-production-website) (HarmonyForge). Card World loads:
+
+`embedded/harmonyforge/index.html`
+
+via the in-app music console iframe. Edit files under this folder freely; the upstream site is unaffected.
+
+### Re-sync from upstream (optional)
+
+```bash
+node tools/sync-harmonyforge.mjs
+```
+
+Then re-apply Card World–specific tweaks in `index.html` (no external Beat Battle links) if the sync overwrote them.

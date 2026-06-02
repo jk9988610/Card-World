@@ -1,0 +1,661 @@
+/* HarmonyForge 布局与模块外壳 — 后加载，覆盖 styles.css 中冲突项 */
+
+/* ---------- 顶栏 ---------- */
+.header-line { display: none; }
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.25rem 0;
+}
+
+.header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.28rem 0.4rem;
+  width: 100%;
+}
+
+.header-row-top { justify-content: flex-start; }
+.header-row-top .transport { margin-left: auto; }
+.header-row-sub { justify-content: flex-start; }
+
+.header-divider {
+  width: 1px;
+  height: 0.9rem;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.btn-icon-sm {
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.7rem;
+}
+
+.btn-compact {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.68rem;
+}
+
+.control-inline {
+  gap: 0.25rem;
+  font-size: 0.68rem;
+}
+
+.control-inline input[type="range"] { width: 52px; }
+
+.home-version {
+  font-size: 0.62rem;
+  padding: 0.1rem 0.35rem;
+}
+
+.header-review-badge {
+  font-size: 0.6rem;
+  padding: 0.08rem 0.35rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.header-battle-link {
+  text-decoration: none;
+}
+
+/* .main 间距见 layout-spacing.css */
+
+.footer-slim {
+  padding: 0.15rem 0;
+  font-size: 0.62rem;
+}
+
+.footer-meta,
+.footer-credit,
+.version-badge,
+.brand-tag { display: none !important; }
+
+.sidebar { display: none; }
+
+/* ============================================================
+   CHROME 外壳 — 只改 --chrome-*（边框/标题/工具条/模块间距）
+   CONTENT 内容 — 只改 --content-*（格子与滑条尺寸）
+   ============================================================ */
+:root {
+  --chrome-module-gap: 0px;
+  --main-module-gap: 11px;
+  --chrome-module-pad-x: 4px;
+  --chrome-module-pad-b: 12px;
+  --chrome-legend-size: 0.6rem;
+  --chrome-toolbar-gap: 2px;
+  --content-seq-step: 0.95rem;
+  --content-seq-label: 5.5rem;
+  --content-arrange-slot-w: 40px;
+  --content-arrange-slot-h: 30px;
+  --content-mixer-track-w: 3.35rem;
+}
+
+/* 外壳高度随 .module-body 内容撑开 */
+fieldset.module {
+  border: 1px solid var(--border) !important;
+  border-radius: 3px;
+  margin: 0 !important;
+  padding: 0 var(--chrome-module-pad-x) var(--chrome-module-pad-b) !important;
+  min-width: 0;
+  width: 100%;
+  height: fit-content;
+  min-height: 0;
+  background: var(--bg-panel);
+  box-sizing: border-box;
+}
+
+fieldset.module legend {
+  font-size: var(--chrome-legend-size);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0 3px;
+  margin-left: 1px;
+  line-height: 1;
+}
+
+fieldset.module .module-chrome,
+fieldset.module .arrange-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.3rem;
+  margin: 0 0 var(--chrome-toolbar-gap) !important;
+  padding: 0 !important;
+}
+
+fieldset.module .module-body {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 0;
+  width: 100%;
+  height: auto;
+  max-height: none !important;
+  box-sizing: border-box;
+  --seq-label-col: var(--content-seq-label);
+  --seq-step-size: var(--content-seq-step);
+}
+
+fieldset.module.module-sequencer .module-body {
+  overflow-x: auto;
+  overflow-y: visible !important;
+  padding-bottom: 2px;
+}
+
+fieldset.module.module-arrange .module-body {
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+fieldset.module.module-mixer .module-body {
+  overflow: visible;
+}
+
+/* 内容尺寸：仅 module-body 内，用 !important 压过 styles.css 全局 .arrange-slot */
+fieldset.module .module-body .arrange-slot {
+  width: var(--content-arrange-slot-w) !important;
+  min-height: var(--content-arrange-slot-h) !important;
+  max-height: none;
+  padding: 0.15rem 0.2rem !important;
+  box-sizing: border-box;
+}
+
+fieldset.module .module-body .step-cell {
+  width: var(--seq-step-size) !important;
+  height: var(--seq-step-size) !important;
+  min-width: 0;
+  max-width: none;
+}
+
+fieldset.module .module-body .track-row,
+fieldset.module .module-body .step-labels {
+  gap: 2px;
+}
+
+fieldset.module .module-body .pattern-tab {
+  padding: 0.15rem 0.45rem;
+  font-size: 0.68rem;
+}
+
+fieldset.module .module-body .mixer-horizontal {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.12rem;
+}
+
+fieldset.module .module-body .mixer-horizontal .mixer-track {
+  flex: 0 0 var(--content-mixer-track-w) !important;
+  min-width: var(--content-mixer-track-w) !important;
+}
+
+fieldset.module .module-body .mixer-horizontal .mixer-track label {
+  font-size: 0.55rem;
+  margin-bottom: 0;
+}
+
+/* 调试 ?debug=layers ：橙=外壳 fieldset，青=内容 body，紫=工具条 */
+html[data-debug-layers] fieldset.module {
+  outline: 2px dashed #f59e0b !important;
+}
+
+html[data-debug-layers] fieldset.module .module-body {
+  outline: 2px dashed #22d3ee !important;
+  outline-offset: -2px;
+}
+
+html[data-debug-layers] fieldset.module .module-chrome {
+  outline: 1px dotted #a78bfa !important;
+}
+
+.arrange-slot-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-style: dashed !important;
+  border-color: var(--accent-dim) !important;
+  background: transparent !important;
+  min-width: 42px;
+  min-height: 34px;
+}
+
+.arrange-slot-add:hover {
+  background: rgba(110, 231, 183, 0.08) !important;
+}
+
+.arrange-slot-add-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.sequencer-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 var(--chrome-toolbar-gap) !important;
+  padding: 0 !important;
+}
+
+.step-count-info {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+
+.arrange-bar .pattern-tabs-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.arrange-bar .pattern-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.2rem;
+  overflow-x: auto;
+  flex: 1 1 auto;
+  min-width: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+fieldset.module.module-sequencer .sequencer-wrap {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+fieldset.module.module-sequencer .sequencer-wrap .track-row,
+fieldset.module.module-sequencer .sequencer-wrap .step-labels {
+  width: max-content;
+  min-width: min-content;
+}
+
+
+.home-version.has-update {
+  color: var(--warn);
+  box-shadow: 0 0 0 1px var(--warn);
+}
+
+.sequencer-bar,
+.arrange-bar .pattern-tabs-wrap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.btn-step-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+/* —— 用户自定义布局 —— */
+fieldset.module {
+  border-radius: var(--layout-module-radius, 3px) !important;
+}
+
+html[data-layout-columns="2"] .main {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  align-items: start;
+}
+
+html[data-layout-columns="2"] .main fieldset.module[data-module="mixer"] {
+  grid-column: 1 / -1;
+}
+
+html[data-layout-compact-header="1"] .header {
+  padding: 0.12rem 0;
+  gap: 0.1rem;
+}
+
+html[data-layout-compact-header="1"] .header-row {
+  gap: 0.15rem 0.25rem;
+}
+
+.layout-edit-mode fieldset.module[data-module] {
+  cursor: grab;
+  outline: 1px dashed var(--accent-dim);
+  outline-offset: 2px;
+}
+
+.layout-edit-mode fieldset.module.layout-dragging {
+  opacity: 0.55;
+  cursor: grabbing;
+}
+
+.layout-edit-mode fieldset.module.layout-drop-target {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.layout-dialog {
+  max-width: min(420px, 96vw);
+  max-height: 90vh;
+}
+
+.layout-dialog-body {
+  overflow-y: auto;
+  max-height: calc(90vh - 3rem);
+  padding: 0 0.25rem 0.5rem;
+}
+
+.layout-section {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.layout-section h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.layout-hint {
+  margin: 0 0 0.35rem;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.layout-control {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  margin: 0.25rem 0;
+  flex-wrap: wrap;
+}
+
+.layout-control input[type="range"] {
+  flex: 1 1 100px;
+  min-width: 60px;
+  accent-color: var(--accent);
+}
+
+.layout-control output {
+  min-width: 2.2rem;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--accent);
+}
+
+.layout-vis-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.68rem;
+  margin: 0.35rem 0;
+}
+
+.layout-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  margin-top: 0.35rem;
+}
+
+.layout-preset-select {
+  font-size: 0.68rem;
+  padding: 0.2rem 0.35rem;
+  background: var(--bg-elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.layout-order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.layout-order-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0;
+  font-size: 0.72rem;
+}
+
+.layout-order-grip {
+  color: var(--text-muted);
+  cursor: grab;
+  user-select: none;
+}
+
+.layout-order-name {
+  flex: 1;
+}
+
+#btnLayoutEdit.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.layout-print-output {
+  display: block;
+  margin-top: 0.5rem;
+  padding: 0.45rem 0.5rem;
+  max-height: 10rem;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.layout-print-output:not([hidden]) {
+  display: block;
+}
+
+.layout-actions-row .btn.active-flash {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.layout-print-panel {
+  margin-top: 0.5rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--border);
+}
+
+.layout-code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  margin-bottom: 0.25rem;
+}
+
+.layout-code-title {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.layout-code-output {
+  display: block;
+  width: 100%;
+  min-height: 7rem;
+  max-height: 12rem;
+  margin: 0;
+  padding: 0.45rem 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  line-height: 1.4;
+  color: var(--text);
+  background: var(--bg-deep);
+  border: 1px solid var(--accent-dim);
+  border-radius: 4px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.layout-report-details {
+  margin-top: 0.35rem;
+  font-size: 0.62rem;
+}
+
+.layout-report-details summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.layout-print-output {
+  margin-top: 0.25rem;
+  max-height: 6rem;
+}
+
+.app-build-value {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  margin-left: 0.1rem;
+}
+
+/* 模块工具栏 — 编曲 / 音序统一格式 */
+.module-toolbar-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  width: 100%;
+}
+
+.module-toolbar-row + .module-toolbar-row {
+  margin-top: 0.25rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.module-toolbar-label {
+  flex: 0 0 auto;
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  min-width: 3.25rem;
+}
+
+.arrange-bar .pattern-tabs {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.arrange-bar .btn-step-group .btn-sm {
+  min-width: 2.1rem;
+  padding: 0.2rem 0.45rem;
+}
+
+.sequencer-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+
+.sequencer-bar .module-toolbar-row-steps .step-count-info {
+  margin-left: auto;
+}
+
+.sequencer-bar .module-toolbar-row-types .type-count-info {
+  margin-left: auto;
+}
+
+.arrange-bar .arrange-info {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.help-modules dd ul.help-list {
+  margin: 0.35rem 0 0.5rem 1rem;
+  padding: 0;
+}
+
+.help-modules dd p {
+  margin: 0.35rem 0;
+  line-height: 1.45;
+}
+
+.help-modules dd p:first-child {
+  margin-top: 0;
+}
+
+.sequencer-bar .module-toolbar-row-types {
+  align-items: center;
+}
+
+.sequencer-bar .pattern-tabs-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.sequencer-bar .module-toolbar-row-steps {
+  margin-top: 0.25rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.sequencer-bar .pattern-tabs-row .pattern-tabs {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  gap: 0.2rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.type-count-info {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.btn-history-undo,
+.btn-history-redo {
+  font-size: 0.62rem !important;
+  padding: 0.18rem 0.4rem !important;
+  min-width: 2.4rem;
+}
+
+.btn-history-undo:disabled,
+.btn-history-redo:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

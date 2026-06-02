@@ -32,7 +32,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.12.2";
+const APP_VERSION = "0.12.3";
 
 const SETTINGS_MENU_SLUGS = new Set([
   "founders.language_settings",
