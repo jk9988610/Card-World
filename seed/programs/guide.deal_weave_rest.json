@@ -1,0 +1,14 @@
+{
+  "id": "guide.deal_weave_rest",
+  "entry": "n0",
+  "nodes": [
+    {
+      "id": "n0",
+      "op": "deal",
+      "params": {
+        "toZone": "field",
+        "cards": ["founders.settings"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{ "id": "action.exit_fullscreen", "entry": "n0", "nodes": [{ "id": "n0", "op": "fullscreen_exit" }] }

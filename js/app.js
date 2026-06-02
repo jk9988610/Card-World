@@ -1,16 +1,24 @@
 /**
- * Card World — core: tap to enlarge, drag Hand→Field to play, Field→Hand to take.
+ * Card World v0.3 — tap zoom | drag Hand→Field play | Field→Hand take
  */
 
-const APP_VERSION = "0.2.2";
-const MAX_STEPS = 200;
+const APP_VERSION = "0.3.0";
 
 const defBySlug = new Map();
 let programs = {};
+let locales = { en: {} };
+let currentLocale = "en";
 
-const state = { hand: [], field: [], bootstrapDone: false };
+const state = {
+  hand: [],
+  field: [],
+  bootstrapDone: false,
+  highlightOn: true,
+};
+
 let instanceCounter = 0;
 let drag = null;
+let fullscreenTried = false;
 
 const els = {
   hand: document.getElementById("hand-cards"),
@@ -20,8 +28,18 @@ const els = {
   zoomSlot: document.getElementById("zoom-slot"),
 };
 
+const HIGHLIGHT_SLUGS = new Set([
+  "founders.world_controller",
+  "founders.settings",
+  "founders.tutorial",
+]);
+
 function getDef(slug) {
   return defBySlug.get(slug);
+}
+
+function localeCard(key) {
+  return locales[currentLocale]?.cards?.[key] || locales.en?.cards?.[key];
 }
 
 function resolveInstance(inst) {
@@ -29,13 +47,23 @@ function resolveInstance(inst) {
   if (!def) {
     return { ...inst, title: "?", text: "", image: null, tags: [], programs: {} };
   }
+  const key = inst.localeKey || def.localeKey || def.slug.split(".").pop();
+  const loc = localeCard(key);
+  let title = inst.title ?? loc?.title ?? def.title;
+  let text = inst.text ?? loc?.text ?? def.text;
+  if (inst.textKey) {
+    const t = localeCard(inst.textKey.replace(/^cards\./, ""));
+    if (t?.text) text = t.text;
+    if (t?.title) title = t.title;
+  }
   return {
     ...inst,
-    title: inst.title ?? def.title,
-    text: inst.text ?? def.text,
+    title,
+    text,
     image: inst.image ?? def.image,
     tags: def.tags ?? [],
     programs: def.programs ?? {},
+    localeKey: key,
   };
 }
 
@@ -66,9 +94,9 @@ function drawPixel(canvas, payload, large = false) {
   const pal = payload.palette || ["#000", "#fff"];
   const px = payload.pixels || [];
   const parent = canvas.parentElement;
-  const cw = parent?.clientWidth || (large ? 320 : 200);
-  const ch = parent?.clientHeight || (large ? 280 : 180);
-  const block = Math.max(large ? 14 : 6, Math.floor(Math.min(cw / w, ch / h) * 0.9));
+  const cw = parent?.clientWidth || (large ? 320 : 160);
+  const ch = parent?.clientHeight || (large ? 280 : 140);
+  const block = Math.max(large ? 12 : 5, Math.floor(Math.min(cw / w, ch / h) * 0.88));
   canvas.width = w * block;
   canvas.height = h * block;
   ctx.imageSmoothingEnabled = false;
@@ -84,24 +112,32 @@ function drawPixel(canvas, payload, large = false) {
 }
 
 function tagClass(tags) {
-  if (tags.includes("programming")) return "tag-programming";
-  if (tags.includes("tutorial")) return "tag-tutorial";
+  if (tags.includes("settings")) return "tag-settings";
+  if (tags.includes("language")) return "tag-language";
+  if (tags.includes("tutorial") || tags.includes("guide")) return "tag-guide";
   if (tags.includes("controller")) return "tag-controller";
   if (tags.includes("content")) return "tag-content";
+  if (tags.includes("programming")) return "tag-programming";
   return "";
 }
 
-function buildCardEl(inst, zone, { large = false, forZoom = false } = {}) {
+function shouldHint(slug, zone) {
+  if (!state.highlightOn) return false;
+  if (slug === "founders.world_controller" && zone === "hand" && !state.bootstrapDone) return true;
+  if (slug === "founders.settings" && zone === "field") return true;
+  if (slug === "founders.tutorial" && zone === "field") return true;
+  return HIGHLIGHT_SLUGS.has(slug) && zone === "hand";
+}
+
+function buildCardEl(inst, zone, opts = {}) {
+  const { large = false, forZoom = false } = opts;
   const r = resolveInstance(inst);
   const el = document.createElement("article");
-  el.className = `card ${tagClass(r.tags)}${large ? " card-large" : ""}`;
-  if (forZoom) el.classList.add("card-zoomed");
+  el.className = `card ${tagClass(r.tags)}`;
   el.dataset.instanceId = inst.instanceId;
   el.dataset.definitionSlug = inst.definitionSlug;
 
-  if (!large && !forZoom && !state.bootstrapDone && r.definitionSlug === "founders.world_controller" && zone === "hand") {
-    el.classList.add("hint");
-  }
+  if (!forZoom && shouldHint(r.definitionSlug, zone)) el.classList.add("hint");
 
   if (!forZoom) {
     el.draggable = true;
@@ -113,13 +149,8 @@ function buildCardEl(inst, zone, { large = false, forZoom = false } = {}) {
     el.addEventListener("dragstart", (e) => {
       drag = { id: inst.instanceId, from: zone, moved: false };
       e.dataTransfer.setData("text/plain", inst.instanceId);
-      e.dataTransfer.effectAllowed = "move";
     });
-    el.addEventListener("dragend", () => {
-      setTimeout(() => {
-        drag = null;
-      }, 50);
-    });
+    el.addEventListener("dragend", () => setTimeout(() => { drag = null; }, 50));
   }
 
   const title = document.createElement("div");
@@ -156,12 +187,10 @@ function openZoom(inst) {
   els.zoomSlot.innerHTML = "";
   els.zoomSlot.appendChild(buildCardEl({ ...inst }, "zoom", { large: true, forZoom: true }));
   els.zoom.classList.remove("hidden");
-  els.zoom.setAttribute("aria-hidden", "false");
 }
 
 function closeZoom() {
   els.zoom.classList.add("hidden");
-  els.zoom.setAttribute("aria-hidden", "true");
   els.zoomSlot.innerHTML = "";
 }
 
@@ -186,18 +215,50 @@ function setupDropZone(container, zoneName) {
     const from = drag.from;
     drag.moved = true;
     if (from === zoneName) return;
-
     if (from === "hand" && zoneName === "field") {
       moveInstance(id, "field");
       playCard(id);
+      tryAutoFullscreen();
     } else if (from === "field" && zoneName === "hand") {
       moveInstance(id, "hand");
     }
   });
 }
 
+function tryAutoFullscreen() {
+  if (fullscreenTried) return;
+  fullscreenTried = true;
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+}
+
+async function enterFullscreen() {
+  try {
+    await document.documentElement.requestFullscreen();
+  } catch (_) {}
+}
+
+async function exitFullscreen() {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+  } catch (_) {}
+}
+
+function setLocale(code) {
+  if (!locales[code]) return;
+  currentLocale = code;
+  renderAll();
+  if (els.zoom && !els.zoom.classList.contains("hidden")) {
+    const id = els.zoomSlot.querySelector(".card")?.dataset?.instanceId;
+    if (id) {
+      const loc = findInstance(id);
+      if (loc) openZoom(loc.instance);
+    }
+  }
+}
+
 function getNode(program, nodeId) {
-  return program.nodes.find((n) => n.id === nodeId);
+  return program.nodes?.find((n) => n.id === nodeId);
 }
 
 function runProgram(programId, ctx) {
@@ -205,12 +266,12 @@ function runProgram(programId, ctx) {
   if (!program) return;
   let steps = 0;
   const exec = (nodeId) => {
-    if (!nodeId || steps++ > MAX_STEPS) return;
+    if (!nodeId || steps++ > 200) return;
     const node = getNode(program, nodeId);
     if (!node) return;
     switch (node.op) {
       case "sequence":
-        for (const child of node.children || []) exec(child);
+        for (const c of node.children || []) exec(c);
         break;
       case "deal":
         for (const slug of node.params?.cards || []) {
@@ -223,8 +284,8 @@ function runProgram(programId, ctx) {
         renderAll();
         break;
       case "set_slot": {
-        const targetId = node.params?.targetInstanceId || ctx?.instanceId;
-        const loc = findInstance(targetId);
+        const tid = node.params?.targetInstanceId || ctx?.instanceId;
+        const loc = findInstance(tid);
         if (loc) {
           if (node.params?.slot === "title") loc.instance.title = node.params?.value;
           else loc.instance.text = node.params?.value;
@@ -232,6 +293,34 @@ function runProgram(programId, ctx) {
         }
         break;
       }
+      case "set_locale":
+        setLocale(node.params?.locale || "en");
+        break;
+      case "set_locale_text": {
+        const loc = findInstance(ctx?.instanceId);
+        if (loc) {
+          const key = (node.params?.textKey || "").replace(/^cards\./, "");
+          const t = localeCard(key);
+          if (t) {
+            loc.instance.textKey = node.params?.textKey;
+            loc.instance.localeKey = key;
+            if (t.text) loc.instance.text = t.text;
+            if (t.title) loc.instance.title = t.title;
+          }
+          renderAll();
+        }
+        break;
+      }
+      case "fullscreen_enter":
+        enterFullscreen();
+        break;
+      case "fullscreen_exit":
+        exitFullscreen();
+        break;
+      case "highlight":
+        state.highlightOn = !!node.params?.on;
+        renderAll();
+        break;
       default:
         break;
     }
@@ -242,41 +331,53 @@ function runProgram(programId, ctx) {
 function playCard(instanceId) {
   const loc = findInstance(instanceId);
   if (!loc || loc.zone !== "field") return;
-
   const programId = resolveInstance(loc.instance).programs?.on_play;
   if (!programId) return;
-
   runProgram(programId, { instanceId });
-
   if (programId === "world.bootstrap") {
     state.bootstrapDone = true;
-    document.querySelectorAll(".hint").forEach((el) => el.classList.remove("hint"));
-    const tutorial = findInstance("inst_tutorial_1");
-    if (tutorial) {
-      tutorial.instance.text =
-        "Played World Controller.\nDrag Door from Field — or play Door by dragging Hand→Field.\nTap cards to enlarge.";
-      renderAll();
-    }
+    renderAll();
   }
 }
 
+async function loadJson(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${url} ${res.status}`);
+  return res.json();
+}
+
 async function loadBundle() {
-  const candidates = [
-    new URL("../dist/seed-bundle.json", import.meta.url).href,
+  const base = new URL("../", import.meta.url).href;
+  const urls = [
+    new URL("dist/seed-bundle.json", base).href,
     `${location.pathname.replace(/\/[^/]*$/, "/")}dist/seed-bundle.json`,
     "dist/seed-bundle.json",
   ];
   let lastErr;
-  for (const url of candidates) {
+  for (const url of urls) {
     try {
-      const res = await fetch(url);
-      if (res.ok) return res.json();
-      lastErr = new Error(`${url} → ${res.status}`);
+      return await loadJson(url);
     } catch (e) {
       lastErr = e;
     }
   }
-  throw lastErr || new Error("seed-bundle not found");
+  throw lastErr;
+}
+
+async function loadLocales() {
+  const base = new URL("../", import.meta.url).href;
+  const prefix = `${location.pathname.replace(/\/[^/]*$/, "/")}locales/`;
+  for (const code of ["en", "zh-Hans"]) {
+    try {
+      locales[code] = await loadJson(new URL(`locales/${code}.json`, base).href);
+    } catch {
+      try {
+        locales[code] = await loadJson(`${prefix}${code}.json`);
+      } catch {
+        locales[code] = locales.en;
+      }
+    }
+  }
 }
 
 function applyStarter(bundle) {
@@ -299,6 +400,7 @@ async function init() {
   els.zoomBackdrop.addEventListener("click", closeZoom);
 
   try {
+    await loadLocales();
     const bundle = await loadBundle();
     applyStarter(bundle);
     renderAll();

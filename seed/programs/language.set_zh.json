@@ -1,0 +1,1 @@
+{ "id": "language.set_zh", "entry": "n0", "nodes": [{ "id": "n0", "op": "set_locale", "params": { "locale": "zh-Hans" } }] }

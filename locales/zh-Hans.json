@@ -1,0 +1,23 @@
+{
+  "cards": {
+    "tutorial": { "title": "教程", "text": "点击 — 放大查看。\n手牌拖到场 — 打出。\n场拖回手牌 — 收回。\n打出「设置」获取更多选项。" },
+    "settings": { "title": "设置", "text": "拖到场 — 在手牌获得设置卡。" },
+    "fullscreen": { "title": "全屏", "text": "拖到场 — 进入全屏。" },
+    "exit_fullscreen": { "title": "退出全屏", "text": "拖到场 — 退出全屏。" },
+    "language_settings": { "title": "语言设置", "text": "拖到场 — 在手牌获得语言卡。" },
+    "lang_en": { "title": "English", "text": "Drag to Field — English display." },
+    "lang_zh": { "title": "中文", "text": "拖到场 — 卡牌与说明显示中文。" },
+    "highlight_on": { "title": "高亮开启", "text": "拖到场 — 关键卡显示打出提示。" },
+    "highlight_off": { "title": "高亮关闭", "text": "拖到场 — 关闭打出提示。" },
+    "starter_deck": { "title": "编程入门", "text": "编程牌。拖到场打出。" },
+    "world_controller": { "title": "世界控制器", "text": "拖到场 — 启动世界。" },
+    "starter_deck": { "title": "编程入门", "text": "编程牌。拖到场打出。" },
+    "door": { "title": "门", "text": "关闭" },
+    "door_open": { "title": "门", "text": "打开" },
+    "guide_weave_1": { "title": "编织 1", "text": "你是第一位编织者。把世界控制器拖到场。" },
+    "guide_weave_2": { "title": "编织 2", "text": "启动后，把门拖到场打出。" },
+    "guide_weave_3": { "title": "编织 3", "text": "用手牌里的编程牌 — 逐张拖到场。" },
+    "guide_weave_4": { "title": "编织 4", "text": "点击卡牌可放大阅读。随时把场牌拖回手牌。" },
+    "guide_weave_5": { "title": "编织 5", "text": "打开设置卡：全屏、语言、高亮与更多引导。" }
+  }
+}

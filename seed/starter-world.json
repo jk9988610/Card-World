@@ -1,10 +1,12 @@
 {
-  "version": "0.2.2",
+  "version": "0.3.0",
   "hand": [
     { "definitionSlug": "founders.world_controller", "instanceId": "inst_world_ctrl_1" },
     { "definitionSlug": "seed.starter_deck", "instanceId": "inst_starter_deck_1" }
   ],
   "field": [
-    { "definitionSlug": "founders.tutorial", "instanceId": "inst_tutorial_1" }
+    { "definitionSlug": "founders.tutorial", "instanceId": "inst_tutorial_1" },
+    { "definitionSlug": "founders.settings", "instanceId": "inst_settings_1" },
+    { "definitionSlug": "founders.guide_weave_1", "instanceId": "inst_gw1" }
   ]
 }

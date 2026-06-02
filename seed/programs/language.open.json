@@ -1,0 +1,14 @@
+{
+  "id": "language.open",
+  "entry": "n0",
+  "nodes": [
+    {
+      "id": "n0",
+      "op": "deal",
+      "params": {
+        "toZone": "hand",
+        "cards": ["founders.lang_en", "founders.lang_zh"]
+      }
+    }
+  ]
+}

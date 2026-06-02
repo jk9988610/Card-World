@@ -1,0 +1,24 @@
+{
+  "id": "settings.open",
+  "entry": "n0",
+  "nodes": [
+    {
+      "id": "n0",
+      "op": "deal",
+      "params": {
+        "toZone": "hand",
+        "cards": [
+          "founders.fullscreen",
+          "founders.exit_fullscreen",
+          "founders.language_settings",
+          "founders.highlight_on",
+          "founders.highlight_off",
+          "founders.guide_weave_2",
+          "founders.guide_weave_3",
+          "founders.guide_weave_4",
+          "founders.guide_weave_5"
+        ]
+      }
+    }
+  ]
+}
