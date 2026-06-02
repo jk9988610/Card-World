@@ -2,9 +2,11 @@
   --felt: #1e4d3a;
   --felt-light: #2a6b52;
   --hand-bg: #152238;
-  --card-scale: 0.4;
   --card-w: 250px;
   --card-h: 350px;
+  --card-scale-field: 0.38;
+  --card-scale-hand: 0.34;
+  --hand-bar: clamp(100px, 38dvh, 220px);
 }
 
 * {
@@ -15,28 +17,43 @@
 
 html,
 body {
+  width: 100%;
   height: 100%;
   overflow: hidden;
   background: #0d1117;
 }
 
+/* Landscape-first: Field on top (main), Hand bar along the bottom */
 body {
   display: grid;
-  grid-template-rows: 1fr minmax(140px, 28vh);
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr var(--hand-bar);
+  width: 100vw;
+  height: 100dvh;
+  max-width: 100vw;
+  max-height: 100dvh;
 }
 
 .zone-field {
+  grid-column: 1;
+  grid-row: 1;
+  min-height: 0;
+  min-width: 0;
   background: linear-gradient(160deg, var(--felt-light), var(--felt));
   overflow: auto;
-  padding: 0.75rem;
+  padding: 0.5rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 .zone-hand {
+  grid-column: 1;
+  grid-row: 2;
+  min-height: 0;
+  min-width: 0;
   background: var(--hand-bg);
   border-top: 3px solid #38486a;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 0.5rem 0.75rem;
+  overflow: hidden;
+  padding: 0.35rem 0.5rem;
 }
 
 .zone-scene {
@@ -44,7 +61,7 @@ body {
   inset: 0;
   z-index: 50;
   background: linear-gradient(160deg, #2c3e5a, #1a2332);
-  padding: 0.75rem;
+  padding: 0.5rem;
   overflow: auto;
 }
 
@@ -52,21 +69,32 @@ body {
   display: none;
 }
 
-.zone-cards {
+/* Field: cards wrap on the table */
+.zone-field .zone-cards {
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
-  gap: 0.35rem;
-  min-height: 100%;
+  gap: 0.25rem;
+  min-height: min-content;
+}
+
+/* Hand: single horizontal strip (bottom in landscape) */
+.zone-hand .zone-cards {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: 0.25rem;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .card {
+  flex-shrink: 0;
   width: var(--card-w);
   height: var(--card-h);
-  transform: scale(var(--card-scale));
-  transform-origin: top left;
-  margin-right: calc(var(--card-w) * var(--card-scale) - 108px);
-  margin-bottom: calc(var(--card-h) * var(--card-scale) - 150px);
   background: #f8f9fa;
   border: 3px solid #212529;
   border-radius: 10px;
@@ -76,6 +104,20 @@ body {
   user-select: none;
   color: #212529;
   box-shadow: 4px 6px 14px rgba(0, 0, 0, 0.5);
+}
+
+.zone-field .card {
+  transform: scale(var(--card-scale-field));
+  transform-origin: top left;
+  margin-right: calc(var(--card-w) * var(--card-scale-field) - 100px);
+  margin-bottom: calc(var(--card-h) * var(--card-scale-field) - 140px);
+}
+
+.zone-hand .card {
+  transform: scale(var(--card-scale-hand));
+  transform-origin: top left;
+  margin-right: calc(var(--card-w) * var(--card-scale-hand) - 92px);
+  margin-bottom: calc(var(--card-h) * var(--card-scale-hand) - 125px);
 }
 
 .card:active {
