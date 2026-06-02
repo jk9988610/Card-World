@@ -486,12 +486,9 @@ function migrateWorldLayoutIfNeeded() {
 
   const toolOnField = state.field.some((i) => TOOL_SLUGS_ON_FIELD.includes(i.definitionSlug));
   const tutorialInHand = state.hand.some((i) => i.definitionSlug === "founders.tutorial");
-  const handMismatch = state.hand.some((i) => !STARTER_HAND_SLUGS.has(i.definitionSlug) && i.definitionSlug !== "content.door");
-  const fieldMismatch = state.field.some(
-    (i) => !STARTER_FIELD_SLUGS.has(i.definitionSlug) && i.definitionSlug !== "content.door"
-  );
+  const guideOnField = state.field.some((i) => i.definitionSlug === "founders.guide_weave_1");
 
-  if (toolOnField || tutorialInHand || (handMismatch && fieldMismatch)) {
+  if (toolOnField || tutorialInHand || guideOnField) {
     const doorInHand = state.hand.filter((i) => i.definitionSlug === "content.door");
     const doorOnField = state.field.filter((i) => i.definitionSlug === "content.door");
     state.hand = [...cloneInstList(starterSnapshot.hand), ...doorInHand];
