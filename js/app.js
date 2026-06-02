@@ -603,13 +603,11 @@ function openContainerFromHand(instanceId) {
     if (!state.guideQueue.length) setHintTarget("founders.language_settings");
   } else {
     if (!inner.length) {
-      state.hand.push(inst);
-      for (const c of state.fieldStash) state.field.push(c);
-      state.fieldStash = [];
-      return false;
+      toPour = [];
+    } else {
+      toPour = [...inner];
+      inst.inner = [];
     }
-    toPour = [...inner];
-    inst.inner = [];
   }
   for (const item of toPour) state.field.push(item);
 

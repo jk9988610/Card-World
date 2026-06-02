@@ -1607,7 +1607,7 @@
     if (!project) return false;
     if (!meta.skipConfirm) {
       const label = meta.title ? `「${meta.title}」` : meta.name ? `「${meta.name}」` : "该作品";
-      if (!confirm(`加载 ${label} 将替换当前编曲，是否继续？`)) return false;
+      if (!confirm(t("status.load_work_confirm", { label }))) return false;
     }
     if (typeof DraftStation !== "undefined") {
       DraftStation.archiveBeforeLoad(

@@ -50,7 +50,7 @@ const AppLogger = (() => {
 
   function formatAll() {
     const header = `=== ${versionLine()} ===`;
-    if (!entries.length) return header + "\n（暂无日志）";
+    if (!entries.length) return header + "\n" + (typeof window.HF_T === "function" ? window.HF_T("logger.no_entries") : "(no log entries)");
     return header + "\n" + entries.map(formatEntry).join("\n");
   }
 
@@ -74,16 +74,16 @@ const AppLogger = (() => {
           document.execCommand("copy");
           document.body.removeChild(ta);
         }
-        push("info", "日志已复制到剪贴板", header);
+        push("info", typeof window.HF_T === "function" ? window.HF_T("logger.copied") : "Log copied", header);
         return true;
       } catch (err) {
-        push("error", "复制日志失败", err.message);
+        push("error", typeof window.HF_T === "function" ? window.HF_T("logger.copy_failed") : "Copy failed", err.message);
         return false;
       }
     },
     clear() {
       entries.length = 0;
-      push("info", "日志已清空");
+      push("info", typeof window.HF_T === "function" ? window.HF_T("logger.cleared") : "Log cleared");
     },
   };
 })();

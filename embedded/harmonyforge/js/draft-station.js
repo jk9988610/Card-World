@@ -2,6 +2,8 @@
  * 草稿站 — 本地多份编曲草稿（localStorage）
  */
 const DraftStation = (() => {
+  const t = (key, params) =>
+    typeof window.HF_T === "function" ? window.HF_T(key, params) : key;
   const LS_KEY = "harmonyforge-draft-station";
   const MAX_DRAFTS = 40;
 
@@ -53,7 +55,7 @@ const DraftStation = (() => {
   }
 
   function saveDraft(name, project, meta = {}) {
-    if (!project) throw new Error("无法保存空工程");
+    if (!project) throw new Error(t("draft.empty_project"));
     const store = readStore();
     const entry = {
       id: crypto.randomUUID(),
@@ -115,7 +117,7 @@ const DraftStation = (() => {
       if (!drafts.length) {
         const li = document.createElement("li");
         li.className = "publish-store-empty";
-        li.textContent = "草稿站为空。加载他人作品时会自动保存当前编曲。";
+        li.textContent = t("draft.empty");
         listEl.appendChild(li);
         return;
       }
@@ -140,7 +142,7 @@ const DraftStation = (() => {
 
         const tag = document.createElement("div");
         tag.className = "publish-store-item-author";
-        tag.textContent = draft.meta?.auto ? "自动归档" : "手动保存";
+        tag.textContent = draft.meta?.auto ? t("draft.auto_tag") : t("draft.manual_tag");
 
         const actions = document.createElement("div");
         actions.className = "publish-store-item-actions";
@@ -148,7 +150,7 @@ const DraftStation = (() => {
         const btnLoad = document.createElement("button");
         btnLoad.type = "button";
         btnLoad.className = "btn btn-xs";
-        btnLoad.textContent = "加载";
+        btnLoad.textContent = t("draft.load");
         btnLoad.addEventListener("click", () => {
           if (typeof onLoadDraft !== "function") return;
           const ok = onLoadDraft(draft.project, {
@@ -162,12 +164,12 @@ const DraftStation = (() => {
         const btnDel = document.createElement("button");
         btnDel.type = "button";
         btnDel.className = "btn btn-xs btn-ghost";
-        btnDel.textContent = "删除";
+        btnDel.textContent = t("draft.delete");
         btnDel.addEventListener("click", () => {
-          if (!confirm(`删除草稿「${draft.name}」？`)) return;
+          if (!confirm(t("draft.delete_confirm", { name: draft.name }))) return;
           deleteDraft(draft.id);
           render();
-          setStatus?.("已删除草稿");
+          setStatus?.(t("draft.deleted"));
         });
 
         actions.append(btnLoad, btnDel);
@@ -183,11 +185,11 @@ const DraftStation = (() => {
 
     btnSaveCurrent?.addEventListener("click", () => {
       try {
-        const name = prompt("草稿名称", `草稿 ${formatNow()}`);
+        const name = prompt(t("draft.name_prompt"), `${t("draft.name_prompt")} ${formatNow()}`);
         if (name == null) return;
         const entry = saveDraft(name, getProjectData(), { auto: false });
         render();
-        setStatus?.(`已存入草稿站：${entry.name}`);
+        setStatus?.(t("draft.saved", { name: entry.name }));
         AppLogger?.info("草稿站", entry.name);
       } catch (err) {
         alert(err.message);

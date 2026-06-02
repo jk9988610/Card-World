@@ -288,6 +288,7 @@
     "no_saved": "No saved project",
     "project_loaded": "Project loaded",
     "load_failed": "Load failed: {msg}",
+    "load_work_confirm": "Load {label} replaces the current project. Continue?",
     "clear_confirm": "Clear all patterns and arrangement? Cannot undo.",
     "reset_demo": "Reset to demo data",
     "loaded_draft": "Loaded from drafts: {name}",
