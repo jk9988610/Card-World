@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache" />
   <title>Card World</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="css/main.css?v=0.9.0" />
+  <link rel="stylesheet" href="css/main.css?v=0.10.0" />
 </head>
 <body>
   <div id="app-version" class="app-version" aria-label="Version"></div>
@@ -75,6 +75,22 @@
       </div>
     </div>
   </div>
+  <div id="music-console" class="music-console hidden" aria-hidden="true">
+    <div class="music-console-shell">
+      <header class="music-console-top">
+        <span id="music-console-title" class="music-console-title">HarmonyForge</span>
+        <button type="button" id="music-console-close" class="art-editor-btn art-editor-btn-icon" aria-label="Close">×</button>
+      </header>
+      <p id="music-console-hint" class="music-console-hint"></p>
+      <iframe
+        id="music-console-frame"
+        class="music-console-frame"
+        title="HarmonyForge"
+        allow="autoplay; fullscreen"
+        referrerpolicy="no-referrer-when-downgrade"
+      ></iframe>
+    </div>
+  </div>
   <div id="art-works-gallery" class="art-modal hidden" aria-hidden="true">
     <div class="art-modal-panel art-works-panel" role="dialog" aria-labelledby="art-works-title">
       <header class="art-works-header">
@@ -90,6 +106,6 @@
     <div class="card-zoom-backdrop" id="zoom-backdrop"></div>
     <div class="card-zoom-slot" id="zoom-slot"></div>
   </div>
-  <script type="module" src="js/app.js?v=0.9.0"></script>
+  <script type="module" src="js/app.js?v=0.10.0"></script>
 </body>
 </html>

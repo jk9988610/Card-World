@@ -13,6 +13,10 @@
     {
       "definitionSlug": "founders.art_console",
       "instanceId": "inst_art_console_1"
+    },
+    {
+      "definitionSlug": "founders.music_console",
+      "instanceId": "inst_music_console_1"
     }
   ],
   "field": [

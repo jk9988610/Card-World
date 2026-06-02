@@ -96,6 +96,30 @@
       "title": "美术控制台",
       "text": "双击 — 进入美术工作台。"
     },
+    "music_console": {
+      "title": "音乐控制台",
+      "text": "双击 — 进入 HarmonyForge 音乐工具（布局仿编曲站顶栏）。"
+    },
+    "music_tool_studio": {
+      "title": "HarmonyForge",
+      "text": "收回手牌后打出 — 完整编曲工作站（步进 + 时间轴）。"
+    },
+    "music_tool_works": {
+      "title": "作品仓库",
+      "text": "打出 — 内嵌编曲站；请点顶栏「作品仓库」。"
+    },
+    "music_tool_store": {
+      "title": "发布商店",
+      "text": "打出 — 内嵌编曲站；请点顶栏「发布商店」。"
+    },
+    "music_tool_drafts": {
+      "title": "草稿站",
+      "text": "打出 — 内嵌编曲站；请点顶栏「草稿站」。"
+    },
+    "music_tool_battle": {
+      "title": "Beat Battle",
+      "text": "打出 — 新标签页打开评阅站。"
+    },
     "art_tool_pixel": {
       "title": "像素画板",
       "text": "收回手牌后双击打开画板；画完可「导出」到作品仓库，或「应用」写回本卡。"
@@ -112,7 +136,22 @@
   "scenes": {
     "art_console": {
       "title": "美术控制台"
+    },
+    "music_console": {
+      "title": "音乐控制台"
     }
+  },
+  "music_embed": {
+    "title_default": "HarmonyForge",
+    "title_studio": "HarmonyForge · 编曲",
+    "title_works": "HarmonyForge · 作品仓库",
+    "title_store": "HarmonyForge · 发布商店",
+    "title_drafts": "HarmonyForge · 草稿站",
+    "hint_default": "与 Music-production-website 同一站点。",
+    "hint_studio": "步进音序与编曲时间轴；发布/仓库/商店/草稿在顶栏。",
+    "hint_works": "内嵌页面打开后，请点击顶栏「作品仓库」。",
+    "hint_store": "内嵌页面打开后，请点击顶栏「发布商店」。",
+    "hint_drafts": "内嵌页面打开后，请点击顶栏「草稿站」。"
   },
   "art_editor": {
     "title": "像素画板",

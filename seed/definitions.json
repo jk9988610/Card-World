@@ -653,6 +653,108 @@
       }
     },
     {
+      "slug": "founders.music_console",
+      "localeKey": "music_console",
+      "titleKey": "cards.music_console",
+      "textKey": "cards.music_console",
+      "title": "Music Console",
+      "text": "Open HarmonyForge music workshop.",
+      "tags": ["music", "tool", "controller"],
+      "programs": { "on_play": "music.console.enter" },
+      "image": {
+        "type": "pixel/v1",
+        "w": 8,
+        "h": 8,
+        "palette": ["#1a1a2e", "#51cf66", "#339af0", "#ffd43b"],
+        "pixels": [0, 2, 2, 0, 2, 3, 3, 2, 0, 2, 2, 0, 1, 1, 1, 0]
+      }
+    },
+    {
+      "slug": "music.tool.studio",
+      "localeKey": "music_tool_studio",
+      "titleKey": "cards.music_tool_studio",
+      "textKey": "cards.music_tool_studio",
+      "title": "HarmonyForge",
+      "text": "Arranger workstation (step sequencer + timeline).",
+      "tags": ["music", "tool", "reusable"],
+      "programs": { "on_play": "music.embed.open" },
+      "image": {
+        "type": "pixel/v1",
+        "w": 8,
+        "h": 8,
+        "palette": ["#1a1a2e", "#51cf66", "#2f9e44"],
+        "pixels": [0, 1, 1, 1, 1, 1, 1, 0, 1, 2, 2, 2, 2, 2, 2, 1]
+      }
+    },
+    {
+      "slug": "music.tool.works",
+      "localeKey": "music_tool_works",
+      "titleKey": "cards.music_tool_works",
+      "textKey": "cards.music_tool_works",
+      "title": "Works Repo",
+      "text": "Your published tracks (HarmonyForge header: Works Repo).",
+      "tags": ["music", "tool", "reusable"],
+      "programs": { "on_play": "music.embed.open" },
+      "image": {
+        "type": "pixel/v1",
+        "w": 8,
+        "h": 8,
+        "palette": ["#1a1a2e", "#339af0", "#ffd43b"],
+        "pixels": [0, 1, 1, 0, 1, 2, 2, 1, 0, 1, 1, 0, 0, 0, 0, 0]
+      }
+    },
+    {
+      "slug": "music.tool.store",
+      "localeKey": "music_tool_store",
+      "titleKey": "cards.music_tool_store",
+      "textKey": "cards.music_tool_store",
+      "title": "Publish Store",
+      "text": "Browse and load others' projects (HarmonyForge: Publish Store).",
+      "tags": ["music", "tool", "reusable"],
+      "programs": { "on_play": "music.embed.open" },
+      "image": {
+        "type": "pixel/v1",
+        "w": 8,
+        "h": 8,
+        "palette": ["#1a1a2e", "#cc5de8", "#f8f9fa"],
+        "pixels": [0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 2, 1, 1, 2, 1, 0]
+      }
+    },
+    {
+      "slug": "music.tool.drafts",
+      "localeKey": "music_tool_drafts",
+      "titleKey": "cards.music_tool_drafts",
+      "textKey": "cards.music_tool_drafts",
+      "title": "Draft Station",
+      "text": "Local project drafts (HarmonyForge: Draft Station).",
+      "tags": ["music", "tool", "reusable"],
+      "programs": { "on_play": "music.embed.open" },
+      "image": {
+        "type": "pixel/v1",
+        "w": 8,
+        "h": 8,
+        "palette": ["#1a1a2e", "#868e96", "#dee2e6"],
+        "pixels": [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1]
+      }
+    },
+    {
+      "slug": "music.tool.battle",
+      "localeKey": "music_tool_battle",
+      "titleKey": "cards.music_tool_battle",
+      "textKey": "cards.music_tool_battle",
+      "title": "Beat Battle",
+      "text": "Open the Beat Battle review site.",
+      "tags": ["music", "tool", "reusable"],
+      "programs": { "on_play": "music.battle.open" },
+      "image": {
+        "type": "pixel/v1",
+        "w": 8,
+        "h": 8,
+        "palette": ["#1a1a2e", "#ff922b", "#ffd43b"],
+        "pixels": [0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 1, 1, 0, 0, 0, 0]
+      }
+    },
+    {
       "slug": "founders.art_console",
       "localeKey": "art_console",
       "titleKey": "cards.art_console",

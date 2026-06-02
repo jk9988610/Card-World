@@ -96,6 +96,30 @@
       "title": "Art Console",
       "text": "Double-tap — open the art workshop."
     },
+    "music_console": {
+      "title": "Music Console",
+      "text": "Double-tap — open HarmonyForge tools (like the music site header)."
+    },
+    "music_tool_studio": {
+      "title": "HarmonyForge",
+      "text": "Recall to Hand, play — full arranger (sequencer + timeline)."
+    },
+    "music_tool_works": {
+      "title": "Works Repo",
+      "text": "Play — embed HarmonyForge; use top bar «Works Repo»."
+    },
+    "music_tool_store": {
+      "title": "Publish Store",
+      "text": "Play — embed HarmonyForge; use top bar «Publish Store»."
+    },
+    "music_tool_drafts": {
+      "title": "Draft Station",
+      "text": "Play — embed HarmonyForge; use top bar «Draft Station»."
+    },
+    "music_tool_battle": {
+      "title": "Beat Battle",
+      "text": "Play — open Beat Battle review site in a new tab."
+    },
     "art_tool_pixel": {
       "title": "Pixel Board",
       "text": "Recall to Hand, double-tap to edit. Export to Works, or Apply to save on this card."
@@ -112,7 +136,22 @@
   "scenes": {
     "art_console": {
       "title": "Art Console"
+    },
+    "music_console": {
+      "title": "Music Console"
     }
+  },
+  "music_embed": {
+    "title_default": "HarmonyForge",
+    "title_studio": "HarmonyForge · Studio",
+    "title_works": "HarmonyForge · Works Repo",
+    "title_store": "HarmonyForge · Publish Store",
+    "title_drafts": "HarmonyForge · Draft Station",
+    "hint_default": "Same app as Music-production-website.",
+    "hint_studio": "Arrange patterns and timeline; Publish / Works / Store / Drafts are in the top bar.",
+    "hint_works": "In the embedded app, tap «Works Repo» in the header to manage your cloud tracks.",
+    "hint_store": "In the embedded app, tap «Publish Store» to browse and load community projects.",
+    "hint_drafts": "In the embedded app, tap «Draft Station» for local draft backups."
   },
   "art_editor": {
     "title": "Pixel Board",

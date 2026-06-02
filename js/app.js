@@ -23,6 +23,11 @@ import {
   uploadArtPng,
 } from "./art-storage.js";
 import { isCloudEnabled } from "./cloud-config.js";
+import {
+  BEAT_BATTLE_URL,
+  MUSIC_EMBED_SLUG_TO_MODE,
+  musicEmbedUrl,
+} from "./music-config.js";
 import { clearSave, loadSave, writeSave } from "./storage.js";
 import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
 
@@ -30,7 +35,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.9.0";
+const APP_VERSION = "0.10.0";
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -46,6 +51,7 @@ const TOOL_SLUGS_ON_FIELD = [
   "founders.settings",
   "seed.starter_deck",
   "founders.art_console",
+  "founders.music_console",
 ];
 
 const SWATCH_BY_TAG = [
@@ -59,6 +65,7 @@ const SWATCH_BY_TAG = [
   ["container", "#ae3ec9"],
   ["deck", "#9c36b5"],
   ["art", "#cc5de8"],
+  ["music", "#51cf66"],
   ["tool", "#868e96"],
 ];
 
@@ -114,6 +121,7 @@ const artEditor = {
   shopCache: [],
 };
 let artDraftSaveTimer = null;
+let musicEmbedMode = "studio";
 let currentLocale = "en";
 
 const state = {
@@ -176,6 +184,11 @@ const els = {
   artWorksGallery: document.getElementById("art-works-gallery"),
   artWorksList: document.getElementById("art-works-list"),
   artWorksClose: document.getElementById("art-works-close"),
+  musicConsole: document.getElementById("music-console"),
+  musicConsoleFrame: document.getElementById("music-console-frame"),
+  musicConsoleTitle: document.getElementById("music-console-title"),
+  musicConsoleHint: document.getElementById("music-console-hint"),
+  musicConsoleClose: document.getElementById("music-console-close"),
   appVersion: document.getElementById("app-version"),
 };
 
@@ -397,6 +410,7 @@ function tagClass(tags) {
   if (tags.includes("language")) return "tag-language";
   if (tags.includes("tutorial") || tags.includes("guide")) return "tag-guide";
   if (tags.includes("controller")) return "tag-controller";
+  if (tags.includes("music")) return "tag-music";
   if (tags.includes("content")) return "tag-content";
   if (tags.includes("container") || tags.includes("deck")) return "tag-container";
   if (tags.includes("programming")) return "tag-programming";
@@ -684,13 +698,14 @@ function updateSceneChrome() {
   if (scene) {
     document.body.classList.add("in-scene");
     document.body.classList.toggle("scene-art", scene.kind === "art");
+    document.body.classList.toggle("scene-music", scene.kind === "music");
     els.sceneBar?.classList.remove("hidden");
     const locTitle = localeScene(scene.titleKey);
     if (els.sceneTitle) {
       els.sceneTitle.textContent = locTitle?.title || scene.title || state.currentSceneId;
     }
   } else {
-    document.body.classList.remove("in-scene", "scene-art");
+    document.body.classList.remove("in-scene", "scene-art", "scene-music");
     els.sceneBar?.classList.add("hidden");
     if (els.sceneTitle) els.sceneTitle.textContent = "";
   }
@@ -699,6 +714,7 @@ function updateSceneChrome() {
 function pushScene(sceneId) {
   const scene = scenes[sceneId];
   if (!scene) return;
+  closeMusicEmbed();
   state.sceneStack.push({
     sceneId: state.currentSceneId,
     ...worldSlice(),
@@ -717,6 +733,7 @@ function pushScene(sceneId) {
 function popScene() {
   if (!state.sceneStack.length) return;
   closeArtEditor();
+  closeMusicEmbed();
   const frame = state.sceneStack.pop();
   state.currentSceneId = frame.sceneId ?? null;
   applyWorldSlice(frame);
@@ -1482,6 +1499,43 @@ function closeWorksGallery() {
   els.artWorksGallery?.setAttribute("aria-hidden", "true");
 }
 
+function musicEmbedHintForMode(mode) {
+  const t = locales[currentLocale]?.music_embed || locales.en?.music_embed || {};
+  return t[`hint_${mode}`] || t.hint_default || "";
+}
+
+function musicTitleForMode(mode) {
+  const t = locales[currentLocale]?.music_embed || locales.en?.music_embed || {};
+  return t[`title_${mode}`] || t.title_default || "HarmonyForge";
+}
+
+function openMusicEmbed(mode = "studio") {
+  musicEmbedMode = mode;
+  const url = musicEmbedUrl(mode);
+  if (els.musicConsoleTitle) els.musicConsoleTitle.textContent = musicTitleForMode(mode);
+  if (els.musicConsoleHint) els.musicConsoleHint.textContent = musicEmbedHintForMode(mode);
+  if (els.musicConsoleFrame) els.musicConsoleFrame.src = url;
+  document.body.classList.add("music-console-open");
+  els.musicConsole?.classList.remove("hidden");
+  els.musicConsole?.setAttribute("aria-hidden", "false");
+}
+
+function closeMusicEmbed() {
+  document.body.classList.remove("music-console-open");
+  els.musicConsole?.classList.add("hidden");
+  els.musicConsole?.setAttribute("aria-hidden", "true");
+  if (els.musicConsoleFrame) els.musicConsoleFrame.src = "about:blank";
+}
+
+function openExternalUrl(url) {
+  if (!url) return;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+function setupMusicConsole() {
+  els.musicConsoleClose?.addEventListener("click", () => closeMusicEmbed());
+}
+
 async function openArtEditor(instanceId) {
   artEditor.open = true;
   artEditor.tool = "brush";
@@ -1674,6 +1728,7 @@ function resetWorld() {
   abortPointerDrag();
   closeZoom();
   closeArtEditor();
+  closeMusicEmbed();
   clearSave();
   state.sceneStack = [];
   state.currentSceneId = null;
@@ -2086,6 +2141,10 @@ function setLocale(code) {
     applyWorksGalleryI18n();
     renderWorksGallery();
   }
+  if (els.musicConsole && !els.musicConsole.classList.contains("hidden")) {
+    if (els.musicConsoleTitle) els.musicConsoleTitle.textContent = musicTitleForMode(musicEmbedMode);
+    if (els.musicConsoleHint) els.musicConsoleHint.textContent = musicEmbedHintForMode(musicEmbedMode);
+  }
   renderAll();
   persistSave();
   if (els.zoom && !els.zoom.classList.contains("hidden")) {
@@ -2185,6 +2244,19 @@ function runProgram(programId, ctx) {
       case "art_gallery_open":
         openWorksGallery();
         break;
+      case "music_embed_open": {
+        const loc = ctx?.instanceId ? findInstance(ctx.instanceId) : null;
+        const slug = loc?.instance?.definitionSlug;
+        const mode =
+          node.params?.mode ||
+          (slug && MUSIC_EMBED_SLUG_TO_MODE[slug]) ||
+          "studio";
+        openMusicEmbed(mode);
+        break;
+      }
+      case "open_url":
+        openExternalUrl(node.params?.url || BEAT_BATTLE_URL);
+        break;
       default:
         break;
     }
@@ -2253,6 +2325,7 @@ async function init() {
   setupDropZone(els.zoneField, "field");
   els.zoomBackdrop.addEventListener("click", closeZoom);
   setupArtEditor();
+  setupMusicConsole();
 
   try {
     await loadLocales();

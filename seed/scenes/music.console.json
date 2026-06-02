@@ -1,0 +1,33 @@
+{
+  "id": "scene.music.console",
+  "title": "Music Console",
+  "titleKey": "scenes.music_console",
+  "kind": "music",
+  "hand": [
+    {
+      "definitionSlug": "founders.back",
+      "instanceId": "inst_music_back_1"
+    },
+    {
+      "definitionSlug": "music.tool.studio",
+      "instanceId": "inst_music_studio_1"
+    },
+    {
+      "definitionSlug": "music.tool.works",
+      "instanceId": "inst_music_works_1"
+    },
+    {
+      "definitionSlug": "music.tool.store",
+      "instanceId": "inst_music_store_1"
+    },
+    {
+      "definitionSlug": "music.tool.drafts",
+      "instanceId": "inst_music_drafts_1"
+    },
+    {
+      "definitionSlug": "music.tool.battle",
+      "instanceId": "inst_music_battle_1"
+    }
+  ],
+  "field": []
+}

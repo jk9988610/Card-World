@@ -1,0 +1,5 @@
+{
+  "id": "music.embed.open",
+  "entry": "n0",
+  "nodes": [{ "id": "n0", "op": "music_embed_open" }]
+}
