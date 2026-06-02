@@ -170,10 +170,17 @@ body.in-scene.scene-art .zone-field {
   cursor: grab;
   touch-action: manipulation;
   user-select: none;
+  -webkit-user-select: none;
   -webkit-user-drag: element;
+  -webkit-touch-callout: none;
   color: #212529;
   box-shadow: calc(2px * var(--card-scale)) calc(4px * var(--card-scale)) calc(10px * var(--card-scale))
     rgba(0, 0, 0, 0.45);
+}
+
+/* Let drag hit the card shell, not inner canvas/text (fixes iOS native + pointer) */
+.card > * {
+  pointer-events: none;
 }
 
 .card.tag-settings {
@@ -313,6 +320,34 @@ body.in-scene.scene-art .zone-field {
 
 .zone-field .card {
   touch-action: none;
+}
+
+.card.card-pickup {
+  opacity: 0.35;
+}
+
+.card.long-press-armed {
+  transform: scale(1.03);
+  transition: transform 0.12s ease;
+}
+
+.drag-ghost {
+  position: fixed;
+  z-index: 300;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  opacity: 0.95;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.45));
+}
+
+body.card-dragging .zone-hand {
+  overflow: hidden;
+}
+
+.zone-hand.zone-drop-target,
+.zone-field.zone-drop-target {
+  outline: 3px dashed rgba(255, 212, 59, 0.75);
+  outline-offset: -3px;
 }
 
 .art-editor {
