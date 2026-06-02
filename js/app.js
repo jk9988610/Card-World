@@ -4,7 +4,7 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | native drag (mouse) | short long-press drag (touch)
  */
 
-const APP_VERSION = "0.6.3";
+const APP_VERSION = "0.6.4";
 
 const TOOL_SLUGS_ON_FIELD = [
   "founders.settings",
@@ -664,6 +664,7 @@ function setupArtEditor() {
 
 function resetWorld() {
   if (!starterSnapshot) return;
+  abortAllDrags();
   closeZoom();
   closeArtEditor();
   clearSave();
@@ -694,28 +695,51 @@ function zoneAtPoint(clientX, clientY) {
   return null;
 }
 
+function cleanupDragVisuals(sourceEl) {
+  document.querySelectorAll(".drag-ghost").forEach((n) => n.remove());
+  dragGhost = null;
+  if (sourceEl?.isConnected) {
+    sourceEl.classList.remove("dragging-source");
+  }
+  document.querySelectorAll(".card.dragging-source").forEach((n) => n.classList.remove("dragging-source"));
+  document.body.classList.remove("card-dragging");
+}
+
+function abortAllDrags() {
+  if (touchSession?.timer) {
+    clearTimeout(touchSession.timer);
+    touchSession.timer = null;
+  }
+  const sourceEl = touchSession?.el;
+  touchSession = null;
+  cleanupDragVisuals(sourceEl);
+  drag = null;
+}
+
 function ensureTouchDocListeners() {
   if (touchDocListenersOn) return;
   touchDocListenersOn = true;
   document.addEventListener("pointermove", onTouchDocPointerMove, { passive: false });
   document.addEventListener("pointerup", onTouchDocPointerEnd);
   document.addEventListener("pointercancel", onTouchDocPointerEnd);
+  document.addEventListener("lostpointercapture", onTouchLostPointerCapture);
+  window.addEventListener("blur", abortAllDrags);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") abortAllDrags();
+  });
+}
+
+function onTouchLostPointerCapture(e) {
+  if (!touchSession || e.pointerId !== touchSession.pointerId) return;
+  if (touchSession.phase === "dragging") {
+    const s = touchSession;
+    touchSession = null;
+    finishTouchDrag(e.clientX, e.clientY, s);
+  }
 }
 
 function cancelTouchSession() {
-  if (!touchSession) return;
-  if (touchSession.timer) {
-    clearTimeout(touchSession.timer);
-    touchSession.timer = null;
-  }
-  if (touchSession.phase === "dragging") {
-    dragGhost?.remove();
-    dragGhost = null;
-    touchSession.el.classList.remove("dragging-source");
-    document.body.classList.remove("card-dragging");
-    drag = null;
-  }
-  touchSession = null;
+  abortAllDrags();
 }
 
 function startTouchDrag(clientX, clientY) {
@@ -737,21 +761,16 @@ function startTouchDrag(clientX, clientY) {
   document.body.classList.add("card-dragging");
 }
 
-function finishTouchDrag(clientX, clientY) {
-  if (!touchSession || touchSession.phase !== "dragging") return;
-  const s = touchSession;
+function finishTouchDrag(clientX, clientY, session) {
+  if (!session || session.phase !== "dragging") return;
   const toZone = zoneAtPoint(clientX, clientY);
-  if (toZone && toZone !== s.zone) {
-    drag = { id: s.instanceId, from: s.zone, moved: true };
-    handleZoneDrop(s.instanceId, s.zone, toZone);
-  }
-  dragGhost?.remove();
-  dragGhost = null;
-  s.el.classList.remove("dragging-source");
-  document.body.classList.remove("card-dragging");
-  setTimeout(() => {
+  cleanupDragVisuals(session.el);
+  drag = null;
+  if (toZone && toZone !== session.zone) {
+    drag = { id: session.instanceId, from: session.zone, moved: true };
+    handleZoneDrop(session.instanceId, session.zone, toZone);
     drag = null;
-  }, 25);
+  }
 }
 
 function onTouchDocPointerMove(e) {
@@ -799,7 +818,7 @@ function onTouchDocPointerEnd(e) {
   } catch (_) {}
 
   if (wasDrag) {
-    finishTouchDrag(e.clientX, e.clientY);
+    finishTouchDrag(e.clientX, e.clientY, s);
     return;
   }
 
@@ -847,7 +866,10 @@ function setupMouseDrag(el, inst, zone) {
     drag = { id: inst.instanceId, from: zone, moved: false };
     e.dataTransfer.setData("text/plain", inst.instanceId);
   });
-  el.addEventListener("dragend", () => setTimeout(() => { drag = null; }, 50));
+  el.addEventListener("dragend", () => {
+    cleanupDragVisuals(el);
+    drag = null;
+  });
 }
 
 function shouldHint(slug, zone) {
@@ -896,6 +918,9 @@ function buildCardEl(inst, zone, opts = {}) {
 }
 
 function renderAll() {
+  if (touchSession?.phase === "dragging" || dragGhost) {
+    abortAllDrags();
+  }
   renderZone("field", els.field, state.field);
   renderZone("hand", els.hand, state.hand);
 }
