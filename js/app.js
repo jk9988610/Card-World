@@ -4,7 +4,7 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.7.6";
+const APP_VERSION = "0.7.7";
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -124,6 +124,7 @@ const els = {
   artColorHex: document.getElementById("art-color-hex"),
   artColorApply: document.getElementById("art-color-apply"),
   artBrushPreview: document.getElementById("art-brush-preview"),
+  artExportBtn: document.getElementById("art-export-btn"),
   appVersion: document.getElementById("app-version"),
 };
 
@@ -823,6 +824,7 @@ async function openArtEditor() {
   if (els.artEditorTitle) els.artEditorTitle.textContent = t.title || "Pixel Board";
   if (els.artEditorHint) els.artEditorHint.textContent = t.hint || "";
   if (els.artColorApply) els.artColorApply.textContent = t.apply_color || "Apply";
+  if (els.artExportBtn) els.artExportBtn.textContent = t.export_png || "Export PNG";
   rebuildArtToolUI();
   document.body.classList.add("art-editor-open");
   els.artEditor?.classList.remove("hidden");
@@ -838,6 +840,32 @@ async function openArtEditor() {
 
 function layoutArtCanvasFrame() {
   redrawArtPixelCanvas();
+}
+
+function exportArtPaintingPng() {
+  const scale = 12;
+  const w = artEditor.w * scale;
+  const h = artEditor.h * scale;
+  const out = document.createElement("canvas");
+  out.width = w;
+  out.height = h;
+  const ctx = out.getContext("2d");
+  if (!ctx) return;
+  for (let y = 0; y < artEditor.h; y++) {
+    for (let x = 0; x < artEditor.w; x++) {
+      ctx.fillStyle = normalizeHex(artEditor.grid[y * artEditor.w + x] || ART_BG);
+      ctx.fillRect(x * scale, y * scale, scale, scale);
+    }
+  }
+  out.toBlob((blob) => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `card-world-${Date.now()}.png`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }, "image/png");
 }
 
 async function closeArtEditor() {
@@ -885,6 +913,7 @@ function setupArtEditor() {
   });
 
   els.artEditorClose?.addEventListener("click", () => closeArtEditor());
+  els.artExportBtn?.addEventListener("click", exportArtPaintingPng);
   els.artColorPicker?.addEventListener("input", (e) => {
     setArtBrushColor(e.target.value);
   });
@@ -1307,6 +1336,7 @@ function setLocale(code) {
     const t = locales[currentLocale]?.art_editor || locales.en?.art_editor || {};
     if (els.artEditorHint) els.artEditorHint.textContent = t.hint || "";
     if (els.artColorApply) els.artColorApply.textContent = t.apply_color || "Apply";
+    if (els.artExportBtn) els.artExportBtn.textContent = t.export_png || "Export PNG";
     rebuildArtToolUI();
   }
   renderAll();

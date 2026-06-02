@@ -109,6 +109,7 @@
   "art_editor": {
     "title": "Pixel Board",
     "hint": "Brush, eraser, fill, eyedropper. Canvas 7:5 (wider than tall), matches card image frame. Presets or RGB.",
+    "export_png": "Export PNG",
     "apply_color": "Apply",
     "tools": {
       "brush": "Brush",

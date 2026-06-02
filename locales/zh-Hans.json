@@ -109,6 +109,7 @@
   "art_editor": {
     "title": "像素画板",
     "hint": "画笔/橡皮/填充/取色器；画板 7:5（宽>高）与卡牌图像框一致。预设色或 RGB。",
+    "export_png": "导出 PNG",
     "apply_color": "应用",
     "tools": {
       "brush": "画笔",
