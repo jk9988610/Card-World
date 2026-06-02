@@ -22,9 +22,15 @@ jobs:
       - name: Build seed bundle
         run: node tools/build-seed.mjs
 
+      - name: Prepare site folder
+        run: |
+          mkdir -p _site
+          cp index.html .nojekyll _site/
+          cp -r css js dist seed _site/
+          cp README.md _site/README.md
+
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
-          exclude_assets: ".github,.git"
+          publish_dir: ./_site
