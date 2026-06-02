@@ -1,13 +1,17 @@
 import { clearSave, loadSave, writeSave } from "./storage.js";
 
 /**
- * Card World — tap zoom | native drag (smooth on iPad) | backpack flow
+ * Card World — tap zoom | native drag (mouse) | short long-press drag (touch)
  */
 
-const APP_VERSION = "0.5.7";
-/** Quick tap to zoom (ms); ~half of typical mobile click delay */
-const TAP_ZOOM_MAX_MS = 225;
+const APP_VERSION = "0.5.8";
+/** Touch drag: ~half of Safari default long-press (~500ms → ~250ms) */
+const TOUCH_DRAG_HOLD_MS = 250;
+const TOUCH_MOVE_CANCEL_PX = 14;
 const TAP_ZOOM_MAX_PX = 14;
+const TAP_ZOOM_MAX_MS = 450;
+
+const USE_TOUCH_DRAG = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 
 const SWATCH_BY_TAG = [
   ["programming", "#6f42c1"],

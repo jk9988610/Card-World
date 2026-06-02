@@ -220,6 +220,30 @@ body {
   font-size: 0.95rem;
 }
 
+.zone-hand .card {
+  touch-action: pan-x;
+}
+
+.zone-field .card {
+  touch-action: none;
+}
+
+.card.dragging-source {
+  opacity: 0.4;
+}
+
+.drag-ghost {
+  position: fixed;
+  z-index: 300;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  opacity: 0.92;
+}
+
+body.card-dragging .zone-hand {
+  overflow: hidden;
+}
+
 /* Fullscreen: hand zone +50% taller (2:1 -> 2:1.5) */
 @media (display-mode: fullscreen) {
   body {
