@@ -2,7 +2,7 @@
  * Card World — minimal UI: Field, Hand, Cards only.
  */
 
-export const APP_VERSION = "0.2.0";
+export const APP_VERSION = "0.2.1";
 
 const MAX_STEPS = 200;
 const LOG_INSTANCE_ID = "inst_log_1";
@@ -110,25 +110,28 @@ function drawPixel(canvas, payload) {
   canvas.height = h;
   const pal = payload.palette || ["#000", "#fff"];
   const px = payload.pixels || [];
+  const parent = canvas.parentElement;
+  const cw = parent?.clientWidth || 242;
+  const ch = parent?.clientHeight || 168;
+  const block = Math.max(6, Math.floor(Math.min(cw / w, ch / h) * 0.85));
+  canvas.width = w * block;
+  canvas.height = h * block;
   ctx.imageSmoothingEnabled = false;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = px[y * w + x] ?? px[(y * w + x) % Math.max(px.length, 1)] ?? 0;
       ctx.fillStyle = pal[i] ?? pal[0];
-      ctx.fillRect(x, y, 1, 1);
+      ctx.fillRect(x * block, y * block, block, block);
     }
   }
-  const parent = canvas.parentElement;
-  const cw = parent?.clientWidth || 242;
-  const ch = parent?.clientHeight || 168;
-  const scale = Math.min(cw / w, ch / h, 8);
-  canvas.style.width = `${w * scale}px`;
-  canvas.style.height = `${h * scale}px`;
+  canvas.style.width = `${w * block}px`;
+  canvas.style.height = `${h * block}px`;
 }
 
 function tagClass(tags) {
   if (tags.includes("programming")) return "tag-programming";
   if (tags.includes("log")) return "tag-log";
+  if (tags.includes("tutorial")) return "tag-tutorial";
   if (tags.includes("guide")) return "tag-guide";
   if (tags.includes("controller")) return "tag-controller";
   if (tags.includes("content")) return "tag-content";
@@ -355,10 +358,10 @@ function playCard(instanceId) {
   if (programId === "world.bootstrap") {
     state.bootstrapDone = true;
     document.querySelectorAll(".hint").forEach((el) => el.classList.remove("hint"));
-    const guide = findInstance("inst_guide_1");
-    if (guide) {
-      guide.instance.text =
-        "1. Door spawned.\n2. Play Door.\n3. Drag cards.\n4. Play Copy Log to export log.";
+    const tutorial = findInstance("inst_tutorial_1");
+    if (tutorial) {
+      tutorial.instance.text =
+        "STEP 1–2 done.\nSTEP 3 — Play Door.\nSTEP 4 — Drag cards.\nSTEP 5 — Play Copy Log.";
       renderAll();
     }
   }
@@ -432,7 +435,7 @@ async function init() {
     appendLog(`Load failed: ${err.message}`);
     state.field.push({
       instanceId: "inst_err_1",
-      definitionSlug: "founders.guide",
+      definitionSlug: "founders.tutorial",
       title: "Load Error",
       text: String(err.message),
     });

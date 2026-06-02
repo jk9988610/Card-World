@@ -2,11 +2,11 @@
   --felt: #1e4d3a;
   --felt-light: #2a6b52;
   --hand-bg: #152238;
-  --card-w: 250px;
-  --card-h: 350px;
-  --card-scale-field: 0.38;
-  --card-scale-hand: 0.34;
-  --hand-bar: clamp(100px, 38dvh, 220px);
+  /* 5:7 card face — sized for phone landscape */
+  --card-w: clamp(168px, 32vmin, 280px);
+  --card-h: calc(var(--card-w) * 7 / 5);
+  --hand-bar: clamp(140px, 48dvh, 300px);
+  --gap: 0.4rem;
 }
 
 * {
@@ -23,7 +23,7 @@ body {
   background: #0d1117;
 }
 
-/* Landscape-first: Field on top (main), Hand bar along the bottom */
+/* Landscape: Field top, Hand bottom (full width each) */
 body {
   display: grid;
   grid-template-columns: 1fr;
@@ -41,7 +41,7 @@ body {
   min-width: 0;
   background: linear-gradient(160deg, var(--felt-light), var(--felt));
   overflow: auto;
-  padding: 0.5rem;
+  padding: var(--gap);
   -webkit-overflow-scrolling: touch;
 }
 
@@ -51,9 +51,9 @@ body {
   min-height: 0;
   min-width: 0;
   background: var(--hand-bg);
-  border-top: 3px solid #38486a;
+  border-top: 4px solid #4dabf7;
   overflow: hidden;
-  padding: 0.35rem 0.5rem;
+  padding: var(--gap);
 }
 
 .zone-scene {
@@ -61,7 +61,7 @@ body {
   inset: 0;
   z-index: 50;
   background: linear-gradient(160deg, #2c3e5a, #1a2332);
-  padding: 0.5rem;
+  padding: var(--gap);
   overflow: auto;
 }
 
@@ -69,26 +69,24 @@ body {
   display: none;
 }
 
-/* Field: cards wrap on the table */
 .zone-field .zone-cards {
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
-  gap: 0.25rem;
-  min-height: min-content;
+  gap: var(--gap);
 }
 
-/* Hand: single horizontal strip (bottom in landscape) */
 .zone-hand .zone-cards {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: flex-start;
-  gap: 0.25rem;
+  gap: var(--gap);
   height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: 0.25rem;
 }
 
 .card {
@@ -96,28 +94,19 @@ body {
   width: var(--card-w);
   height: var(--card-h);
   background: #f8f9fa;
-  border: 3px solid #212529;
-  border-radius: 10px;
+  border: 4px solid #212529;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   cursor: grab;
   user-select: none;
   color: #212529;
-  box-shadow: 4px 6px 14px rgba(0, 0, 0, 0.5);
-}
-
-.zone-field .card {
-  transform: scale(var(--card-scale-field));
-  transform-origin: top left;
-  margin-right: calc(var(--card-w) * var(--card-scale-field) - 100px);
-  margin-bottom: calc(var(--card-h) * var(--card-scale-field) - 140px);
+  box-shadow: 4px 8px 18px rgba(0, 0, 0, 0.55);
 }
 
 .zone-hand .card {
-  transform: scale(var(--card-scale-hand));
-  transform-origin: top left;
-  margin-right: calc(var(--card-w) * var(--card-scale-hand) - 92px);
-  margin-bottom: calc(var(--card-h) * var(--card-scale-hand) - 125px);
+  width: clamp(150px, 28vmin, 240px);
+  height: calc(clamp(150px, 28vmin, 240px) * 7 / 5);
 }
 
 .card:active {
@@ -125,12 +114,13 @@ body {
 }
 
 .card.hint {
-  animation: pulse 2.2s ease-in-out infinite;
+  animation: pulse 2s ease-in-out infinite;
+  border-color: #ffd43b;
 }
 
 @keyframes pulse {
   50% {
-    box-shadow: 0 0 0 3px #ffd43b, 4px 6px 14px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 0 4px #ffd43b, 4px 8px 18px rgba(0, 0, 0, 0.55);
   }
 }
 
@@ -138,13 +128,16 @@ body {
   border-color: #1971c2;
 }
 
+.card.tag-tutorial,
 .card.tag-guide,
 .card.tag-log {
   border-color: #e03131;
+  border-width: 4px;
 }
 
 .card.tag-controller {
   border-color: #5f3dc4;
+  border-width: 4px;
 }
 
 .card.tag-content {
@@ -157,18 +150,21 @@ body {
 
 .card-title {
   height: 14%;
+  min-height: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 0.95rem;
+  font-weight: 800;
+  font-size: clamp(1rem, 3.2vmin, 1.35rem);
   border-bottom: 2px solid #dee2e6;
-  padding: 0 6px;
+  padding: 0 8px;
   text-align: center;
+  line-height: 1.2;
 }
 
 .card-image {
   height: 48%;
+  min-height: 4.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -179,16 +175,23 @@ body {
 
 .card-image canvas {
   image-rendering: pixelated;
+  width: 80% !important;
+  height: 80% !important;
   max-width: 100%;
   max-height: 100%;
 }
 
 .card-text {
-  height: 31%;
-  padding: 6px 8px;
-  font-size: 0.72rem;
-  line-height: 1.3;
+  flex: 1;
+  padding: 8px 10px;
+  font-size: clamp(0.85rem, 2.8vmin, 1.05rem);
+  line-height: 1.4;
   overflow-y: auto;
   text-align: left;
   word-break: break-word;
+}
+
+.card.tag-tutorial .card-text,
+.card.tag-log .card-text {
+  font-size: clamp(0.8rem, 2.6vmin, 1rem);
 }
