@@ -6,7 +6,7 @@
     "exit_fullscreen": { "title": "Exit Fullscreen", "text": "Drag to Field — leave fullscreen." },
     "language_settings": { "title": "Language Settings", "text": "Drag to Field — get language cards in Hand." },
     "lang_en": { "title": "English", "text": "Drag to Field — UI and cards in English." },
-    "lang_zh": { "title": "中文", "text": "拖到场 — 界面与卡牌显示中文。" },
+    "lang_zh": { "title": "中文", "text": "Drag to Field — display in Chinese." },
     "highlight_on": { "title": "Highlight On", "text": "Drag to Field — show play hints on key cards." },
     "highlight_off": { "title": "Highlight Off", "text": "Drag to Field — hide play hints." },
     "world_controller": { "title": "World Controller", "text": "Drag to Field to bootstrap the world." },
@@ -17,6 +17,10 @@
     "guide_weave_2": { "title": "Weave 2", "text": "After bootstrap, drag Door to Field to play it." },
     "guide_weave_3": { "title": "Weave 3", "text": "Use programming cards from Hand — drag each to Field." },
     "guide_weave_4": { "title": "Weave 4", "text": "Tap any card to read it large. Take cards Field→Hand anytime." },
-    "guide_weave_5": { "title": "Weave 5", "text": "Open Settings for fullscreen, language, and highlights." }
+    "guide_weave_5": { "title": "Weave 5", "text": "Open Settings for fullscreen, language, and highlights." },
+    "prog_on_play": { "title": "On Play", "text": "Programming card. Drag to Field with other program cards." },
+    "prog_spawn": { "title": "Spawn", "text": "Programming card. Creates a card on the table." },
+    "prog_set_slot": { "title": "Set Slot", "text": "Programming card. Changes title, image, or text." },
+    "load_error": { "title": "Load Error", "text": "Could not load game data. Check your connection and refresh." }
   }
 }

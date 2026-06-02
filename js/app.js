@@ -1,8 +1,10 @@
+import { loadSave, writeSave } from "./storage.js";
+
 /**
  * Card World v0.3 — tap zoom | drag Hand→Field play | Field→Hand take
  */
 
-const APP_VERSION = "0.3.1";
+const APP_VERSION = "0.3.2";
 
 const defBySlug = new Map();
 let programs = {};
@@ -29,6 +31,38 @@ const els = {
   zoomSlot: document.getElementById("zoom-slot"),
 };
 
+
+function localeKeyForDef(def) {
+  if (def.localeKey) return def.localeKey;
+  return def.slug.replace(/\./g, "_");
+}
+
+function persistSave() {
+  writeSave({
+    appVersion: APP_VERSION,
+    locale: currentLocale,
+    highlightOn: state.highlightOn,
+    bootstrapDone: state.bootstrapDone,
+    hintTarget: state.hintTarget,
+    hand: state.hand,
+    field: state.field,
+  });
+}
+
+function applySaved(save) {
+  if (!save) return;
+  if (save.locale && locales[save.locale]) currentLocale = save.locale;
+  if (typeof save.highlightOn === "boolean") state.highlightOn = save.highlightOn;
+  if (typeof save.bootstrapDone === "boolean") state.bootstrapDone = save.bootstrapDone;
+  if (save.hintTarget !== undefined) state.hintTarget = save.hintTarget;
+  if (Array.isArray(save.hand) && save.hand.length) state.hand = save.hand;
+  if (Array.isArray(save.field) && save.field.length) state.field = save.field;
+  for (const inst of [...state.hand, ...state.field]) {
+    const n = parseInt(inst.instanceId?.replace(/\D/g, "") || "0", 10);
+    if (n > instanceCounter) instanceCounter = n;
+  }
+}
+
 function getDef(slug) {
   return defBySlug.get(slug);
 }
@@ -42,7 +76,7 @@ function resolveInstance(inst) {
   if (!def) {
     return { ...inst, title: "?", text: "", image: null, tags: [], programs: {} };
   }
-  const key = inst.localeKey || def.localeKey || def.slug.split(".").pop();
+  const key = inst.localeKey || localeKeyForDef(def);
   const loc = localeCard(key);
   let title = inst.title ?? loc?.title ?? def.title;
   let text = inst.text ?? loc?.text ?? def.text;
@@ -203,6 +237,7 @@ function moveInstance(id, toZone) {
   loc.instance.zone = toZone;
   state[toZone].push(loc.instance);
   renderAll();
+  persistSave();
 }
 
 function setupDropZone(container, zoneName) {
@@ -250,6 +285,7 @@ function setLocale(code) {
   if (!locales[code]) return;
   currentLocale = code;
   renderAll();
+  persistSave();
   if (els.zoom && !els.zoom.classList.contains("hidden")) {
     const id = els.zoomSlot.querySelector(".card")?.dataset?.instanceId;
     if (id) {
@@ -322,6 +358,7 @@ function runProgram(programId, ctx) {
       case "highlight":
         state.highlightOn = !!node.params?.on;
         renderAll();
+        persistSave();
         break;
       default:
         break;
@@ -350,6 +387,7 @@ function playCard(instanceId) {
     setHintTarget(null);
     renderAll();
   }
+  persistSave();
 }
 
 async function loadJson(url) {
@@ -415,13 +453,15 @@ async function init() {
     await loadLocales();
     const bundle = await loadBundle();
     applyStarter(bundle);
+    applySaved(loadSave());
     renderAll();
+    persistSave();
   } catch (err) {
     console.error(err);
     state.field.push({
       instanceId: "inst_err",
       definitionSlug: "founders.tutorial",
-      title: "Load Error",
+      localeKey: "load_error",
       text: String(err.message),
     });
     renderAll();
