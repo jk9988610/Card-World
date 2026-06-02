@@ -1,4 +1,8 @@
 {
+  "ui": {
+    "zone_field": "Field",
+    "zone_hand": "Hand"
+  },
   "cards": {
     "tutorial": {
       "title": "Tutorial",
