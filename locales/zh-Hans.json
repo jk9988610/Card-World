@@ -101,8 +101,8 @@
       "text": "收回手牌后双击打开画板；画完可「导出」到作品仓库，或「应用」写回本卡。"
     },
     "art_tool_gallery": {
-      "title": "作品仓库",
-      "text": "双击打开 — 查看已导出作品，可上传到美术素材库（Supabase）。"
+      "title": "美术商店",
+      "text": "双击 — 浏览商店作品、下载与编辑；管理本地作品与草稿。"
     },
     "art_work": {
       "title": "作品",
@@ -116,14 +116,36 @@
   },
   "art_editor": {
     "title": "像素画板",
-    "hint": "画板 7:5 与卡牌图像框一致，避免拉高变形。导出 → 命名与正文 → 作品仓库；应用仅写回画板卡。",
+    "hint": "画板 35×25（7:5）与卡牌一致；每笔画自动存本地草稿，可撤回/重做。云同步已内置，无需手填 Supabase。",
     "apply": "应用",
-    "apply_color": "应用",
+    "save_draft": "存草稿",
+    "upload_shop": "上传商店",
+    "undo": "撤回",
+    "redo": "重做",
+    "draft_saved": "已自动保存",
+    "draft_named_saved": "草稿已保存",
+    "restore_session": "恢复上次未导出的绘画草稿？",
+    "draft_name_prompt": "草稿名称",
+    "draft_default_name": "草稿",
+    "upload_title_prompt": "上传到美术商店的作品名",
+    "upload_text_prompt": "作品说明（可空）",
+    "upload_default_title": "我的作品",
+    "uploading": "上传中…",
+    "upload_ok": "已上传到美术商店",
+    "upload_fail": "上传失败：",
+    "cloud_off": "云同步未就绪",
     "tools": {
       "brush": "画笔",
       "eraser": "橡皮",
+      "line": "直线",
+      "rect": "矩形",
       "fill": "填充",
       "picker": "取色"
+    },
+    "brush_sizes": {
+      "1": "细",
+      "2": "中",
+      "3": "粗"
     }
   },
   "art_export": {
@@ -137,15 +159,23 @@
     "confirm": "导出作品"
   },
   "art_works": {
-    "open": "作品仓库",
-    "title": "作品仓库",
-    "hint": "导出后的作品保存在本机。配置 Supabase 后可上传到 art 存储桶。",
+    "open": "美术商店",
+    "title": "美术商店",
+    "hint": "与 Beat-Battle 制作库类似：浏览云端作品，下载或载入画板编辑。",
+    "tab_mine": "我的作品",
+    "tab_shop": "商店",
+    "tab_drafts": "草稿",
     "empty": "还没有作品，先在画板点「导出」。",
-    "upload": "上传素材库",
+    "shop_empty": "商店暂无作品，可在画板点「上传商店」。",
+    "drafts_empty": "暂无命名草稿，画板中点「存草稿」。",
+    "upload": "上架商店",
     "uploading": "上传中…",
-    "uploaded": "已上传",
+    "uploaded": "已上架",
     "upload_error": "上传失败：",
-    "no_config": "请先将 js/supabase-config.example.js 复制为 js/supabase-config.js 并填入项目 URL 与 anon key。",
+    "download": "下载",
+    "downloaded": "已下载到「我的作品」",
+    "download_error": "失败：",
+    "edit": "编辑",
     "delete": "删除"
   }
 }

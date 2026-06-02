@@ -101,8 +101,8 @@
       "text": "Recall to Hand, double-tap to edit. Export to Works, or Apply to save on this card."
     },
     "art_tool_gallery": {
-      "title": "Works Gallery",
-      "text": "Double-tap — view exported works and upload to Supabase art bucket."
+      "title": "Art Shop",
+      "text": "Double-tap — browse shop, download, edit; manage local works and drafts."
     },
     "art_work": {
       "title": "Artwork",
@@ -116,14 +116,36 @@
   },
   "art_editor": {
     "title": "Pixel Board",
-    "hint": "Canvas 7:5 matches the card frame. Export → name & text → Works gallery. Apply only updates the board card.",
+    "hint": "35×25 (7:5) canvas; auto local draft; undo/redo. Cloud built-in like Beat-Battle.",
     "apply": "Apply",
-    "apply_color": "Apply",
+    "save_draft": "Draft",
+    "upload_shop": "Upload",
+    "undo": "Undo",
+    "redo": "Redo",
+    "draft_saved": "Auto-saved",
+    "draft_named_saved": "Draft saved",
+    "restore_session": "Restore unsaved session draft?",
+    "draft_name_prompt": "Draft name",
+    "draft_default_name": "Draft",
+    "upload_title_prompt": "Title for art shop",
+    "upload_text_prompt": "Description (optional)",
+    "upload_default_title": "My work",
+    "uploading": "Uploading…",
+    "upload_ok": "Uploaded to art shop",
+    "upload_fail": "Upload failed: ",
+    "cloud_off": "Cloud not ready",
     "tools": {
       "brush": "Brush",
       "eraser": "Eraser",
+      "line": "Line",
+      "rect": "Rect",
       "fill": "Fill",
       "picker": "Pick"
+    },
+    "brush_sizes": {
+      "1": "S",
+      "2": "M",
+      "3": "L"
     }
   },
   "art_export": {
@@ -137,15 +159,23 @@
     "confirm": "Export work"
   },
   "art_works": {
-    "open": "Works",
-    "title": "Works gallery",
-    "hint": "Exported works stay on this device. Configure Supabase to upload to the art bucket.",
-    "empty": "No works yet — paint and tap Export.",
-    "upload": "Upload to library",
+    "open": "Art Shop",
+    "title": "Art Shop",
+    "hint": "Like Beat-Battle library: browse cloud works, download or edit in the pixel board.",
+    "tab_mine": "Mine",
+    "tab_shop": "Shop",
+    "tab_drafts": "Drafts",
+    "empty": "No works yet — paint and Export.",
+    "shop_empty": "Shop is empty — use Upload in the editor.",
+    "drafts_empty": "No named drafts — use Save draft in the editor.",
+    "upload": "To shop",
     "uploading": "Uploading…",
-    "uploaded": "Uploaded",
+    "uploaded": "Listed",
     "upload_error": "Upload failed: ",
-    "no_config": "Copy js/supabase-config.example.js to js/supabase-config.js and add your project URL and anon key.",
+    "download": "Download",
+    "downloaded": "Saved to Mine",
+    "download_error": "Failed: ",
+    "edit": "Edit",
     "delete": "Delete"
   }
 }

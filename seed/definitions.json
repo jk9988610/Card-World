@@ -674,8 +674,8 @@
       "localeKey": "art_tool_gallery",
       "titleKey": "cards.art_tool_gallery",
       "textKey": "cards.art_tool_gallery",
-      "title": "Works Gallery",
-      "text": "View exported works and upload to Supabase.",
+      "title": "Art Shop",
+      "text": "Browse art shop, download and edit works.",
       "tags": ["art", "tool", "reusable"],
       "programs": { "on_play": "art.gallery.open" },
       "image": {

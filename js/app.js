@@ -1,4 +1,28 @@
-import { uploadArtPng, isArtStorageConfigured } from "./art-storage.js";
+import {
+  clearSessionDraft,
+  loadNamedDrafts,
+  loadSessionDraft,
+  removeNamedDraft,
+  saveNamedDraft,
+  saveSessionDraft,
+} from "./art-draft.js";
+import {
+  canRedo,
+  canUndo,
+  createArtHistory,
+  pushArtHistory,
+  redoArtHistory,
+  resetArtHistory,
+  undoArtHistory,
+} from "./art-history.js";
+import {
+  downloadArtShopMeta,
+  isArtStorageConfigured,
+  listArtShopItems,
+  publishToArtShop,
+  uploadArtPng,
+} from "./art-storage.js";
+import { isCloudEnabled } from "./cloud-config.js";
 import { clearSave, loadSave, writeSave } from "./storage.js";
 import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
 
@@ -6,7 +30,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.8.0";
+const APP_VERSION = "0.9.0";
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -69,8 +93,8 @@ const ART_BG = "#1a1a2e";
 /** Match card image frame: 7:5 landscape (宽 > 高) */
 const IMAGE_FRAME_W = 7;
 const IMAGE_FRAME_H = 5;
-const ART_GRID_W = 42;
-const ART_GRID_H = 30;
+const ART_GRID_W = 35;
+const ART_GRID_H = 25;
 
 const artEditor = {
   open: false,
@@ -78,10 +102,18 @@ const artEditor = {
   h: ART_GRID_H,
   grid: [],
   brushColor: "#e03131",
+  brushSize: 1,
   tool: "brush",
   painting: false,
+  strokeDirty: false,
+  lastCell: null,
+  rectStart: null,
   targetInstanceId: null,
+  history: createArtHistory(80),
+  galleryTab: "mine",
+  shopCache: [],
 };
+let artDraftSaveTimer = null;
 let currentLocale = "en";
 
 const state = {
@@ -124,12 +156,17 @@ const els = {
   artPixelCanvas: document.getElementById("art-pixel-canvas"),
   artPalette: document.getElementById("art-palette"),
   artColorPicker: document.getElementById("art-color-picker"),
-  artColorHex: document.getElementById("art-color-hex"),
-  artColorApply: document.getElementById("art-color-apply"),
   artBrushPreview: document.getElementById("art-brush-preview"),
+  artEditorToolsExtra: document.getElementById("art-editor-tools-extra"),
+  artUndoBtn: document.getElementById("art-undo-btn"),
+  artRedoBtn: document.getElementById("art-redo-btn"),
+  artSaveDraftBtn: document.getElementById("art-save-draft-btn"),
+  artUploadBtn: document.getElementById("art-upload-btn"),
+  artDraftStatus: document.getElementById("art-draft-status"),
   artExportBtn: document.getElementById("art-export-btn"),
   artApplyBtn: document.getElementById("art-apply-btn"),
   artGalleryBtn: document.getElementById("art-gallery-btn"),
+  artWorksTabs: document.getElementById("art-works-tabs"),
   artExportModal: document.getElementById("art-export-modal"),
   artExportTitle: document.getElementById("art-export-title"),
   artExportText: document.getElementById("art-export-text"),
@@ -705,9 +742,124 @@ function normalizeHex(raw) {
 function setArtBrushColor(hex) {
   artEditor.brushColor = normalizeHex(hex);
   if (els.artColorPicker) els.artColorPicker.value = artEditor.brushColor;
-  if (els.artColorHex) els.artColorHex.value = artEditor.brushColor;
   if (els.artBrushPreview) els.artBrushPreview.style.background = artEditor.brushColor;
   rebuildArtPaletteUI();
+}
+
+function updateArtHistoryButtons() {
+  if (els.artUndoBtn) els.artUndoBtn.disabled = !canUndo(artEditor.history);
+  if (els.artRedoBtn) els.artRedoBtn.disabled = !canRedo(artEditor.history);
+}
+
+function commitArtStroke() {
+  if (!artEditor.strokeDirty) return;
+  pushArtHistory(artEditor.history, artEditor.grid);
+  artEditor.strokeDirty = false;
+  updateArtHistoryButtons();
+  scheduleSessionDraftSave();
+}
+
+function scheduleSessionDraftSave() {
+  if (artDraftSaveTimer) clearTimeout(artDraftSaveTimer);
+  artDraftSaveTimer = setTimeout(() => {
+    if (!artEditor.open) return;
+    saveSessionDraft({
+      w: artEditor.w,
+      h: artEditor.h,
+      grid: artEditor.grid,
+      brushColor: artEditor.brushColor,
+      tool: artEditor.tool,
+    });
+    const t = locales[currentLocale]?.art_editor || locales.en?.art_editor || {};
+    if (els.artDraftStatus) els.artDraftStatus.textContent = t.draft_saved || "";
+  }, 400);
+}
+
+function setArtGrid(grid, { pushHist = false } = {}) {
+  artEditor.grid = grid.slice();
+  redrawArtPixelCanvas();
+  if (pushHist) {
+    pushArtHistory(artEditor.history, artEditor.grid);
+    updateArtHistoryButtons();
+  }
+  scheduleSessionDraftSave();
+}
+
+function paintBrushAt(cx, cy, color, size) {
+  const r = Math.max(0, (size || 1) - 1);
+  for (let dy = -r; dy <= r; dy++) {
+    for (let dx = -r; dx <= r; dx++) {
+      if (dx * dx + dy * dy > r * r + 0.01) continue;
+      const x = cx + dx;
+      const y = cy + dy;
+      if (x < 0 || y < 0 || x >= artEditor.w || y >= artEditor.h) continue;
+      artEditor.grid[y * artEditor.w + x] = color;
+    }
+  }
+}
+
+function paintLine(x0, y0, x1, y1, color, size) {
+  let x = x0;
+  let y = y0;
+  const dx = Math.abs(x1 - x0);
+  const dy = Math.abs(y1 - y0);
+  const sx = x0 < x1 ? 1 : -1;
+  const sy = y0 < y1 ? 1 : -1;
+  let err = dx - dy;
+  while (true) {
+    paintBrushAt(x, y, color, size);
+    if (x === x1 && y === y1) break;
+    const e2 = 2 * err;
+    if (e2 > -dy) {
+      err -= dy;
+      x += sx;
+    }
+    if (e2 < dx) {
+      err += dx;
+      y += sy;
+    }
+  }
+}
+
+function paintRect(x0, y0, x1, y1, color, filled) {
+  const minX = Math.max(0, Math.min(x0, x1));
+  const maxX = Math.min(artEditor.w - 1, Math.max(x0, x1));
+  const minY = Math.max(0, Math.min(y0, y1));
+  const maxY = Math.min(artEditor.h - 1, Math.max(y0, y1));
+  if (filled) {
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        artEditor.grid[y * artEditor.w + x] = color;
+      }
+    }
+    return;
+  }
+  for (let x = minX; x <= maxX; x++) {
+    artEditor.grid[minY * artEditor.w + x] = color;
+    artEditor.grid[maxY * artEditor.w + x] = color;
+  }
+  for (let y = minY; y <= maxY; y++) {
+    artEditor.grid[y * artEditor.w + minX] = color;
+    artEditor.grid[y * artEditor.w + maxX] = color;
+  }
+}
+
+function artUndo() {
+  const g = undoArtHistory(artEditor.history);
+  if (!g) return;
+  artEditor.grid = g;
+  redrawArtPixelCanvas();
+  updateArtHistoryButtons();
+  scheduleSessionDraftSave();
+}
+
+function artRedo() {
+  const g = redoArtHistory(artEditor.history);
+  if (!g) return;
+  artEditor.grid = g;
+  redrawArtPixelCanvas();
+  updateArtHistoryButtons();
+  scheduleSessionDraftSave();
 }
 
 function artPixelImageFromEditor() {
@@ -760,25 +912,34 @@ function floodFillArt(startX, startY, fillColor) {
   }
 }
 
-function applyArtToolAt(cellX, cellY) {
+function applyArtToolAt(cellX, cellY, { lineFrom = null } = {}) {
   if (cellX < 0 || cellY < 0 || cellX >= artEditor.w || cellY >= artEditor.h) return;
   const i = cellY * artEditor.w + cellX;
+  artEditor.strokeDirty = true;
   switch (artEditor.tool) {
     case "eraser":
-      artEditor.grid[i] = ART_BG;
+      if (lineFrom) paintLine(lineFrom.x, lineFrom.y, cellX, cellY, ART_BG, artEditor.brushSize);
+      else paintBrushAt(cellX, cellY, ART_BG, artEditor.brushSize);
       break;
     case "fill":
       floodFillArt(cellX, cellY, artEditor.brushColor);
+      commitArtStroke();
       break;
     case "picker": {
       const picked = artEditor.grid[i] || ART_BG;
       setArtBrushColor(picked);
       artEditor.tool = "brush";
       updateArtToolUI();
+      artEditor.strokeDirty = false;
       break;
     }
+    case "line":
+      if (lineFrom) paintLine(lineFrom.x, lineFrom.y, cellX, cellY, artEditor.brushColor, artEditor.brushSize);
+      else paintBrushAt(cellX, cellY, artEditor.brushColor, artEditor.brushSize);
+      break;
     default:
-      artEditor.grid[i] = artEditor.brushColor;
+      if (lineFrom) paintLine(lineFrom.x, lineFrom.y, cellX, cellY, artEditor.brushColor, artEditor.brushSize);
+      else paintBrushAt(cellX, cellY, artEditor.brushColor, artEditor.brushSize);
       break;
   }
   redrawArtPixelCanvas();
@@ -821,21 +982,41 @@ function updateArtToolUI() {
 }
 
 function rebuildArtToolUI() {
-  if (!els.artEditorTools) return;
   const t = locales[currentLocale]?.art_editor || locales.en?.art_editor || {};
   const labels = t.tools || {};
-  els.artEditorTools.innerHTML = "";
-  for (const tool of ["brush", "eraser", "fill", "picker"]) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "art-tool-btn";
-    btn.dataset.tool = tool;
-    btn.textContent = labels[tool] || tool;
-    btn.addEventListener("click", () => {
-      artEditor.tool = tool;
-      updateArtToolUI();
-    });
-    els.artEditorTools.appendChild(btn);
+  const sizeLabels = t.brush_sizes || {};
+
+  if (els.artEditorTools) {
+    els.artEditorTools.innerHTML = "";
+    for (const tool of ["brush", "eraser", "line", "rect", "fill", "picker"]) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "art-tool-btn";
+      btn.dataset.tool = tool;
+      btn.textContent = labels[tool] || tool;
+      btn.addEventListener("click", () => {
+        artEditor.tool = tool;
+        updateArtToolUI();
+      });
+      els.artEditorTools.appendChild(btn);
+    }
+  }
+
+  if (els.artEditorToolsExtra) {
+    els.artEditorToolsExtra.innerHTML = "";
+    for (const size of [1, 2, 3]) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "art-tool-btn art-tool-size";
+      btn.dataset.size = String(size);
+      btn.textContent = sizeLabels[size] || `${size}px`;
+      btn.classList.toggle("active", artEditor.brushSize === size);
+      btn.addEventListener("click", () => {
+        artEditor.brushSize = size;
+        rebuildArtToolUI();
+      });
+      els.artEditorToolsExtra.appendChild(btn);
+    }
   }
   updateArtToolUI();
 }
@@ -968,6 +1149,20 @@ async function confirmArtExport() {
     storagePath: null,
     publicUrl: null,
   });
+  if (isCloudEnabled()) {
+    try {
+      const blob = await pixelImageToPngBlob(image, 12);
+      const pub = await publishToArtShop({ id: workId, title, text, image, pngBlob: blob });
+      updateWork(workId, {
+        storagePath: pub.pngPath,
+        publicUrl: pub.publicUrl,
+        uploadedAt: pub.publishedAt,
+      });
+    } catch (e) {
+      console.warn("shop publish", e);
+    }
+  }
+  clearSessionDraft();
   spawnExportedWorkCard(title, text, image);
   applyArtToGame();
   closeArtExportModal();
@@ -976,11 +1171,187 @@ async function confirmArtExport() {
   persistSave();
 }
 
+function loadImageIntoArtEditor(image) {
+  loadArtGridFromImage(image);
+  resetArtHistory(artEditor.history, artEditor.grid);
+  updateArtHistoryButtons();
+  scheduleSessionDraftSave();
+}
+
+async function uploadCurrentPaintingToShop() {
+  const t = locales[currentLocale]?.art_editor || locales.en?.art_editor || {};
+  if (!(await isArtStorageConfigured())) {
+    alert(t.cloud_off || "云同步未就绪");
+    return;
+  }
+  const title = prompt(t.upload_title_prompt || "作品名", t.upload_default_title || "我的作品");
+  if (title === null) return;
+  const text = prompt(t.upload_text_prompt || "说明（可空）", "") ?? "";
+  if (els.artUploadBtn) {
+    els.artUploadBtn.disabled = true;
+    els.artUploadBtn.textContent = t.uploading || "上传中…";
+  }
+  try {
+    const image = artPixelImageFromEditor();
+    const blob = await pixelImageToPngBlob(image, 12);
+    await publishToArtShop({
+      id: `shop_${Date.now().toString(36)}`,
+      title: title.trim() || t.upload_default_title || "作品",
+      text: text.trim(),
+      image,
+      pngBlob: blob,
+    });
+    alert(t.upload_ok || "已上传到美术商店");
+  } catch (e) {
+    alert((t.upload_fail || "上传失败：") + (e.message || e));
+  } finally {
+    if (els.artUploadBtn) {
+      els.artUploadBtn.disabled = false;
+      els.artUploadBtn.textContent = t.upload_shop || "上传商店";
+    }
+  }
+}
+
+function saveCurrentPaintingAsDraft() {
+  const t = locales[currentLocale]?.art_editor || locales.en?.art_editor || {};
+  const name = prompt(t.draft_name_prompt || "草稿名称", t.draft_default_name || "草稿");
+  if (name === null) return;
+  const id = `draft_${Date.now().toString(36)}`;
+  saveNamedDraft({
+    id,
+    title: name.trim() || t.draft_default_name || "草稿",
+    image: artPixelImageFromEditor(),
+    savedAt: new Date().toISOString(),
+  });
+  if (els.artDraftStatus) els.artDraftStatus.textContent = t.draft_named_saved || "草稿已保存";
+}
+
+function buildWorkPreviewCanvas(image) {
+  const preview = document.createElement("canvas");
+  preview.className = "art-work-preview";
+  preview.width = 84;
+  preview.height = 60;
+  const pctx = preview.getContext("2d");
+  if (pctx && image) drawPixelImage(pctx, image, 84, 60, { fit: true, background: "#e9ecef" });
+  return preview;
+}
+
 function renderWorksGallery() {
   if (!els.artWorksList) return;
   const t = locales[currentLocale]?.art_works || locales.en?.art_works || {};
-  const works = loadWorks();
   els.artWorksList.innerHTML = "";
+
+  const tab = artEditor.galleryTab;
+
+  if (tab === "shop") {
+    const items = artEditor.shopCache;
+    if (!items.length) {
+      const empty = document.createElement("p");
+      empty.className = "art-works-empty";
+      empty.textContent = t.shop_empty || "商店暂无作品";
+      els.artWorksList.appendChild(empty);
+      return;
+    }
+    for (const item of items) {
+      const row = document.createElement("article");
+      row.className = "art-work-row";
+      const preview = item.image
+        ? buildWorkPreviewCanvas(item.image)
+        : (() => {
+            const img = document.createElement("img");
+            img.className = "art-work-preview-img";
+            img.src = item.previewUrl || "";
+            img.alt = item.title || "";
+            return img;
+          })();
+      const meta = document.createElement("div");
+      meta.className = "art-work-meta";
+      meta.innerHTML = `<h3>${item.title || "?"}</h3><p>${item.text || ""}</p>`;
+      const actions = document.createElement("div");
+      actions.className = "art-work-actions";
+      const dlBtn = document.createElement("button");
+      dlBtn.type = "button";
+      dlBtn.className = "art-editor-btn art-editor-btn-small";
+      dlBtn.textContent = t.download || "下载";
+      dlBtn.addEventListener("click", async () => {
+        try {
+          const metaFull = await downloadArtShopMeta(item.id);
+          addWork({
+            id: `local_${item.id}`,
+            title: metaFull.title,
+            text: metaFull.text,
+            image: metaFull.image,
+            createdAt: new Date().toISOString(),
+            fromShop: true,
+          });
+          alert(t.downloaded || "已下载到本地作品");
+        } catch (e) {
+          alert((t.download_error || "下载失败：") + (e.message || e));
+        }
+      });
+      const editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "art-editor-btn art-editor-btn-small";
+      editBtn.textContent = t.edit || "编辑";
+      editBtn.addEventListener("click", async () => {
+        try {
+          const metaFull = await downloadArtShopMeta(item.id);
+          closeWorksGallery();
+          if (!artEditor.open) await openArtEditor();
+          loadImageIntoArtEditor(metaFull.image);
+        } catch (e) {
+          alert((t.download_error || "加载失败：") + (e.message || e));
+        }
+      });
+      actions.append(dlBtn, editBtn);
+      row.append(preview, meta, actions);
+      els.artWorksList.appendChild(row);
+    }
+    return;
+  }
+
+  if (tab === "drafts") {
+    const drafts = loadNamedDrafts();
+    if (!drafts.length) {
+      const empty = document.createElement("p");
+      empty.className = "art-works-empty";
+      empty.textContent = t.drafts_empty || "暂无命名草稿";
+      els.artWorksList.appendChild(empty);
+      return;
+    }
+    for (const d of drafts) {
+      const row = document.createElement("article");
+      row.className = "art-work-row";
+      const meta = document.createElement("div");
+      meta.className = "art-work-meta";
+      meta.innerHTML = `<h3>${d.title}</h3><p class="muted">${new Date(d.savedAt).toLocaleString()}</p>`;
+      const actions = document.createElement("div");
+      actions.className = "art-work-actions";
+      const editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "art-editor-btn art-editor-btn-small";
+      editBtn.textContent = t.edit || "编辑";
+      editBtn.addEventListener("click", async () => {
+        closeWorksGallery();
+        if (!artEditor.open) await openArtEditor();
+        loadImageIntoArtEditor(d.image);
+      });
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "art-editor-btn art-editor-btn-icon";
+      delBtn.textContent = "×";
+      delBtn.addEventListener("click", () => {
+        removeNamedDraft(d.id);
+        renderWorksGallery();
+      });
+      actions.append(editBtn, delBtn);
+      row.append(buildWorkPreviewCanvas(d.image), meta, actions);
+      els.artWorksList.appendChild(row);
+    }
+    return;
+  }
+
+  const works = loadWorks();
   if (!works.length) {
     const empty = document.createElement("p");
     empty.className = "art-works-empty";
@@ -991,42 +1362,36 @@ function renderWorksGallery() {
   for (const work of works) {
     const row = document.createElement("article");
     row.className = "art-work-row";
-    const preview = document.createElement("canvas");
-    preview.className = "art-work-preview";
-    preview.width = 84;
-    preview.height = 60;
-    const pctx = preview.getContext("2d");
-    if (pctx && work.image) drawPixelImage(pctx, work.image, 84, 60, { fit: true, background: "#e9ecef" });
-
     const meta = document.createElement("div");
     meta.className = "art-work-meta";
-    const h = document.createElement("h3");
-    h.textContent = work.title;
-    const p = document.createElement("p");
-    p.textContent = work.text;
-    meta.append(h, p);
-
+    meta.innerHTML = `<h3>${work.title}</h3><p>${work.text || ""}</p>`;
     const actions = document.createElement("div");
     actions.className = "art-work-actions";
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "art-editor-btn art-editor-btn-small";
+    editBtn.textContent = t.edit || "编辑";
+    editBtn.addEventListener("click", async () => {
+      closeWorksGallery();
+      if (!artEditor.open) await openArtEditor();
+      loadImageIntoArtEditor(work.image);
+    });
     const uploadBtn = document.createElement("button");
     uploadBtn.type = "button";
     uploadBtn.className = "art-editor-btn art-editor-btn-small";
-    uploadBtn.textContent = work.publicUrl ? t.uploaded || "Uploaded" : t.upload || "Upload";
+    uploadBtn.textContent = work.publicUrl ? t.uploaded || "已上架" : t.upload || "上架";
     uploadBtn.disabled = !!work.publicUrl;
     uploadBtn.addEventListener("click", () => uploadWorkToSupabase(work.id, uploadBtn));
-
     const delBtn = document.createElement("button");
     delBtn.type = "button";
     delBtn.className = "art-editor-btn art-editor-btn-icon";
     delBtn.textContent = "×";
-    delBtn.title = t.delete || "Delete";
     delBtn.addEventListener("click", () => {
       removeWork(work.id);
       renderWorksGallery();
     });
-
-    actions.append(uploadBtn, delBtn);
-    row.append(preview, meta, actions);
+    actions.append(editBtn, uploadBtn, delBtn);
+    row.append(buildWorkPreviewCanvas(work.image), meta, actions);
     els.artWorksList.appendChild(row);
   }
 }
@@ -1035,11 +1400,6 @@ async function uploadWorkToSupabase(workId, btn) {
   const t = locales[currentLocale]?.art_works || locales.en?.art_works || {};
   const work = loadWorks().find((w) => w.id === workId);
   if (!work?.image) return;
-  const configured = await isArtStorageConfigured();
-  if (!configured) {
-    alert(t.no_config || "Copy js/supabase-config.example.js to js/supabase-config.js first.");
-    return;
-  }
   if (btn) {
     btn.disabled = true;
     btn.textContent = t.uploading || "Uploading…";
@@ -1047,8 +1407,18 @@ async function uploadWorkToSupabase(workId, btn) {
   try {
     const blob = await pixelImageToPngBlob(work.image, 12);
     if (!blob) throw new Error("PNG failed");
-    const { path, publicUrl } = await uploadArtPng(blob, { workId, title: work.title });
-    updateWork(workId, { storagePath: path, publicUrl, uploadedAt: new Date().toISOString() });
+    const pub = await publishToArtShop({
+      id: workId,
+      title: work.title,
+      text: work.text,
+      image: work.image,
+      pngBlob: blob,
+    });
+    updateWork(workId, {
+      storagePath: pub.pngPath,
+      publicUrl: pub.publicUrl,
+      uploadedAt: pub.publishedAt,
+    });
     renderWorksGallery();
   } catch (e) {
     console.error(e);
@@ -1060,8 +1430,48 @@ async function uploadWorkToSupabase(workId, btn) {
   }
 }
 
-function openWorksGallery() {
+function renderGalleryTabs() {
+  if (!els.artWorksTabs) return;
+  const t = locales[currentLocale]?.art_works || locales.en?.art_works || {};
+  const tabs = [
+    { id: "mine", label: t.tab_mine || "我的作品" },
+    { id: "shop", label: t.tab_shop || "美术商店" },
+    { id: "drafts", label: t.tab_drafts || "草稿" },
+  ];
+  els.artWorksTabs.innerHTML = "";
+  for (const tab of tabs) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `art-works-tab${artEditor.galleryTab === tab.id ? " active" : ""}`;
+    btn.textContent = tab.label;
+    btn.addEventListener("click", async () => {
+      artEditor.galleryTab = tab.id;
+      if (tab.id === "shop") await refreshArtShopCache();
+      renderGalleryTabs();
+      renderWorksGallery();
+    });
+    els.artWorksTabs.appendChild(btn);
+  }
+}
+
+async function refreshArtShopCache() {
+  if (!isCloudEnabled()) {
+    artEditor.shopCache = [];
+    return;
+  }
+  try {
+    artEditor.shopCache = await listArtShopItems();
+  } catch (e) {
+    console.warn("art shop", e);
+    artEditor.shopCache = [];
+  }
+}
+
+async function openWorksGallery() {
   applyWorksGalleryI18n();
+  if (!artEditor.galleryTab) artEditor.galleryTab = "mine";
+  renderGalleryTabs();
+  if (artEditor.galleryTab === "shop") await refreshArtShopCache();
   renderWorksGallery();
   els.artWorksGallery?.classList.remove("hidden");
   els.artWorksGallery?.setAttribute("aria-hidden", "false");
@@ -1075,20 +1485,40 @@ function closeWorksGallery() {
 async function openArtEditor(instanceId) {
   artEditor.open = true;
   artEditor.tool = "brush";
+  artEditor.brushSize = 1;
+  artEditor.strokeDirty = false;
+  artEditor.lastCell = null;
+  artEditor.rectStart = null;
   artEditor.targetInstanceId = instanceId || findPixelBoardInstanceId();
-  const loc = artEditor.targetInstanceId ? findInstance(artEditor.targetInstanceId) : null;
-  if (loc?.instance?.image) loadArtGridFromImage(loc.instance.image);
-  else initArtGrid(ART_BG);
-  setArtBrushColor(artEditor.brushColor || "#e03131");
   const t = locales[currentLocale]?.art_editor || locales.en?.art_editor || {};
+  const loc = artEditor.targetInstanceId ? findInstance(artEditor.targetInstanceId) : null;
+  const session = loadSessionDraft();
+  let restored = false;
+  if (session?.grid?.length === ART_GRID_W * ART_GRID_H && session.w === ART_GRID_W) {
+    if (window.confirm(t.restore_session || "恢复未保存的本地草稿？")) {
+      artEditor.grid = session.grid.slice();
+      restored = true;
+    }
+  }
+  if (!restored) {
+    if (loc?.instance?.image) loadArtGridFromImage(loc.instance.image);
+    else initArtGrid(ART_BG);
+  }
+  resetArtHistory(artEditor.history, artEditor.grid);
+  updateArtHistoryButtons();
+  setArtBrushColor(artEditor.brushColor || "#e03131");
   if (els.artEditorTitle) els.artEditorTitle.textContent = t.title || "Pixel Board";
   if (els.artEditorHint) els.artEditorHint.textContent = t.hint || "";
-  if (els.artColorApply) els.artColorApply.textContent = t.apply_color || "Apply";
+  if (els.artDraftStatus) els.artDraftStatus.textContent = "";
   const ex = locales[currentLocale]?.art_export || locales.en?.art_export || {};
   const wk = locales[currentLocale]?.art_works || locales.en?.art_works || {};
   if (els.artExportBtn) els.artExportBtn.textContent = ex.open || "Export";
   if (els.artApplyBtn) els.artApplyBtn.textContent = t.apply || "Apply";
   if (els.artGalleryBtn) els.artGalleryBtn.textContent = wk.open || "Works";
+  if (els.artSaveDraftBtn) els.artSaveDraftBtn.textContent = t.save_draft || "草稿";
+  if (els.artUploadBtn) els.artUploadBtn.textContent = t.upload_shop || "上传商店";
+  if (els.artUndoBtn) els.artUndoBtn.title = t.undo || "Undo";
+  if (els.artRedoBtn) els.artRedoBtn.title = t.redo || "Redo";
   rebuildArtToolUI();
   document.body.classList.add("art-editor-open");
   els.artEditor?.classList.remove("hidden");
@@ -1103,6 +1533,21 @@ async function openArtEditor(instanceId) {
 }
 
 function layoutArtCanvasFrame() {
+  const canvas = els.artPixelCanvas;
+  const wrap = canvas?.parentElement;
+  if (canvas && wrap) {
+    const maxW = wrap.clientWidth;
+    const maxH = wrap.clientHeight;
+    const aspect = IMAGE_FRAME_W / IMAGE_FRAME_H;
+    let cssW = maxW;
+    let cssH = cssW / aspect;
+    if (cssH > maxH) {
+      cssH = maxH;
+      cssW = cssH * aspect;
+    }
+    canvas.style.width = `${Math.floor(cssW)}px`;
+    canvas.style.height = `${Math.floor(cssH)}px`;
+  }
   redrawArtPixelCanvas();
 }
 
@@ -1124,31 +1569,70 @@ function setupArtEditor() {
   const canvas = els.artPixelCanvas;
   if (!canvas) return;
 
-  const strokeAtEvent = (e) => {
+  const strokeAtEvent = (e, { lineFrom = null } = {}) => {
     const cell = cellFromArtEvent(e);
     if (!cell) return;
-    applyArtToolAt(cell.x, cell.y);
+    applyArtToolAt(cell.x, cell.y, { lineFrom });
+    artEditor.lastCell = cell;
   };
 
   canvas.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     artEditor.painting = true;
+    artEditor.strokeDirty = false;
     canvas.setPointerCapture(e.pointerId);
-    strokeAtEvent(e);
+    const cell = cellFromArtEvent(e);
+    if (!cell) return;
+    if (artEditor.tool === "rect") {
+      artEditor.rectStart = cell;
+      return;
+    }
+    artEditor.lastCell = cell;
+    applyArtToolAt(cell.x, cell.y);
   });
   canvas.addEventListener("pointermove", (e) => {
     if (!artEditor.painting || !canvas.hasPointerCapture(e.pointerId)) return;
     e.preventDefault();
-    if (artEditor.tool === "brush" || artEditor.tool === "eraser") strokeAtEvent(e);
+    const cell = cellFromArtEvent(e);
+    if (!cell) return;
+    if (artEditor.tool === "rect" || artEditor.tool === "fill" || artEditor.tool === "picker") return;
+    const lineFrom =
+      artEditor.tool === "line" || artEditor.tool === "brush" || artEditor.tool === "eraser"
+        ? artEditor.lastCell
+        : null;
+    if (lineFrom && (lineFrom.x !== cell.x || lineFrom.y !== cell.y)) {
+      strokeAtEvent(e, { lineFrom });
+    }
   });
   canvas.addEventListener("pointerup", (e) => {
+    const cell = cellFromArtEvent(e);
+    if (artEditor.tool === "rect" && artEditor.rectStart && cell) {
+      artEditor.strokeDirty = true;
+      paintRect(
+        artEditor.rectStart.x,
+        artEditor.rectStart.y,
+        cell.x,
+        cell.y,
+        artEditor.brushColor,
+        e.shiftKey
+      );
+      redrawArtPixelCanvas();
+      commitArtStroke();
+      artEditor.rectStart = null;
+    } else {
+      commitArtStroke();
+    }
     artEditor.painting = false;
+    artEditor.lastCell = null;
     try {
       canvas.releasePointerCapture(e.pointerId);
     } catch (_) {}
   });
   canvas.addEventListener("pointercancel", () => {
+    commitArtStroke();
     artEditor.painting = false;
+    artEditor.lastCell = null;
+    artEditor.rectStart = null;
   });
 
   els.artEditorClose?.addEventListener("click", () => closeArtEditor());
@@ -1158,6 +1642,10 @@ function setupArtEditor() {
     closeArtEditor();
   });
   els.artGalleryBtn?.addEventListener("click", () => openWorksGallery());
+  els.artSaveDraftBtn?.addEventListener("click", () => saveCurrentPaintingAsDraft());
+  els.artUploadBtn?.addEventListener("click", () => uploadCurrentPaintingToShop());
+  els.artUndoBtn?.addEventListener("click", () => artUndo());
+  els.artRedoBtn?.addEventListener("click", () => artRedo());
   els.artExportCancel?.addEventListener("click", () => closeArtExportModal());
   els.artExportConfirm?.addEventListener("click", () => confirmArtExport());
   els.artWorksClose?.addEventListener("click", () => closeWorksGallery());
@@ -1169,12 +1657,6 @@ function setupArtEditor() {
   });
   els.artColorPicker?.addEventListener("input", (e) => {
     setArtBrushColor(e.target.value);
-  });
-  els.artColorHex?.addEventListener("change", () => {
-    setArtBrushColor(els.artColorHex.value);
-  });
-  els.artColorApply?.addEventListener("click", () => {
-    setArtBrushColor(els.artColorHex?.value || artEditor.brushColor);
   });
 
   document.addEventListener("fullscreenchange", () => {
@@ -1590,10 +2072,11 @@ function setLocale(code) {
     const ex = locales[currentLocale]?.art_export || locales.en?.art_export || {};
     const wk = locales[currentLocale]?.art_works || locales.en?.art_works || {};
     if (els.artEditorHint) els.artEditorHint.textContent = t.hint || "";
-    if (els.artColorApply) els.artColorApply.textContent = t.apply_color || "Apply";
     if (els.artExportBtn) els.artExportBtn.textContent = ex.open || "Export";
     if (els.artApplyBtn) els.artApplyBtn.textContent = t.apply || "Apply";
     if (els.artGalleryBtn) els.artGalleryBtn.textContent = wk.open || "Works";
+    if (els.artSaveDraftBtn) els.artSaveDraftBtn.textContent = t.save_draft || "草稿";
+    if (els.artUploadBtn) els.artUploadBtn.textContent = t.upload_shop || "上传商店";
     rebuildArtToolUI();
   }
   if (els.artExportModal && !els.artExportModal.classList.contains("hidden")) {

@@ -10,13 +10,13 @@ Card World 将作品仓库中的像素画导出为 PNG，并上传到你在 Supa
    - **Project URL** → `SUPABASE_URL`
    - **anon public** key → `SUPABASE_ANON_KEY`
 
-## 2. 本地配置
+## 2. 配置（默认无需手填）
 
-```bash
-cp js/supabase-config.example.js js/supabase-config.js
-```
+与 [Beat-Battle](https://github.com/jk9988610/Beat-Battle) 相同，项目在 `js/cloud-config.js` 中**内置** Supabase URL 与 anon key，打开即可上传/浏览美术商店。
 
-编辑 `js/supabase-config.js`，填入 URL 与 anon key。
+可选：在浏览器 localStorage 覆盖 `cardworld-cloud-config`（与 Beat-Battle 的 `beat-battle-cloud-config` 类似）。
+
+旧方式 `js/supabase-config.js` 仍可作为备用覆盖（若存在则 `art-storage` 可后续扩展读取）。
 
 ## 3. Storage 策略
 

@@ -447,12 +447,13 @@ body.art-editor-open .app-version {
 .art-editor-canvas-wrap {
   flex: 1 1 auto;
   min-height: 0;
-  width: 100%;
-  margin: 0;
+  width: min(100%, calc((100dvh - 14rem) * 7 / 5));
+  max-width: 92vw;
+  margin: 0 auto;
   padding: 0;
   aspect-ratio: 7 / 5;
   align-self: center;
-  max-height: min(calc(100dvh - 12rem), calc(96vw * 5 / 7));
+  max-height: min(calc(100dvh - 14rem), calc(92vw * 5 / 7));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -465,16 +466,51 @@ body.art-editor-open .app-version {
 
 #art-pixel-canvas {
   display: block;
-  width: 100%;
-  height: auto;
-  max-width: 100%;
-  max-height: 100%;
-  margin: auto;
-  aspect-ratio: 7 / 5;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   touch-action: none;
   cursor: crosshair;
+}
+
+.art-editor-toolbar-secondary {
+  padding-top: 0;
+}
+
+.art-draft-status {
+  flex: 1;
+  font-size: 0.65rem;
+  color: #69db7c;
+  text-align: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.art-rgb-picker-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+}
+
+.art-rgb-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.art-rgb-input {
+  width: 3.25rem;
+  height: 3.25rem;
+  padding: 0;
+  border: 3px solid #ffd43b;
+  border-radius: 10px;
+  cursor: pointer;
+  background: transparent;
+}
+
+.art-tool-size.active {
+  border-color: #69db7c;
 }
 
 .art-editor-colors {
@@ -507,38 +543,36 @@ body.art-editor-open .app-version {
   box-shadow: 0 0 0 3px #ffd43b;
 }
 
-.art-color-custom {
+.art-works-tabs {
   display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
 }
 
-.art-color-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  opacity: 0.85;
-}
-
-#art-color-picker {
-  width: 2.5rem;
-  height: 2rem;
-  padding: 0;
-  border: 2px solid #f8f9fa;
-  border-radius: 6px;
-  cursor: pointer;
-  background: transparent;
-}
-
-.art-color-hex {
-  width: 5.5rem;
+.art-works-tab {
+  flex: 1;
   border: 2px solid #868e96;
-  border-radius: 6px;
-  padding: 0.3rem 0.4rem;
-  font-size: 0.75rem;
-  font-family: ui-monospace, monospace;
+  border-radius: 8px;
+  padding: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
   background: #343a40;
   color: #f8f9fa;
+  cursor: pointer;
+}
+
+.art-works-tab.active {
+  border-color: #ffd43b;
+  background: #495057;
+}
+
+.art-work-preview-img {
+  width: 84px;
+  height: 60px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  background: #e9ecef;
+  border-radius: 4px;
 }
 
 .art-brush-preview {

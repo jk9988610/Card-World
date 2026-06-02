@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache" />
   <title>Card World</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="css/main.css?v=0.8.0" />
+  <link rel="stylesheet" href="css/main.css?v=0.9.0" />
 </head>
 <body>
   <div id="app-version" class="app-version" aria-label="Version"></div>
@@ -29,25 +29,29 @@
     <div class="art-editor-shell">
       <header class="art-editor-top">
         <span id="art-editor-title" class="art-editor-title"></span>
+        <span id="art-draft-status" class="art-draft-status" aria-live="polite"></span>
         <button type="button" id="art-editor-close" class="art-editor-btn art-editor-btn-icon" aria-label="Close">×</button>
       </header>
       <div class="art-editor-toolbar" id="art-editor-tools" role="toolbar"></div>
+      <div class="art-editor-toolbar art-editor-toolbar-secondary" id="art-editor-tools-extra" role="toolbar"></div>
       <div class="art-editor-canvas-wrap">
-        <canvas id="art-pixel-canvas" width="42" height="30"></canvas>
+        <canvas id="art-pixel-canvas" width="35" height="25"></canvas>
       </div>
       <div class="art-editor-colors">
-        <div id="art-palette" class="art-palette"></div>
-        <div class="art-color-custom">
-          <label class="art-color-label" id="art-color-label-rgb">RGB</label>
-          <input type="color" id="art-color-picker" value="#e03131" />
-          <input type="text" id="art-color-hex" class="art-color-hex" value="#e03131" maxlength="7" spellcheck="false" />
-          <button type="button" id="art-color-apply" class="art-editor-btn art-editor-btn-small"></button>
+        <div class="art-rgb-picker-wrap">
+          <label class="art-rgb-label" id="art-rgb-label" for="art-color-picker">RGB</label>
+          <input type="color" id="art-color-picker" value="#e03131" class="art-rgb-input" />
+          <div id="art-brush-preview" class="art-brush-preview" title="Brush"></div>
         </div>
-        <div id="art-brush-preview" class="art-brush-preview" title="Brush"></div>
+        <div id="art-palette" class="art-palette"></div>
       </div>
       <footer class="art-editor-foot">
         <p id="art-editor-hint" class="art-editor-hint"></p>
         <div class="art-editor-foot-actions">
+          <button type="button" id="art-undo-btn" class="art-editor-btn" disabled>↶</button>
+          <button type="button" id="art-redo-btn" class="art-editor-btn" disabled>↷</button>
+          <button type="button" id="art-save-draft-btn" class="art-editor-btn"></button>
+          <button type="button" id="art-upload-btn" class="art-editor-btn"></button>
           <button type="button" id="art-gallery-btn" class="art-editor-btn"></button>
           <button type="button" id="art-apply-btn" class="art-editor-btn"></button>
           <button type="button" id="art-export-btn" class="art-editor-btn art-editor-btn-primary"></button>
@@ -63,7 +67,7 @@
       <label class="art-modal-label" for="art-export-text" data-i18n-export="text_label">Text</label>
       <textarea id="art-export-text" class="art-modal-textarea" rows="4" maxlength="500"></textarea>
       <div class="art-export-preview-wrap">
-        <canvas id="art-export-preview" width="252" height="180"></canvas>
+        <canvas id="art-export-preview" width="210" height="150"></canvas>
       </div>
       <div class="art-modal-actions">
         <button type="button" id="art-export-cancel" class="art-editor-btn"></button>
@@ -77,6 +81,7 @@
         <h2 id="art-works-title" class="art-modal-title"></h2>
         <button type="button" id="art-works-close" class="art-editor-btn art-editor-btn-icon" aria-label="Close">×</button>
       </header>
+      <div class="art-works-tabs" id="art-works-tabs" role="tablist"></div>
       <p class="art-works-hint" id="art-works-hint"></p>
       <div id="art-works-list" class="art-works-list"></div>
     </div>
@@ -85,6 +90,6 @@
     <div class="card-zoom-backdrop" id="zoom-backdrop"></div>
     <div class="card-zoom-slot" id="zoom-slot"></div>
   </div>
-  <script type="module" src="js/app.js?v=0.8.0"></script>
+  <script type="module" src="js/app.js?v=0.9.0"></script>
 </body>
 </html>
