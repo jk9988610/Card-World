@@ -2,6 +2,9 @@
  * HarmonyForge ↔ Beat Battle 云发布与会话（与评阅站同域 localStorage）
  */
 const BeatBattleCloud = (() => {
+  const t = (key, params) =>
+    typeof window.HF_T === "function" ? window.HF_T(key, params) : key;
+
   /** Card World embed: no external Beat Battle site */
   const BEAT_BATTLE_URL = "";
   const LS_SESSION = "beat-battle-cloud-session";
@@ -78,7 +81,7 @@ const BeatBattleCloud = (() => {
 
   async function ensureClient() {
     if (!isCloudEnabled()) {
-      throw new Error("云同步未配置，请先在评阅站完成云同步设置");
+      throw new Error(t("cloud.cloud_off"));
     }
     if (!client) {
       const createClient = await loadSupabase();
@@ -107,7 +110,7 @@ const BeatBattleCloud = (() => {
       }
     }
     const name = (userName || session?.userName || "").trim();
-    if (!name) throw new Error("请先在评阅站加入赛季，或填写参赛者昵称");
+    if (!name) throw new Error(t("cloud.need_nickname"));
     const user = await findOrCreateUser(name);
     saveSession({ userId: user.id, userName: user.name });
     cachedUser = { id: user.id, name: user.name };
@@ -129,7 +132,7 @@ const BeatBattleCloud = (() => {
   /** 与 Beat Battle project-json-utils 一致：bundle 或裸 project */
   function normalizeProjectJsonPayload(data) {
     if (!data || typeof data !== "object") {
-      throw new Error("编曲工程内容无效");
+      throw new Error(t("cloud.invalid_project"));
     }
     if (data.harmonyforge != null && data.project) return data;
     if (data.sequencer || data.arranger) {
@@ -139,7 +142,7 @@ const BeatBattleCloud = (() => {
         project: data,
       };
     }
-    throw new Error("不是有效的 HarmonyForge 编曲工程");
+    throw new Error(t("cloud.not_hf_project"));
   }
 
   function buildPublishProjectJson(project, meta = {}) {
@@ -202,7 +205,7 @@ const BeatBattleCloud = (() => {
   async function renamePublishedWork(workId, title, userName) {
     const user = await ensureUser(userName);
     const trimmed = title?.trim();
-    if (!trimmed) throw new Error("标题不能为空");
+    if (!trimmed) throw new Error(t("cloud.title_required"));
     const sb = await ensureClient();
     const { data, error } = await sb
       .from("published_works")
@@ -227,7 +230,7 @@ const BeatBattleCloud = (() => {
     if (fetchErr) throw fetchErr;
 
     if (typeof AudioExport === "undefined" || !AudioExport.renderExportBlob) {
-      throw new Error("音频导出模块未加载");
+      throw new Error(t("cloud.audio_module_missing"));
     }
     const projectJson = buildPublishProjectJson(project, {
       title: title || existing.title,
@@ -266,8 +269,8 @@ const BeatBattleCloud = (() => {
 
   async function publishWork({ title, audioBlob, userName, projectJson }) {
     const user = await ensureUser(userName);
-    if (!title?.trim()) throw new Error("请填写作品标题");
-    if (!(audioBlob instanceof Blob)) throw new Error("音频无效");
+    if (!title?.trim()) throw new Error(t("cloud.need_title"));
+    if (!(audioBlob instanceof Blob)) throw new Error(t("cloud.invalid_audio"));
 
     let jsonPayload = null;
     if (projectJson != null) {
@@ -852,7 +855,7 @@ const BeatBattleCloud = (() => {
             throw new Error("无法读取当前工程");
           }
           if (typeof AudioExport === "undefined" || !AudioExport.renderExportBlob) {
-            throw new Error("音频导出模块未加载");
+            throw new Error(t("cloud.audio_module_missing"));
           }
           setStatus?.("正在渲染音频与工程 JSON，并发布到制作库…");
           btnPublish.disabled = true;

@@ -1,7 +1,10 @@
 /**
- * HarmonyForge 主应用 — UI 与播放调度
+ * HarmonyForge — main UI and playback
  */
 (() => {
+  const t = (key, params) =>
+    typeof window.HF_T === "function" ? window.HF_T(key, params) : key;
+
   const STORAGE_KEY = "harmonyforge-project";
   const DRAFT_KEY = "harmonyforge-draft";
   let autosaveTimer = null;
@@ -94,6 +97,9 @@
   }
 
   function scaleLabel(scaleId) {
+    const key = `scales.${scaleId}`;
+    const loc = t(key);
+    if (loc && loc !== key) return loc;
     const opt = Sequencer.SCALE_OPTIONS.find((o) => o.id === scaleId);
     return opt ? opt.label : scaleId;
   }
@@ -448,6 +454,15 @@
   }
 
   function init() {
+    if (typeof Instruments !== "undefined" && Instruments.applyI18nNames) {
+      Instruments.applyI18nNames();
+    }
+    if (typeof Sequencer !== "undefined" && Sequencer.refreshScaleLabels) {
+      Sequencer.refreshScaleLabels();
+    }
+    if (els.btnNoteScalePick) {
+      els.btnNoteScalePick.textContent = scaleLabel("major");
+    }
     if (new URLSearchParams(location.search).get("debug") === "layers") {
       document.documentElement.setAttribute("data-debug-layers", "");
       requestAnimationFrame(() => logModuleShellMetrics());
@@ -508,7 +523,7 @@
       const main = document.querySelector(".main");
       if (main) new ResizeObserver(syncModuleSpacing).observe(main);
     }
-    setStatus("就绪 — 草稿将自动保存");
+    setStatus(t("status.ready"));
     scheduleAutosave();
   }
 
@@ -1706,7 +1721,7 @@
   }
 
   function clearProject() {
-    if (!confirm("确定清空所有 Pattern 与编曲？此操作不可撤销。")) return;
+    if (!confirm(t("status.clear_confirm"))) return;
     editingPublishedWorkId = null;
     Sequencer.importState({ steps: 16, patterns: Sequencer.createEmptyPatterns(Sequencer.DEFAULT_PATTERN_COUNT) });
     Arranger.init(Sequencer.patternCount);
@@ -1722,16 +1737,23 @@
       updateHistoryButtons();
     }
     scheduleAutosave();
-    setStatus("已重置为演示数据");
+    setStatus(t("status.reset_demo"));
   }
 
   function setStatus(msg) {
     els.statusText.textContent = msg;
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
+  async function boot() {
+    try {
+      if (window.__hfI18nPromise) await window.__hfI18nPromise;
+    } catch (_) {}
     init();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => boot());
+  } else {
+    boot();
   }
 })();

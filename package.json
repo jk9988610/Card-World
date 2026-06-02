@@ -7,6 +7,7 @@
     "export-program": "node tools/export-program.mjs",
     "validate-seed": "node tools/validate-seed.mjs",
     "build-seed": "node tools/build-seed.mjs",
+    "build-hf-locales": "node tools/build-hf-locales.mjs",
     "vendor:supabase": "node tools/vendor-supabase.mjs"
   }
 }

@@ -432,6 +432,15 @@ const Sequencer = (() => {
     if (currentPattern >= patterns.length) currentPattern = 0;
   }
 
+  function refreshScaleLabels() {
+    if (!window.HF_T) return;
+    for (const o of SCALE_OPTIONS) {
+      const key = `scales.${o.id}`;
+      const label = window.HF_T(key);
+      if (label && label !== key) o.label = label;
+    }
+  }
+
   return {
     get STEPS() {
       return steps;
@@ -502,5 +511,6 @@ const Sequencer = (() => {
     MIN_PATTERNS,
     normalizeAllPatterns,
     listInstruments: Instruments.list,
+    refreshScaleLabels,
   };
 })();

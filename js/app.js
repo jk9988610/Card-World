@@ -34,7 +34,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.13.3";
+const APP_VERSION = "0.13.4";
 
 const SETTINGS_MENU_SLUGS = new Set([
   "founders.language_settings",
@@ -1964,7 +1964,7 @@ function musicTitleForMode(mode) {
 
 function openMusicEmbed(mode = "studio") {
   musicEmbedMode = mode;
-  const url = musicEmbedUrl(mode);
+  const url = musicEmbedUrl(mode, currentLocale);
   if (els.musicConsoleTitle) els.musicConsoleTitle.textContent = musicTitleForMode(mode);
   if (els.musicConsoleHint) els.musicConsoleHint.textContent = musicEmbedHintForMode(mode);
   if (els.musicConsoleFrame) els.musicConsoleFrame.src = url;

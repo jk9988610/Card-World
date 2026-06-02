@@ -81,6 +81,15 @@ const Instruments = (() => {
     return type === "drum" ? 0.85 : 0.75;
   }
 
+  function applyI18nNames() {
+    if (!window.HF_T) return;
+    for (const inst of CATALOG) {
+      const key = `instruments.${inst.id}`;
+      const name = window.HF_T(key);
+      if (name && name !== key) inst.name = name;
+    }
+  }
+
   return {
     CATALOG,
     DEFAULT_LAYOUT,
@@ -89,5 +98,6 @@ const Instruments = (() => {
     get,
     list,
     defaultVolume,
+    applyI18nNames,
   };
 })();
