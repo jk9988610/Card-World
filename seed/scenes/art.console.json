@@ -11,10 +11,6 @@
     {
       "definitionSlug": "art.tool.pixel",
       "instanceId": "inst_art_pixel_1"
-    },
-    {
-      "definitionSlug": "art.tool.export",
-      "instanceId": "inst_art_export_1"
     }
   ],
   "field": []

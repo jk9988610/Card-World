@@ -2,9 +2,12 @@
   --felt: #1e4d3a;
   --felt-light: #2a6b52;
   --hand-bg: #152238;
-  /* TCG portrait 2.5"×3.5" → width:height = 5:7 (高大于宽) */
+  /* Card shell: TCG portrait 2.5"×3.5" (5:7, 高略大于宽) */
   --tcg-ratio-w: 5;
   --tcg-ratio-h: 7;
+  /* Image frame on card: landscape 7:5 (宽大于高) */
+  --card-image-ratio-w: 7;
+  --card-image-ratio-h: 5;
   --card-scale: 0.6666667;
   --card-w: clamp(70px, 10.5vw, 102px);
   --card-h: calc(var(--card-w) * var(--tcg-ratio-h) / var(--tcg-ratio-w));
@@ -257,13 +260,11 @@ body.in-scene.scene-art .zone-field {
 }
 
 .card-image {
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 0 0 auto;
   width: 100%;
   margin: 0;
   padding: 0;
-  aspect-ratio: 5 / 7;
-  max-height: 58%;
+  aspect-ratio: 7 / 5;
   display: block;
   overflow: hidden;
   background: #e9ecef;
@@ -320,8 +321,7 @@ body.in-scene.scene-art .zone-field {
 
 .card-zoom-slot .card-image {
   width: 100%;
-  max-height: 62%;
-  aspect-ratio: 5 / 7;
+  aspect-ratio: 7 / 5;
 }
 
 .card-zoom-slot .card-image canvas {
@@ -450,9 +450,9 @@ body.art-editor-open .app-version {
   width: 100%;
   margin: 0;
   padding: 0;
-  aspect-ratio: 5 / 7;
+  aspect-ratio: 7 / 5;
   align-self: center;
-  max-height: calc(100dvh - 12rem);
+  max-height: min(calc(100dvh - 12rem), calc(96vw * 5 / 7));
   display: block;
   overflow: hidden;
   background: #212529;

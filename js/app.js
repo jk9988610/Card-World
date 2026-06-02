@@ -4,7 +4,7 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.7.5";
+const APP_VERSION = "0.7.6";
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -64,11 +64,11 @@ const ART_PALETTE = [
 ];
 
 const ART_BG = "#1a1a2e";
-/** Match TCG card image frame (5:7 portrait) so exports are not squashed on cards */
-const TCG_RATIO_W = 5;
-const TCG_RATIO_H = 7;
-const ART_GRID_W = 30;
-const ART_GRID_H = 42;
+/** Match card image frame: 7:5 landscape (宽 > 高) */
+const IMAGE_FRAME_W = 7;
+const IMAGE_FRAME_H = 5;
+const ART_GRID_W = 42;
+const ART_GRID_H = 30;
 
 const artEditor = {
   open: false,
@@ -124,7 +124,6 @@ const els = {
   artColorHex: document.getElementById("art-color-hex"),
   artColorApply: document.getElementById("art-color-apply"),
   artBrushPreview: document.getElementById("art-brush-preview"),
-  artExportBtn: document.getElementById("art-export-btn"),
   appVersion: document.getElementById("app-version"),
 };
 
@@ -574,7 +573,13 @@ function captureStarterSnapshot() {
 
 /** Drop removed starters (e.g. world controller) from loaded saves. */
 function migrateObsoleteCardsIfNeeded() {
-  const drop = (list) => list.filter((i) => i.definitionSlug !== "founders.world_controller");
+  const drop = (list) =>
+    list.filter(
+      (i) =>
+        i.definitionSlug !== "founders.world_controller" &&
+        i.definitionSlug !== "art.tool.export" &&
+        i.definitionSlug !== "art.work.blank"
+    );
   state.hand = drop(state.hand);
   state.field = drop(state.field);
 }
@@ -817,7 +822,6 @@ async function openArtEditor() {
   const t = locales[currentLocale]?.art_editor || locales.en?.art_editor || {};
   if (els.artEditorTitle) els.artEditorTitle.textContent = t.title || "Pixel Board";
   if (els.artEditorHint) els.artEditorHint.textContent = t.hint || "";
-  if (els.artExportBtn) els.artExportBtn.textContent = t.export || "Export work card";
   if (els.artColorApply) els.artColorApply.textContent = t.apply_color || "Apply";
   rebuildArtToolUI();
   document.body.classList.add("art-editor-open");
@@ -847,23 +851,6 @@ async function closeArtEditor() {
     else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
   } catch (_) {}
   await ensureAppFullscreen();
-}
-
-function exportArtWork() {
-  const img = artPixelImageFromEditor();
-  const t = localeCard("art_work");
-  const inst = {
-    instanceId: nextInstanceId(),
-    definitionSlug: "art.work.blank",
-    title: t?.title || "Artwork",
-    text: t?.text || "",
-    image: img,
-    zone: "field",
-  };
-  state.field.push(inst);
-  closeArtEditor();
-  renderAll();
-  persistSave();
 }
 
 function setupArtEditor() {
@@ -898,8 +885,6 @@ function setupArtEditor() {
   });
 
   els.artEditorClose?.addEventListener("click", () => closeArtEditor());
-  els.artExportBtn?.addEventListener("click", exportArtWork);
-
   els.artColorPicker?.addEventListener("input", (e) => {
     setArtBrushColor(e.target.value);
   });
@@ -1419,9 +1404,6 @@ function runProgram(programId, ctx) {
         break;
       case "art_editor_open":
         openArtEditor();
-        break;
-      case "art_export_work":
-        exportArtWork();
         break;
       default:
         break;

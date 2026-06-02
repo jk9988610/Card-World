@@ -100,14 +100,6 @@
       "title": "Pixel Board",
       "text": "Recall to Hand, double-tap — fullscreen 30×42 editor (TCG 5:7, matches work card frame)."
     },
-    "art_tool_export": {
-      "title": "Export Work",
-      "text": "Double-tap — export your painting as a field card."
-    },
-    "art_work": {
-      "title": "Artwork",
-      "text": "Made in the art console."
-    }
   },
   "scenes": {
     "art_console": {
