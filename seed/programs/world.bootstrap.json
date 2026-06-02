@@ -7,21 +7,6 @@
   "nodes": [
     {
       "id": "n0",
-      "op": "sequence",
-      "label": "Bootstrap",
-      "children": ["n1", "n2"]
-    },
-    {
-      "id": "n1",
-      "op": "deal",
-      "label": "Deal programming cards",
-      "params": {
-        "cards": ["prog.on_play", "prog.spawn", "prog.set_slot"],
-        "toZone": "hand"
-      }
-    },
-    {
-      "id": "n2",
       "op": "spawn",
       "label": "Spawn door",
       "params": { "definitionSlug": "content.door", "zone": "hand" }

@@ -4,7 +4,10 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | native drag (smooth on iPad) | backpack flow
  */
 
-const APP_VERSION = "0.5.6";
+const APP_VERSION = "0.5.7";
+/** Quick tap to zoom (ms); ~half of typical mobile click delay */
+const TAP_ZOOM_MAX_MS = 225;
+const TAP_ZOOM_MAX_PX = 14;
 
 const SWATCH_BY_TAG = [
   ["programming", "#6f42c1"],
@@ -409,16 +412,31 @@ function buildCardEl(inst, zone, opts = {}) {
 
   if (!forZoom) {
     el.draggable = true;
-    el.addEventListener("click", (e) => {
-      e.stopPropagation();
+    let tapDown = null;
+    el.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      tapDown = { t: Date.now(), x: e.clientX, y: e.clientY };
+    });
+    el.addEventListener("pointerup", (e) => {
+      if (!tapDown) return;
+      const down = tapDown;
+      tapDown = null;
       if (drag?.moved) return;
-      openZoom(inst);
+      const dt = Date.now() - down.t;
+      const dist = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+      if (dist < TAP_ZOOM_MAX_PX && dt < TAP_ZOOM_MAX_MS) {
+        openZoom(inst);
+      }
+    });
+    el.addEventListener("pointercancel", () => {
+      tapDown = null;
     });
     el.addEventListener("dragstart", (e) => {
+      tapDown = null;
       drag = { id: inst.instanceId, from: zone, moved: false };
       e.dataTransfer.setData("text/plain", inst.instanceId);
     });
-    el.addEventListener("dragend", () => setTimeout(() => { drag = null; }, 50));
+    el.addEventListener("dragend", () => setTimeout(() => { drag = null; }, 25));
   }
 
   const title = document.createElement("div");

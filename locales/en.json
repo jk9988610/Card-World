@@ -66,7 +66,7 @@
     },
     "guide_weave_3": {
       "title": "Weave 3",
-      "text": "Use programming cards from Hand — drag each to Field."
+      "text": "Drag Door to Field to play. Use the backpack to stash cards."
     },
     "guide_weave_4": {
       "title": "Weave 4",
@@ -76,18 +76,6 @@
       "title": "Weave 5",
       "text": "Open Settings for fullscreen, language, and highlights."
     },
-    "prog_on_play": {
-      "title": "On Play",
-      "text": "Programming card. Drag to Field with other program cards."
-    },
-    "prog_spawn": {
-      "title": "Spawn",
-      "text": "Programming card. Creates a card on the table."
-    },
-    "prog_set_slot": {
-      "title": "Set Slot",
-      "text": "Programming card. Changes title, image, or text."
-    },
     "load_error": {
       "title": "Load Error",
       "text": "Could not load game data. Check your connection and refresh."
@@ -95,10 +83,6 @@
     "shop_script": {
       "title": "Shop Script",
       "text": "Drag to Field — highlights each card you should play, one at a time."
-    },
-    "play_reusable": {
-      "title": "Reusable",
-      "text": "Programming cards stay in Hand when played."
     }
   }
 }
