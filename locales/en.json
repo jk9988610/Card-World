@@ -114,11 +114,11 @@
     },
     "music_tool_studio": {
       "title": "HarmonyForge",
-      "text": "Play — music production only (step sequencer, timeline, publish). No review."
+      "text": "Drag to Field or double-tap — enter the studio (card stays in hand). Works even while a backpack is open."
     },
     "art_tool_pixel": {
       "title": "Pixel Board",
-      "text": "Play — pixel editor, art shop, export works (7:5 canvas)."
+      "text": "Drag to Field or double-tap — enter the editor (card stays in hand). Works even while a backpack is open."
     },
     "art_work": {
       "title": "Artwork",

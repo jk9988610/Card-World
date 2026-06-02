@@ -57,10 +57,12 @@ Meta-rules are **not** hard-coded gameplay. They are defaults the VM provides; *
 
 | Action | Trigger | Effect |
 |--------|---------|--------|
-| **Recall** | Drag backpack Field → Hand | All other field cards → `fieldStash`; field clears; backpack in hand |
-| **Pour** | Drag backpack Hand → Field (empty field) | All `inner` → field; backpack stays in hand |
-| **Take** | Drag spilled item Field → Hand | Pick up item |
-| **Close** | Drag backpack Hand → Field (after pour) | Unpicked field cards → `inner`; backpack → field; `fieldStash` restored |
+| **Open** | Drag backpack Hand → Field | Other field cards → `fieldStash` (hidden); container at index 0; `inner` poured after it |
+| **Pour** | Same as Open | Spilled items appear on field after the container card |
+| **Take** | Drag spilled item Field → Hand | Pick up item (menu/function cards: select, not stash) |
+| **Close** | Drag backpack Hand → Field (container on field) | Unpicked field cards → `inner`; backpack → hand; `fieldStash` restored to field |
+
+While a container is open, only the container row is visible on the field; stashed cards are not rendered until close.
 
 Meta cards (settings, language, tutorial, guide, controller, programming) use **play from hand** only: reusable cards run `on_play` without leaving the hand.
 
@@ -120,9 +122,10 @@ Toggle off with **Highlight Off** card.
 |-------|----------------|
 | **consume** (default) | Card moves to Field, `on_play` runs |
 | **reusable** | Stays in Hand, `on_play` runs |
+| **enter** | Stays in Hand, `on_play` opens tool UI (`art.editor.open`, `music.embed.open`); never stashed into open backpack |
 | **echo** | To Field + play, copy back to Hand |
 
-Tags: `reusable`, `echo`, or field `playStyle`.
+Tags: `reusable`, `echo`, or field `playStyle`. Enter tools are also detected by `programs.on_play`.
 
 ## H. Shop Script
 

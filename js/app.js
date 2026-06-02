@@ -34,7 +34,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.13.2";
+const APP_VERSION = "0.13.3";
 
 const SETTINGS_MENU_SLUGS = new Set([
   "founders.language_settings",
@@ -77,6 +77,9 @@ const REMOVED_CARD_SLUGS = new Set([
 ]);
 
 const REMOVED_SCENE_IDS = new Set(["scene.art.console", "scene.music.console"]);
+
+/** `on_play` programs that open a full-screen tool (not stashed into open containers). */
+const ENTER_PLAY_PROGRAMS = new Set(["art.editor.open", "music.embed.open"]);
 
 const SWATCH_BY_TAG = [
   ["programming", "#6f42c1"],
@@ -455,6 +458,11 @@ function isBackpack(def) {
   return def.tags.includes("container") || def.tags.includes("deck");
 }
 
+function isEnterTool(def) {
+  const pid = def?.programs?.on_play;
+  return !!(pid && ENTER_PLAY_PROGRAMS.has(pid));
+}
+
 function isSettingsContainer(def) {
   return def?.slug === "founders.settings";
 }
@@ -478,6 +486,7 @@ function isMetaCard(def) {
 function playStyle(def) {
   if (!def) return "consume";
   if (def.playStyle) return def.playStyle;
+  if (isEnterTool(def)) return "enter";
   if (def.tags?.includes("reusable")) return "reusable";
   if (def.tags?.includes("echo")) return "echo";
   return "consume";
@@ -506,6 +515,7 @@ function isStorableItem(def) {
   if (!def) return false;
   if (isContainerCard(def)) return false;
   if (isMenuAction(def)) return false;
+  if (isEnterTool(def)) return false;
   if (def.tags?.includes("tutorial") || def.tags?.includes("guide")) return false;
   return true;
 }
@@ -816,6 +826,11 @@ function handleZoneDrop(instanceId, fromZone, toZone, dropPoint = null) {
   }
 
   if (fromZone === "hand" && toZone === "field") {
+    if (isEnterTool(def)) {
+      playFromHand(instanceId);
+      tryAutoFullscreen();
+      return;
+    }
     if (isContainerCard(def)) {
       playContainerFromHand(instanceId);
       tryAutoFullscreen();
@@ -888,7 +903,7 @@ function playFromHand(instanceId) {
   const style = playStyle(def);
   const programId = resolveInstance(loc.instance).programs?.on_play;
 
-  if (style === "reusable" || isMetaCard(def)) {
+  if (style === "reusable" || style === "enter" || isMetaCard(def)) {
     if (programId) runPlayEffects(programId, instanceId);
     advanceGuide(loc.instance.definitionSlug);
     renderAll();
@@ -923,8 +938,9 @@ function clearLastCardTap() {
 
 /** Hand double-tap: play. Field double-tap: recall to hand (same as drag Field→Hand). */
 function playCard(instanceId, zone) {
+  const loc = findInstance(instanceId);
+  const def = getDef(loc?.instance?.definitionSlug);
   if (zone === "hand" && isContainerOpen()) {
-    const def = getDef(findInstance(instanceId)?.instance?.definitionSlug);
     const open = getOpenContainerOnField();
     if (open && isStorableItem(def)) {
       insertIntoOpenContainer(instanceId, -1);
@@ -933,7 +949,15 @@ function playCard(instanceId, zone) {
   }
   if (zone === "hand") playFromHand(instanceId);
   else if (zone === "field") {
-    const def = getDef(inst.definitionSlug);
+    if (isEnterTool(def)) {
+      if (loc?.instance?.programs?.on_play || def?.programs?.on_play) {
+        runPlayEffects(resolveInstance(loc.instance).programs?.on_play, instanceId);
+        advanceGuide(loc.instance.definitionSlug);
+        renderAll();
+        persistSave();
+      }
+      return;
+    }
     if (isContainerOpen() && isMenuAction(def)) activateMenuActionFromField(instanceId);
     else recallFieldToHand(instanceId);
   }
@@ -2437,6 +2461,7 @@ function buildCardEl(inst, zone, opts = {}) {
 
 function renderAll() {
   if (pointerDrag?.active || dragGhost) abortPointerDrag();
+  document.body.classList.toggle("container-open", isContainerOpen());
   renderZone("field", els.field, state.field);
   renderZone("hand", els.hand, state.hand);
 }

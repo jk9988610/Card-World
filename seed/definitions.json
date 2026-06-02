@@ -656,6 +656,7 @@
       "title": "HarmonyForge",
       "text": "Play — open the music production app (no review).",
       "tags": ["music", "tool", "reusable"],
+      "playStyle": "enter",
       "programs": { "on_play": "music.embed.open" },
       "image": {
         "type": "pixel/v1",
@@ -673,6 +674,7 @@
       "title": "Pixel Board",
       "text": "Play — open the 7:5 pixel editor and art shop.",
       "tags": ["art", "tool", "reusable"],
+      "playStyle": "enter",
       "programs": { "on_play": "art.editor.open" },
       "image": {
         "type": "pixel/v1",
