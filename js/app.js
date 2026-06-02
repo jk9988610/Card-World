@@ -45,6 +45,9 @@ const state = {
 
 let instanceCounter = 0;
 let drag = null;
+let touchSession = null;
+let dragGhost = null;
+let touchDocListenersOn = false;
 let starterSnapshot = null;
 let fullscreenTried = false;
 
@@ -396,6 +399,172 @@ function resetWorld() {
   persistSave();
 }
 
+function zoneAtPoint(clientX, clientY) {
+  for (const el of document.elementsFromPoint(clientX, clientY)) {
+    if (el.classList?.contains("drag-ghost")) continue;
+    if (el.closest?.(".dragging-source")) continue;
+    if (els.zoneHand.contains(el)) return "hand";
+    if (els.zoneField.contains(el)) return "field";
+  }
+  return null;
+}
+
+function ensureTouchDocListeners() {
+  if (touchDocListenersOn) return;
+  touchDocListenersOn = true;
+  document.addEventListener("pointermove", onTouchDocPointerMove, { passive: false });
+  document.addEventListener("pointerup", onTouchDocPointerEnd);
+  document.addEventListener("pointercancel", onTouchDocPointerEnd);
+}
+
+function cancelTouchSession() {
+  if (!touchSession) return;
+  if (touchSession.timer) {
+    clearTimeout(touchSession.timer);
+    touchSession.timer = null;
+  }
+  if (touchSession.phase === "dragging") {
+    dragGhost?.remove();
+    dragGhost = null;
+    touchSession.el.classList.remove("dragging-source");
+    document.body.classList.remove("card-dragging");
+    drag = null;
+  }
+  touchSession = null;
+}
+
+function startTouchDrag(clientX, clientY) {
+  if (!touchSession || touchSession.phase !== "pending") return;
+  const s = touchSession;
+  s.phase = "dragging";
+  s.el.classList.add("dragging-source");
+  try {
+    s.el.setPointerCapture(s.pointerId);
+  } catch (_) {}
+  const loc = findInstance(s.instanceId);
+  if (!loc) return;
+  drag = { id: s.instanceId, from: s.zone, moved: false };
+  dragGhost = buildCardEl(loc.instance, s.zone);
+  dragGhost.classList.add("drag-ghost");
+  dragGhost.style.left = `${clientX}px`;
+  dragGhost.style.top = `${clientY}px`;
+  document.body.appendChild(dragGhost);
+  document.body.classList.add("card-dragging");
+}
+
+function finishTouchDrag(clientX, clientY) {
+  if (!touchSession || touchSession.phase !== "dragging") return;
+  const s = touchSession;
+  const toZone = zoneAtPoint(clientX, clientY);
+  if (toZone && toZone !== s.zone) {
+    drag = { id: s.instanceId, from: s.zone, moved: true };
+    handleZoneDrop(s.instanceId, s.zone, toZone);
+  }
+  dragGhost?.remove();
+  dragGhost = null;
+  s.el.classList.remove("dragging-source");
+  document.body.classList.remove("card-dragging");
+  setTimeout(() => {
+    drag = null;
+  }, 25);
+}
+
+function onTouchDocPointerMove(e) {
+  if (!touchSession || e.pointerId !== touchSession.pointerId) return;
+  touchSession.lastX = e.clientX;
+  touchSession.lastY = e.clientY;
+
+  if (touchSession.phase === "pending") {
+    const dx = e.clientX - touchSession.startX;
+    const dy = e.clientY - touchSession.startY;
+    if (Math.hypot(dx, dy) < TOUCH_MOVE_CANCEL_PX) return;
+    if (touchSession.zone === "hand" && Math.abs(dx) > Math.abs(dy) * 1.2) {
+      cancelTouchSession();
+      return;
+    }
+    if (touchSession.timer) {
+      clearTimeout(touchSession.timer);
+      touchSession.timer = null;
+    }
+    return;
+  }
+
+  if (touchSession.phase === "dragging") {
+    e.preventDefault();
+    if (dragGhost) {
+      dragGhost.style.left = `${e.clientX}px`;
+      dragGhost.style.top = `${e.clientY}px`;
+    }
+  }
+}
+
+function onTouchDocPointerEnd(e) {
+  if (!touchSession || e.pointerId !== touchSession.pointerId) return;
+  if (touchSession.timer) {
+    clearTimeout(touchSession.timer);
+    touchSession.timer = null;
+  }
+
+  const s = touchSession;
+  const wasDrag = s.phase === "dragging";
+  touchSession = null;
+
+  try {
+    s.el.releasePointerCapture(e.pointerId);
+  } catch (_) {}
+
+  if (wasDrag) {
+    finishTouchDrag(e.clientX, e.clientY);
+    return;
+  }
+
+  const dist = Math.hypot(e.clientX - s.startX, e.clientY - s.startY);
+  const dt = Date.now() - s.startedAt;
+  if (dist < TAP_ZOOM_MAX_PX && dt < TAP_ZOOM_MAX_MS) {
+    openZoom(s.inst);
+  }
+}
+
+function setupTouchDrag(el, inst, zone) {
+  el.draggable = false;
+  el.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "mouse") return;
+    cancelTouchSession();
+    touchSession = {
+      instanceId: inst.instanceId,
+      zone,
+      el,
+      inst,
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      lastX: e.clientX,
+      lastY: e.clientY,
+      startedAt: Date.now(),
+      phase: "pending",
+      timer: null,
+    };
+    touchSession.timer = setTimeout(() => {
+      if (!touchSession || touchSession.phase !== "pending") return;
+      startTouchDrag(touchSession.lastX, touchSession.lastY);
+    }, TOUCH_DRAG_HOLD_MS);
+  });
+}
+
+function setupMouseDrag(el, inst, zone) {
+  el.draggable = true;
+  el.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (drag?.moved) return;
+    openZoom(inst);
+  });
+  el.addEventListener("dragstart", (e) => {
+    drag = { id: inst.instanceId, from: zone, moved: false };
+    e.dataTransfer.setData("text/plain", inst.instanceId);
+  });
+  el.addEventListener("dragend", () => setTimeout(() => { drag = null; }, 50));
+}
+
 function shouldHint(slug, zone) {
   if (!state.highlightOn || zone !== "hand") return false;
   if (state.hintTarget && slug === state.hintTarget) return true;
@@ -415,32 +584,12 @@ function buildCardEl(inst, zone, opts = {}) {
   if (!forZoom && shouldHint(r.definitionSlug, zone)) el.classList.add("hint");
 
   if (!forZoom) {
-    el.draggable = true;
-    let tapDown = null;
-    el.addEventListener("pointerdown", (e) => {
-      if (e.pointerType === "mouse" && e.button !== 0) return;
-      tapDown = { t: Date.now(), x: e.clientX, y: e.clientY };
-    });
-    el.addEventListener("pointerup", (e) => {
-      if (!tapDown) return;
-      const down = tapDown;
-      tapDown = null;
-      if (drag?.moved) return;
-      const dt = Date.now() - down.t;
-      const dist = Math.hypot(e.clientX - down.x, e.clientY - down.y);
-      if (dist < TAP_ZOOM_MAX_PX && dt < TAP_ZOOM_MAX_MS) {
-        openZoom(inst);
-      }
-    });
-    el.addEventListener("pointercancel", () => {
-      tapDown = null;
-    });
-    el.addEventListener("dragstart", (e) => {
-      tapDown = null;
-      drag = { id: inst.instanceId, from: zone, moved: false };
-      e.dataTransfer.setData("text/plain", inst.instanceId);
-    });
-    el.addEventListener("dragend", () => setTimeout(() => { drag = null; }, 25));
+    if (USE_TOUCH_DRAG) {
+      ensureTouchDocListeners();
+      setupTouchDrag(el, inst, zone);
+    } else {
+      setupMouseDrag(el, inst, zone);
+    }
   }
 
   const title = document.createElement("div");
@@ -680,8 +829,11 @@ function applyStarter(bundle) {
 }
 
 async function init() {
-  setupDropZone(els.zoneHand, "hand");
-  setupDropZone(els.zoneField, "field");
+  if (USE_TOUCH_DRAG) ensureTouchDocListeners();
+  else {
+    setupDropZone(els.zoneHand, "hand");
+    setupDropZone(els.zoneField, "field");
+  }
   els.zoomBackdrop.addEventListener("click", closeZoom);
 
   try {
