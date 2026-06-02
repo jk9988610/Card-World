@@ -6,7 +6,7 @@
   "cards": {
     "tutorial": {
       "title": "Tutorial",
-      "text": "DOUBLE-TAP a card to play.\nYou can still drag Hand→Field.\nDrag Field→Hand to take back.\nSettings only deals language + reset."
+      "text": "DOUBLE-TAP to play, or drag Hand→Field (both work).\nSingle tap does nothing.\nDrag Field→Hand to take back."
     },
     "settings": {
       "title": "Settings",
@@ -102,7 +102,7 @@
     },
     "art_tool_palette": {
       "title": "Palette",
-      "text": "Double-tap — cycle brush color (or tap swatches in the editor)."
+      "text": "Double-tap or drag to Field — cycle brush; card + flash show the color."
     },
     "art_tool_export": {
       "title": "Export Work",

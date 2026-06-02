@@ -4,7 +4,7 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.6.8";
+const APP_VERSION = "0.6.9";
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -375,6 +375,7 @@ function playBackpackFromHand(instanceId) {
 }
 
 function handleZoneDrop(instanceId, fromZone, toZone) {
+  clearLastCardTap();
   const loc = findInstance(instanceId);
   if (!loc) return;
   const def = getDef(loc.instance.definitionSlug);
@@ -477,8 +478,11 @@ function playFromField(instanceId) {
   runCardPlay(instanceId, "field");
 }
 
+function clearLastCardTap() {
+  lastCardTap = { instanceId: null, zone: null, at: 0, x: 0, y: 0 };
+}
+
 function playCard(instanceId, zone) {
-  if (drag?.moved) return;
   if (zone === "hand") playFromHand(instanceId);
   else if (zone === "field") playFromField(instanceId);
 }
@@ -655,10 +659,47 @@ function closeArtEditor() {
   els.artEditor?.classList.add("hidden");
 }
 
+function brushPalettePreviewImage() {
+  const idx = artEditor.colorIndex % ART_PALETTE.length;
+  return {
+    type: "pixel/v1",
+    w: 8,
+    h: 8,
+    palette: ART_PALETTE,
+    pixels: new Array(64).fill(idx),
+  };
+}
+
+let brushFlashTimer = null;
+
+function showBrushColorFlash() {
+  const hex = ART_PALETTE[artEditor.colorIndex];
+  let el = document.getElementById("brush-color-flash");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "brush-color-flash";
+    el.className = "brush-color-flash";
+    el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
+    document.body.appendChild(el);
+  }
+  el.style.background = hex;
+  el.textContent = hex;
+  el.classList.remove("hidden");
+  if (brushFlashTimer) clearTimeout(brushFlashTimer);
+  brushFlashTimer = setTimeout(() => el.classList.add("hidden"), 900);
+  for (const card of document.querySelectorAll('.card[data-definition-slug="art.tool.palette"]')) {
+    card.classList.remove("palette-pulse");
+    void card.offsetWidth;
+    card.classList.add("palette-pulse");
+  }
+}
+
 function cycleArtPalette() {
   artEditor.colorIndex = (artEditor.colorIndex + 1) % ART_PALETTE.length;
   rebuildArtPaletteUI();
   if (artEditor.open) redrawArtPixelCanvas();
+  showBrushColorFlash();
   renderAll();
 }
 
@@ -728,7 +769,7 @@ function resetWorld() {
   state.hand = cloneInstList(starterSnapshot.hand);
   state.field = cloneInstList(starterSnapshot.field);
   state.fieldStash = [];
-  lastCardTap = { instanceId: null, zone: null, at: 0, x: 0, y: 0 };
+  clearLastCardTap();
   instanceCounter = 0;
   for (const inst of [...state.hand, ...state.field]) bumpCounterFromInst(inst);
   renderAll();
@@ -824,6 +865,7 @@ function finishPointerDragSession(e) {
   } catch (_) {}
 
   if (s.active) {
+    clearLastCardTap();
     const toZone = zoneAtPoint(e.clientX, e.clientY);
     endPointerDragVisual();
     if (toZone && toZone !== s.from) {
@@ -834,7 +876,13 @@ function finishPointerDragSession(e) {
   } else {
     const dist = Math.hypot(e.clientX - s.startX, e.clientY - s.startY);
     const dt = Date.now() - s.startedAt;
-    if (dist < TAP_ZOOM_MAX_PX && dt < TAP_ZOOM_MAX_MS && s.inst && s.zone) {
+    if (
+      !s.movedDuringTap &&
+      dist < TAP_ZOOM_MAX_PX &&
+      dt < TAP_ZOOM_MAX_MS &&
+      s.inst &&
+      s.zone
+    ) {
       tryDoubleTapPlay(s.inst, s.zone, e.clientX, e.clientY);
     }
     endPointerDragVisual();
@@ -855,7 +903,6 @@ function ensurePointerDragDocListeners() {
 function setupCardPlay(el, inst, zone) {
   el.addEventListener("dblclick", (e) => {
     e.stopPropagation();
-    e.preventDefault();
     playCard(inst.instanceId, zone);
   });
 }
@@ -889,6 +936,7 @@ function setupTouchPointerDrag(el, inst, zone) {
       startX: e.clientX,
       startY: e.clientY,
       active: false,
+      movedDuringTap: false,
       pointerId: e.pointerId,
       startedAt: Date.now(),
       sourceEl: el,
@@ -913,6 +961,7 @@ function setupTouchPointerDrag(el, inst, zone) {
     if (!pointerDrag.timer) return;
     const dx = e.clientX - pointerDrag.startX;
     const dy = e.clientY - pointerDrag.startY;
+    if (Math.hypot(dx, dy) >= LONG_PRESS_CANCEL_PX) pointerDrag.movedDuringTap = true;
     if (Math.hypot(dx, dy) < LONG_PRESS_CANCEL_PX) return;
     if (zone === "hand" && Math.abs(dx) > Math.abs(dy) * 1.2) {
       abortPointerDrag();
@@ -965,7 +1014,9 @@ function buildCardEl(inst, zone, opts = {}) {
   imageWrap.className = "card-image";
   const canvas = document.createElement("canvas");
   imageWrap.appendChild(canvas);
-  drawCardSwatch(canvas, r.tags, large || forZoom, r.image);
+  const swatchImg =
+    r.definitionSlug === "art.tool.palette" ? brushPalettePreviewImage() : r.image;
+  drawCardSwatch(canvas, r.tags, large || forZoom, swatchImg);
 
   const text = document.createElement("div");
   text.className = "card-text";

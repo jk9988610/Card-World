@@ -350,6 +350,50 @@ body.card-dragging .zone-hand {
   outline-offset: -3px;
 }
 
+.brush-color-flash {
+  position: fixed;
+  left: 50%;
+  top: 42%;
+  z-index: 200;
+  transform: translate(-50%, -50%);
+  min-width: 5.5rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 10px;
+  border: 3px solid #212529;
+  color: #212529;
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.brush-color-flash.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.card.palette-pulse {
+  animation: palette-pulse 0.55s ease;
+}
+
+@keyframes palette-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: calc(2px * var(--card-scale)) calc(4px * var(--card-scale)) calc(10px * var(--card-scale))
+      rgba(0, 0, 0, 0.45);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow:
+      0 0 0 calc(4px * var(--card-scale)) rgba(255, 212, 59, 0.85),
+      calc(2px * var(--card-scale)) calc(4px * var(--card-scale)) calc(10px * var(--card-scale))
+        rgba(0, 0, 0, 0.45);
+  }
+}
+
 .art-editor {
   position: fixed;
   inset: 0;
