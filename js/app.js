@@ -1596,7 +1596,11 @@ function setLocale(code) {
     if (els.artGalleryBtn) els.artGalleryBtn.textContent = wk.open || "Works";
     rebuildArtToolUI();
   }
+  if (els.artExportModal && !els.artExportModal.classList.contains("hidden")) {
+    applyExportModalI18n();
+  }
   if (els.artWorksGallery && !els.artWorksGallery.classList.contains("hidden")) {
+    applyWorksGalleryI18n();
     renderWorksGallery();
   }
   renderAll();
