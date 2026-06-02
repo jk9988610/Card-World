@@ -1,0 +1,19 @@
+{
+  "meta": { "lang": "en", "name": "English" },
+  "ui": {
+    "pageTitle": "Card World",
+    "tagline": "Everything is a card. Click a card to <strong>Play</strong> it.",
+    "guideTitle": "Start here",
+    "guideStep1": "On the Field (table), click World Controller.",
+    "guideStep2": "Programming cards appear in your Hand. A Door appears on the Field.",
+    "guideStep3": "Click the Door — its text becomes Open.",
+    "guideStep4": "Drag cards between Hand and Field. Click any card to Play it.",
+    "guideNote": "You are the first Binder. These programming cards are how you weave the world.",
+    "zoneField": "Field",
+    "zoneHand": "Hand",
+    "logTitle": "Log",
+    "sceneBack": "Back to Table",
+    "welcomeLog": "Welcome to Card World. Click World Controller on the Field.",
+    "loadError": "Load error: {message}"
+  }
+}

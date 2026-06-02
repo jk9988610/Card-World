@@ -1,0 +1,19 @@
+{
+  "meta": { "lang": "zh-Hans", "name": "简体中文" },
+  "ui": {
+    "pageTitle": "卡牌世界",
+    "tagline": "一切皆卡牌。点击卡牌即可打出（Play）。",
+    "guideTitle": "从这里开始",
+    "guideStep1": "在场上（Field）点击世界控制器（World Controller）。",
+    "guideStep2": "手牌区会出现编程牌，场上会出现门（Door）。",
+    "guideStep3": "点击门 — 文字会变为「打开」。",
+    "guideStep4": "可在手牌与场上之间拖拽；点击任意牌即可打出。",
+    "guideNote": "你是第一位编织者。这些编程牌就是你编织世界的方式。",
+    "zoneField": "场上",
+    "zoneHand": "手牌",
+    "logTitle": "日志",
+    "sceneBack": "返回牌桌",
+    "welcomeLog": "欢迎来到卡牌世界。请点击场上的世界控制器。",
+    "loadError": "加载失败：{message}"
+  }
+}

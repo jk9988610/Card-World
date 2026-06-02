@@ -1,8 +1,22 @@
+import { initI18n, applyI18n, t } from './i18n.js';
+
 /**
  * Card World — Phase 0 playable demo
  */
 
-const BUNDLE_URL = "dist/seed-bundle.json";
+function basePath() {
+  const parts = location.pathname.split("/").filter(Boolean);
+  if (parts.length > 0 && !parts[parts.length - 1].includes(".")) {
+    return `/${parts.join("/")}/`;
+  }
+  if (parts.length > 1) {
+    return `/${parts.slice(0, -1).join("/")}/`;
+  }
+  return "/";
+}
+
+const BASE = basePath();
+const BUNDLE_URL = `${BASE}dist/seed-bundle.json`;
 const MAX_STEPS = 200;
 
 /** @type {Map<string, object>} */
@@ -92,8 +106,9 @@ function drawPixel(canvas, payload) {
   canvas.height = h;
   const pal = payload.palette || ["#000", "#fff"];
   const px = payload.pixels || [];
-  const cw = canvas.parentElement.clientWidth;
-  const ch = canvas.parentElement.clientHeight;
+  const parent = canvas.parentElement;
+  const cw = parent?.clientWidth || 242;
+  const ch = parent?.clientHeight || 168;
   ctx.imageSmoothingEnabled = false;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -137,8 +152,8 @@ function buildCardEl(inst, zone) {
   const imageWrap = document.createElement("div");
   imageWrap.className = "card-image";
   const canvas = document.createElement("canvas");
-  drawPixel(canvas, r.image);
   imageWrap.appendChild(canvas);
+  drawPixel(canvas, r.image);
 
   const text = document.createElement("div");
   text.className = "card-text";
@@ -345,7 +360,10 @@ async function loadBundle() {
   }
 }
 
-function init() {
+async function init() {
+  await initI18n(BASE);
+  applyI18n();
+  document.title = t("ui.pageTitle");
   setupDropZone(els.hand, "hand");
   setupDropZone(els.field, "field");
   els.sceneClose.addEventListener("click", closeScene);
@@ -353,10 +371,10 @@ function init() {
   loadBundle()
     .then(() => {
       renderAll();
-      log("Welcome to Card World. Click World Controller on the Field.");
+      log(t("ui.welcomeLog"));
     })
     .catch((err) => {
-      log(`Load error: ${err.message}`);
+      log(t("ui.loadError", { message: err.message }));
       console.error(err);
     });
 }

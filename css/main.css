@@ -305,3 +305,6 @@ body {
     max-height: none;
   }
 }
+
+.lang-switch { margin: 0.35rem 0 0; font-size: 0.85rem; }
+.lang-switch a { color: #79c0ff; }
