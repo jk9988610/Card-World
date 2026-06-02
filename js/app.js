@@ -1,13 +1,17 @@
 import { clearSave, loadSave, writeSave } from "./storage.js";
 
 /**
- * Card World — tap zoom | pointer drag | backpack pour/close flow
+ * Card World — tap zoom | native drag (mouse) | long-press drag (touch)
  */
 
-const APP_VERSION = "0.5.2";
-const DRAG_START_PX = 2;
+const APP_VERSION = "0.5.3";
+/** Shorter than browser default (~500–700ms) for touch drag */
+const LONG_PRESS_MS = 320;
+const LONG_PRESS_CANCEL_PX = 12;
 const TAP_MAX_PX = 12;
 const TAP_MAX_MS = 450;
+
+const USE_TOUCH_LONG_PRESS = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 
 const SWATCH_BY_TAG = [
   ["programming", "#6f42c1"],
@@ -446,10 +450,24 @@ function endPointerDragVisual() {
   }, 50);
 }
 
-function setupCardPointer(el, inst, zone) {
+function setupNativeDrag(el, inst, zone) {
+  el.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (drag?.moved) return;
+    openZoom(inst);
+  });
+  el.addEventListener("dragstart", (e) => {
+    drag = { id: inst.instanceId, from: zone, moved: false };
+    e.dataTransfer.setData("text/plain", inst.instanceId);
+  });
+  el.addEventListener("dragend", () => setTimeout(() => { drag = null; }, 50));
+}
+
+function setupTouchLongPressDrag(el, inst, zone) {
+  let pressTimer = null;
+
   el.addEventListener("pointerdown", (e) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    e.preventDefault();
+    if (e.pointerType === "mouse") return;
     pointerDrag = {
       id: inst.instanceId,
       from: zone,
@@ -460,22 +478,39 @@ function setupCardPointer(el, inst, zone) {
       startedAt: Date.now(),
       sourceEl: el,
     };
-    el.setPointerCapture(e.pointerId);
+    pressTimer = setTimeout(() => {
+      pressTimer = null;
+      if (!pointerDrag || pointerDrag.pointerId !== e.pointerId) return;
+      try {
+        el.setPointerCapture(e.pointerId);
+      } catch (_) {}
+      el.classList.add("long-press-armed");
+      beginPointerDrag(e.clientX, e.clientY);
+    }, LONG_PRESS_MS);
   });
 
   el.addEventListener("pointermove", (e) => {
+    if (e.pointerType === "mouse") return;
     if (!pointerDrag || pointerDrag.pointerId !== e.pointerId) return;
     const dist = Math.hypot(e.clientX - pointerDrag.startX, e.clientY - pointerDrag.startY);
-    if (!pointerDrag.active && dist >= DRAG_START_PX) {
-      beginPointerDrag(e.clientX, e.clientY);
+    if (!pointerDrag.active && pressTimer && dist >= LONG_PRESS_CANCEL_PX) {
+      clearTimeout(pressTimer);
+      pressTimer = null;
     }
     if (pointerDrag.active) {
+      e.preventDefault();
       movePointerDrag(e.clientX, e.clientY);
     }
   });
 
   const finishPointer = (e) => {
+    if (e.pointerType === "mouse") return;
     if (!pointerDrag || pointerDrag.pointerId !== e.pointerId) return;
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      pressTimer = null;
+    }
+    el.classList.remove("long-press-armed");
     try {
       el.releasePointerCapture(e.pointerId);
     } catch (_) {}
@@ -500,6 +535,16 @@ function setupCardPointer(el, inst, zone) {
   el.addEventListener("pointercancel", finishPointer);
 }
 
+function setupCardInteraction(el, inst, zone) {
+  if (USE_TOUCH_LONG_PRESS) {
+    el.draggable = false;
+    setupTouchLongPressDrag(el, inst, zone);
+  } else {
+    el.draggable = true;
+    setupNativeDrag(el, inst, zone);
+  }
+}
+
 function shouldHint(slug, zone) {
   if (!state.highlightOn || zone !== "hand") return false;
   if (state.hintTarget && slug === state.hintTarget) return true;
@@ -519,7 +564,7 @@ function buildCardEl(inst, zone, opts = {}) {
   if (!forZoom && shouldHint(r.definitionSlug, zone)) el.classList.add("hint");
 
   if (!forZoom) {
-    setupCardPointer(el, inst, zone);
+    setupCardInteraction(el, inst, zone);
   }
 
   const title = document.createElement("div");
@@ -574,6 +619,21 @@ function moveInstance(id, toZone) {
   persistSave();
 }
 
+function setupDropZone(container, zoneName) {
+  container.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  });
+  container.addEventListener("drop", (e) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData("text/plain");
+    if (!id || !drag) return;
+    const from = drag.from;
+    drag.moved = true;
+    if (from === zoneName) return;
+    handleZoneDrop(id, from, zoneName);
+  });
+}
 
 function tryAutoFullscreen() {
   if (fullscreenTried) return;
@@ -744,6 +804,8 @@ function applyStarter(bundle) {
 }
 
 async function init() {
+  setupDropZone(els.zoneHand, "hand");
+  setupDropZone(els.zoneField, "field");
   els.zoomBackdrop.addEventListener("click", closeZoom);
 
   try {

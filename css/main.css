@@ -85,7 +85,7 @@ body {
   display: flex;
   flex-direction: column;
   cursor: grab;
-  touch-action: none;
+  touch-action: manipulation;
   user-select: none;
   color: #212529;
   box-shadow: calc(2px * var(--card-scale)) calc(4px * var(--card-scale)) calc(10px * var(--card-scale))
@@ -217,6 +217,13 @@ body {
 
 .card-zoom-slot .card-text {
   font-size: 0.95rem;
+}
+
+.card.long-press-armed {
+  box-shadow:
+    0 0 0 calc(3px * var(--card-scale)) rgba(77, 171, 247, 0.75),
+    calc(2px * var(--card-scale)) calc(4px * var(--card-scale)) calc(10px * var(--card-scale))
+      rgba(0, 0, 0, 0.45);
 }
 
 .card.dragging-source {
