@@ -4,7 +4,10 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.6.7";
+const APP_VERSION = "0.6.8";
+
+const DOUBLE_TAP_MS = 450;
+const DOUBLE_TAP_MAX_PX = 18;
 
 /** iPad / phones: native DnD is fragile; use pointer ghost. Mouse/desktop: HTML5 drag. */
 const USE_POINTER_DRAG_ON_TOUCH = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
@@ -18,7 +21,6 @@ const TOOL_SLUGS_ON_FIELD = [
   "founders.world_controller",
   "seed.starter_deck",
   "founders.art_console",
-  "founders.guide_weave_1",
 ];
 
 const SWATCH_BY_TAG = [
@@ -89,6 +91,7 @@ let drag = null;
 let pointerDrag = null;
 let dragGhost = null;
 let pointerDocListenersOn = false;
+let lastCardTap = { instanceId: null, zone: null, at: 0, x: 0, y: 0 };
 let starterSnapshot = null;
 let fullscreenTried = false;
 
@@ -412,7 +415,7 @@ function runPlayEffects(programId, instanceId) {
   runProgram(programId, { instanceId });
   if (programId === "world.bootstrap") {
     state.bootstrapDone = true;
-    if (!state.guideQueue.length) setHintTarget("content.door");
+    if (!state.guideQueue.length) setHintTarget("founders.settings");
   } else if (programId === "settings.open") {
     if (!state.guideQueue.length) setHintTarget("founders.language_settings");
   } else if (programId === "language.open") {
@@ -422,6 +425,21 @@ function runPlayEffects(programId, instanceId) {
   } else if (programId === "guide.start") {
     state.highlightOn = true;
   }
+}
+
+function runCardPlay(instanceId, zone) {
+  const loc = findInstance(instanceId);
+  if (!loc) return;
+  const def = getDef(loc.instance.definitionSlug);
+  if (!def) return;
+  const programId = resolveInstance(loc.instance).programs?.on_play;
+  const style = playStyle(def);
+
+  if (programId) runPlayEffects(programId, instanceId);
+  if (style === "echo" && zone === "hand") createInstance(loc.instance.definitionSlug, "hand");
+  advanceGuide(loc.instance.definitionSlug);
+  renderAll();
+  persistSave();
 }
 
 function playFromHand(instanceId) {
@@ -449,6 +467,37 @@ function playFromHand(instanceId) {
   advanceGuide(loc.instance.definitionSlug);
   renderAll();
   persistSave();
+}
+
+function playFromField(instanceId) {
+  const loc = findInstance(instanceId);
+  if (!loc || loc.zone !== "field") return;
+  const def = getDef(loc.instance.definitionSlug);
+  if (isBackpack(def)) return;
+  runCardPlay(instanceId, "field");
+}
+
+function playCard(instanceId, zone) {
+  if (drag?.moved) return;
+  if (zone === "hand") playFromHand(instanceId);
+  else if (zone === "field") playFromField(instanceId);
+}
+
+function tryDoubleTapPlay(inst, zone, clientX, clientY) {
+  const now = Date.now();
+  const t = lastCardTap;
+  const isDouble =
+    t.instanceId === inst.instanceId &&
+    t.zone === zone &&
+    now - t.at < DOUBLE_TAP_MS &&
+    Math.hypot(clientX - t.x, clientY - t.y) < DOUBLE_TAP_MAX_PX;
+  if (isDouble) {
+    lastCardTap = { instanceId: null, zone: null, at: 0, x: 0, y: 0 };
+    playCard(inst.instanceId, zone);
+    return true;
+  }
+  lastCardTap = { instanceId: inst.instanceId, zone, at: now, x: clientX, y: clientY };
+  return false;
 }
 
 function setHintTarget(slug) {
@@ -679,6 +728,7 @@ function resetWorld() {
   state.hand = cloneInstList(starterSnapshot.hand);
   state.field = cloneInstList(starterSnapshot.field);
   state.fieldStash = [];
+  lastCardTap = { instanceId: null, zone: null, at: 0, x: 0, y: 0 };
   instanceCounter = 0;
   for (const inst of [...state.hand, ...state.field]) bumpCounterFromInst(inst);
   renderAll();
@@ -784,8 +834,8 @@ function finishPointerDragSession(e) {
   } else {
     const dist = Math.hypot(e.clientX - s.startX, e.clientY - s.startY);
     const dt = Date.now() - s.startedAt;
-    if (dist < TAP_ZOOM_MAX_PX && dt < TAP_ZOOM_MAX_MS && s.inst) {
-      openZoom(s.inst);
+    if (dist < TAP_ZOOM_MAX_PX && dt < TAP_ZOOM_MAX_MS && s.inst && s.zone) {
+      tryDoubleTapPlay(s.inst, s.zone, e.clientX, e.clientY);
     }
     endPointerDragVisual();
   }
@@ -802,13 +852,17 @@ function ensurePointerDragDocListeners() {
   });
 }
 
+function setupCardPlay(el, inst, zone) {
+  el.addEventListener("dblclick", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    playCard(inst.instanceId, zone);
+  });
+}
+
 function setupNativeDrag(el, inst, zone) {
   el.draggable = true;
-  el.addEventListener("click", (e) => {
-    e.stopPropagation();
-    if (drag?.moved) return;
-    openZoom(inst);
-  });
+  setupCardPlay(el, inst, zone);
   el.addEventListener("dragstart", (e) => {
     drag = { id: inst.instanceId, from: zone, moved: false };
     e.dataTransfer.effectAllowed = "move";
@@ -823,12 +877,14 @@ function setupNativeDrag(el, inst, zone) {
 
 function setupTouchPointerDrag(el, inst, zone) {
   el.draggable = false;
+  setupCardPlay(el, inst, zone);
   el.addEventListener("pointerdown", (e) => {
     if (e.pointerType === "mouse") return;
     abortPointerDrag();
     pointerDrag = {
       id: inst.instanceId,
       from: zone,
+      zone,
       inst,
       startX: e.clientX,
       startY: e.clientY,

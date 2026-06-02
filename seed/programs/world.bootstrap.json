@@ -7,9 +7,9 @@
   "nodes": [
     {
       "id": "n0",
-      "op": "spawn",
-      "label": "Spawn door",
-      "params": { "definitionSlug": "content.door", "zone": "hand" }
+      "op": "highlight",
+      "label": "World ready",
+      "params": { "on": true }
     }
   ]
 }

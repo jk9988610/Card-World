@@ -7,18 +7,7 @@
       "op": "deal",
       "params": {
         "toZone": "hand",
-        "cards": [
-          "founders.shop_script",
-          "founders.fullscreen",
-          "founders.exit_fullscreen",
-          "founders.language_settings",
-          "founders.highlight_on",
-          "founders.highlight_off",
-          "founders.reset_world",
-          "founders.guide_weave_2",
-          "founders.guide_weave_4",
-          "founders.guide_weave_5"
-        ]
+        "cards": ["founders.language_settings", "founders.reset_world"]
       }
     }
   ]

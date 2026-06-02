@@ -6,11 +6,11 @@
   "cards": {
     "tutorial": {
       "title": "Tutorial",
-      "text": "TAP — enlarge.\nDRAG Hand→Field — play.\nDRAG Field→Hand — take back.\nPlay Settings for more."
+      "text": "DOUBLE-TAP a card to play.\nYou can still drag Hand→Field.\nDrag Field→Hand to take back.\nSettings only deals language + reset."
     },
     "settings": {
       "title": "Settings",
-      "text": "Drag to Field to open setting cards in your Hand."
+      "text": "Double-tap or drag to Field — language settings and reset only."
     },
     "fullscreen": {
       "title": "Fullscreen",
@@ -94,19 +94,19 @@
     },
     "art_console": {
       "title": "Art Console",
-      "text": "Drag to Field — open the art workshop."
+      "text": "Double-tap — open the art workshop."
     },
     "art_tool_pixel": {
       "title": "Pixel Board",
-      "text": "Drag to Field — open the 8×8 pixel editor."
+      "text": "Double-tap — open the 8×8 pixel editor."
     },
     "art_tool_palette": {
       "title": "Palette",
-      "text": "Drag to Field — cycle brush color (or tap swatches in the editor)."
+      "text": "Double-tap — cycle brush color (or tap swatches in the editor)."
     },
     "art_tool_export": {
       "title": "Export Work",
-      "text": "Drag to Field — export your painting as a card."
+      "text": "Double-tap — export your painting as a field card."
     },
     "art_work": {
       "title": "Artwork",
