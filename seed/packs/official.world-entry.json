@@ -1,0 +1,9 @@
+{
+  "slug": "official.world-entry",
+  "title": "World Entry",
+  "version": "1.0.0",
+  "author": "official",
+  "kind": "world",
+  "openSource": true,
+  "installTarget": "world"
+}

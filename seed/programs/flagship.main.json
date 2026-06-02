@@ -1,0 +1,22 @@
+{
+  "id": "flagship.main",
+  "slug": "flagship-main",
+  "version": "1.0.0",
+  "author": "official",
+  "entry": "n0",
+  "nodes": [
+    {
+      "id": "n0",
+      "op": "if",
+      "label": "Every 30 ticks",
+      "params": { "condition": "tick_mod_30" },
+      "children": ["n1"]
+    },
+    {
+      "id": "n1",
+      "op": "spawn",
+      "label": "Spawn Note",
+      "params": { "definitionSlug": "flagship.note", "zone": "field" }
+    }
+  ]
+}

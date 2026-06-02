@@ -1,0 +1,6 @@
+{
+  "id": "scene.computer.desktop",
+  "title": "Computer Desktop",
+  "field": [{ "definitionSlug": "prog.export", "instanceId": "inst_desk_export" }],
+  "hand": []
+}

@@ -1,0 +1,26 @@
+{
+  "slug": "official.flagship",
+  "title": "Zone Runner",
+  "version": "1.0.0",
+  "author": "official",
+  "kind": "game",
+  "openSource": true,
+  "installTarget": "computer",
+  "includes": {
+    "definitions": [
+      {
+        "slug": "flagship.note",
+        "title": "Note",
+        "text": "Spawned by tick",
+        "tags": ["game"],
+        "image": { "type": "pixel/v1", "w": 8, "h": 8, "palette": ["#1a1a2e", "#e63946"], "pixels": [0, 1, 1, 0, 1, 1, 0, 0] }
+      },
+      {
+        "slug": "flagship.controller",
+        "title": "Game Controller",
+        "programs": { "on_tick": "flagship.main" },
+        "tags": ["game"]
+      }
+    ]
+  }
+}
