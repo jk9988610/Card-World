@@ -687,23 +687,6 @@
       }
     },
     {
-      "slug": "art.tool.palette",
-      "localeKey": "art_tool_palette",
-      "titleKey": "cards.art_tool_palette",
-      "textKey": "cards.art_tool_palette",
-      "title": "Palette",
-      "text": "Cycle brush color.",
-      "tags": ["art", "tool", "reusable"],
-      "programs": { "on_play": "art.palette.cycle" },
-      "image": {
-        "type": "pixel/v1",
-        "w": 8,
-        "h": 8,
-        "palette": ["#1a1a2e", "#e03131", "#ffd43b", "#339af0"],
-        "pixels": [1, 2, 3, 1, 2, 3, 1, 2]
-      }
-    },
-    {
       "slug": "art.tool.export",
       "localeKey": "art_tool_export",
       "titleKey": "cards.art_tool_export",

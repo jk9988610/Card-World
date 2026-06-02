@@ -2,10 +2,12 @@
   --felt: #1e4d3a;
   --felt-light: #2a6b52;
   --hand-bg: #152238;
-  /* 2/3 of former 88–128px width; 5:7 ratio (literal clamp for broad browser support) */
+  /* TCG portrait 2.5"×3.5" → width:height = 5:7 (高大于宽) */
+  --tcg-ratio-w: 5;
+  --tcg-ratio-h: 7;
   --card-scale: 0.6666667;
-  --card-w: clamp(59px, 8.67vw, 85px);
-  --card-h: calc(var(--card-w) * 7 / 5);
+  --card-w: clamp(70px, 10.5vw, 102px);
+  --card-h: calc(var(--card-w) * var(--tcg-ratio-h) / var(--tcg-ratio-w));
   --card-border: calc(2px * var(--card-scale));
   --card-radius: calc(8px * var(--card-scale));
 }
@@ -231,8 +233,8 @@ body.in-scene.scene-art .zone-field {
 }
 
 .card-title {
-  height: 14%;
-  min-height: 1rem;
+  flex: 0 0 10%;
+  min-height: 0.85rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -245,8 +247,12 @@ body.in-scene.scene-art .zone-field {
 }
 
 .card-image {
-  height: 23%;
-  min-height: 1rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 94%;
+  margin: 0 auto;
+  aspect-ratio: 5 / 7;
+  max-height: 58%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -255,15 +261,20 @@ body.in-scene.scene-art .zone-field {
 }
 
 .card-image canvas {
-  max-width: 50%;
-  max-height: 50%;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 5 / 7;
+  object-fit: contain;
 }
 
 .card-text {
-  flex: 1;
-  padding: calc(4px * var(--card-scale)) calc(6px * var(--card-scale));
-  font-size: clamp(0.5rem, 1.27vw, 0.67rem);
-  line-height: 1.3;
+  flex: 1 1 28%;
+  min-height: 0;
+  padding: calc(3px * var(--card-scale)) calc(5px * var(--card-scale));
+  font-size: clamp(0.48rem, 1.2vw, 0.65rem);
+  line-height: 1.28;
   overflow-y: auto;
   white-space: pre-wrap;
   word-break: break-word;
@@ -292,18 +303,20 @@ body.in-scene.scene-art .zone-field {
 .card-zoom-slot .card {
   position: relative;
   z-index: 1;
-  width: min(72vw, calc(300px * var(--card-scale))) !important;
-  height: calc(min(72vw, calc(300px * var(--card-scale))) * 7 / 5) !important;
+  width: min(78vw, 280px) !important;
+  height: calc(min(78vw, 280px) * var(--tcg-ratio-h) / var(--tcg-ratio-w)) !important;
 }
 
 .card-zoom-slot .card-image {
-  height: 46%;
-  min-height: 2.75rem;
+  max-height: 62%;
+  aspect-ratio: 5 / 7;
 }
 
 .card-zoom-slot .card-image canvas {
-  max-width: none;
-  max-height: none;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .card-zoom-slot .card-title {
@@ -348,50 +361,6 @@ body.card-dragging .zone-hand {
 .zone-field.zone-drop-target {
   outline: 3px dashed rgba(255, 212, 59, 0.75);
   outline-offset: -3px;
-}
-
-.brush-color-flash {
-  position: fixed;
-  left: 50%;
-  top: 42%;
-  z-index: 250;
-  transform: translate(-50%, -50%);
-  min-width: 5.5rem;
-  padding: 0.55rem 0.85rem;
-  border-radius: 10px;
-  border: 3px solid #212529;
-  color: #212529;
-  font-weight: 800;
-  font-size: 0.85rem;
-  text-align: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-.brush-color-flash.hidden {
-  opacity: 0;
-  visibility: hidden;
-}
-
-.card.palette-pulse {
-  animation: palette-pulse 0.55s ease;
-}
-
-@keyframes palette-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    box-shadow: calc(2px * var(--card-scale)) calc(4px * var(--card-scale)) calc(10px * var(--card-scale))
-      rgba(0, 0, 0, 0.45);
-  }
-  50% {
-    transform: scale(1.08);
-    box-shadow:
-      0 0 0 calc(4px * var(--card-scale)) rgba(255, 212, 59, 0.85),
-      calc(2px * var(--card-scale)) calc(4px * var(--card-scale)) calc(10px * var(--card-scale))
-        rgba(0, 0, 0, 0.45);
-  }
 }
 
 body.art-editor-open .zone-field,

@@ -4,7 +4,7 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.7.0";
+const APP_VERSION = "0.7.1";
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -272,11 +272,19 @@ function drawPixelImage(ctx, img, destW, destH) {
 
 function drawCardSwatch(canvas, tags, large = false, pixelImage = null) {
   const parent = canvas.parentElement;
-  const cw = parent?.clientWidth || (large ? 300 : 80);
-  const ch = parent?.clientHeight || (large ? 200 : 50);
-  const pad = large ? 10 : 4;
-  const w = Math.max(12, Math.floor(cw - pad * 2));
-  const h = Math.max(12, Math.floor(ch - pad * 2));
+  const boxW = parent?.clientWidth || (large ? 300 : 80);
+  const boxH = parent?.clientHeight || (large ? 420 : 112);
+  const pad = large ? 10 : 3;
+  const innerW = Math.max(12, boxW - pad * 2);
+  const innerH = Math.max(12, boxH - pad * 2);
+  let w = innerW;
+  let h = Math.floor((w * 7) / 5);
+  if (h > innerH) {
+    h = innerH;
+    w = Math.floor((h * 5) / 7);
+  }
+  w = Math.max(12, w);
+  h = Math.max(12, h);
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d");
@@ -698,7 +706,6 @@ function applyArtToolAt(cellX, cellY) {
       setArtBrushColor(picked);
       artEditor.tool = "brush";
       updateArtToolUI();
-      showBrushColorFlash();
       break;
     }
     default:
@@ -796,52 +803,6 @@ async function closeArtEditor() {
   } catch (_) {}
 }
 
-function brushPalettePreviewImage() {
-  const hex = normalizeHex(artEditor.brushColor);
-  return {
-    type: "pixel/v1",
-    w: 8,
-    h: 8,
-    palette: [ART_BG, hex],
-    pixels: new Array(64).fill(1),
-  };
-}
-
-let brushFlashTimer = null;
-
-function showBrushColorFlash() {
-  const hex = normalizeHex(artEditor.brushColor);
-  let el = document.getElementById("brush-color-flash");
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "brush-color-flash";
-    el.className = "brush-color-flash";
-    el.setAttribute("role", "status");
-    el.setAttribute("aria-live", "polite");
-    document.body.appendChild(el);
-  }
-  el.style.background = hex;
-  el.textContent = hex;
-  el.classList.remove("hidden");
-  if (brushFlashTimer) clearTimeout(brushFlashTimer);
-  brushFlashTimer = setTimeout(() => el.classList.add("hidden"), 900);
-  for (const card of document.querySelectorAll('.card[data-definition-slug="art.tool.palette"]')) {
-    card.classList.remove("palette-pulse");
-    void card.offsetWidth;
-    card.classList.add("palette-pulse");
-  }
-}
-
-function cycleArtPalette() {
-  const presets = ART_PALETTE;
-  let idx = presets.findIndex((h) => normalizeHex(h) === normalizeHex(artEditor.brushColor));
-  if (idx < 0) idx = 0;
-  setArtBrushColor(presets[(idx + 1) % presets.length]);
-  showBrushColorFlash();
-  if (artEditor.open) redrawArtPixelCanvas();
-  renderAll();
-}
-
 function exportArtWork() {
   const img = artPixelImageFromEditor();
   const t = localeCard("art_work");
@@ -901,7 +862,6 @@ function setupArtEditor() {
   });
   els.artColorApply?.addEventListener("click", () => {
     setArtBrushColor(els.artColorHex?.value || artEditor.brushColor);
-    showBrushColorFlash();
   });
 
   document.addEventListener("fullscreenchange", () => {
@@ -1171,9 +1131,7 @@ function buildCardEl(inst, zone, opts = {}) {
   imageWrap.className = "card-image";
   const canvas = document.createElement("canvas");
   imageWrap.appendChild(canvas);
-  const swatchImg =
-    r.definitionSlug === "art.tool.palette" ? brushPalettePreviewImage() : r.image;
-  drawCardSwatch(canvas, r.tags, large || forZoom, swatchImg);
+  drawCardSwatch(canvas, r.tags, large || forZoom, r.image);
 
   const text = document.createElement("div");
   text.className = "card-text";
@@ -1366,9 +1324,6 @@ function runProgram(programId, ctx) {
         break;
       case "art_editor_open":
         openArtEditor();
-        break;
-      case "art_palette_cycle":
-        cycleArtPalette();
         break;
       case "art_export_work":
         exportArtWork();

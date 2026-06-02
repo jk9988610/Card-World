@@ -1,5 +1,0 @@
-{
-  "id": "art.palette.cycle",
-  "entry": "n0",
-  "nodes": [{ "id": "n0", "op": "art_palette_cycle" }]
-}

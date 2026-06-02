@@ -100,10 +100,6 @@
       "title": "Pixel Board",
       "text": "Recall to Hand, double-tap — fullscreen 32×32 editor with tools and RGB."
     },
-    "art_tool_palette": {
-      "title": "Palette",
-      "text": "Recall to Hand, then double-tap to cycle color. Or pick RGB in the editor."
-    },
     "art_tool_export": {
       "title": "Export Work",
       "text": "Double-tap — export your painting as a field card."
