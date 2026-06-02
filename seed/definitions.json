@@ -94,9 +94,10 @@
       "slugKey": "starter_deck",
       "titleKey": "cards.starter_deck",
       "textKey": "cards.starter_deck",
-      "title": "Programming Starter",
-      "text": "Deck.",
+      "title": "Backpack",
+      "text": "Drag to hand to clear the field. Drag to field to pour or close.",
       "tags": [
+        "container",
         "deck"
       ],
       "image": {

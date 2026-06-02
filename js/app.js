@@ -1,10 +1,24 @@
 import { loadSave, writeSave } from "./storage.js";
 
 /**
- * Card World v0.3 — tap zoom | drag Hand→Field play | Field→Hand take
+ * Card World — tap zoom | drag play | backpack pour/close flow
  */
 
-const APP_VERSION = "0.3.4";
+const APP_VERSION = "0.5.0";
+
+const SWATCH_BY_TAG = [
+  ["programming", "#6f42c1"],
+  ["controller", "#5c7cfa"],
+  ["settings", "#868e96"],
+  ["language", "#22b8cf"],
+  ["tutorial", "#e03131"],
+  ["guide", "#e8590c"],
+  ["content", "#2f9e44"],
+  ["container", "#ae3ec9"],
+  ["deck", "#9c36b5"],
+];
+
+const META_TAGS = new Set(["settings", "language", "tutorial", "guide", "controller", "programming"]);
 
 const defBySlug = new Map();
 let programs = {};
@@ -14,6 +28,7 @@ let currentLocale = "en";
 const state = {
   hand: [],
   field: [],
+  fieldStash: [],
   bootstrapDone: false,
   highlightOn: true,
   hintTarget: "founders.world_controller",
@@ -35,7 +50,6 @@ const els = {
   zoomSlot: document.getElementById("zoom-slot"),
 };
 
-
 function localeKeyForDef(def) {
   if (def.localeKey) return def.localeKey;
   return def.slug.replace(/\./g, "_");
@@ -52,7 +66,14 @@ function persistSave() {
     guideIndex: state.guideIndex,
     hand: state.hand,
     field: state.field,
+    fieldStash: state.fieldStash,
   });
+}
+
+function bumpCounterFromInst(inst) {
+  const n = parseInt(inst.instanceId?.replace(/\D/g, "") || "0", 10);
+  if (n > instanceCounter) instanceCounter = n;
+  for (const child of inst.inner || []) bumpCounterFromInst(child);
 }
 
 function applySaved(save) {
@@ -65,10 +86,8 @@ function applySaved(save) {
   if (typeof save.guideIndex === "number") state.guideIndex = save.guideIndex;
   if (Array.isArray(save.hand) && save.hand.length) state.hand = save.hand;
   if (Array.isArray(save.field) && save.field.length) state.field = save.field;
-  for (const inst of [...state.hand, ...state.field]) {
-    const n = parseInt(inst.instanceId?.replace(/\D/g, "") || "0", 10);
-    if (n > instanceCounter) instanceCounter = n;
-  }
+  if (Array.isArray(save.fieldStash)) state.fieldStash = save.fieldStash;
+  for (const inst of [...state.hand, ...state.field, ...state.fieldStash]) bumpCounterFromInst(inst);
 }
 
 function getDef(slug) {
@@ -93,6 +112,10 @@ function resolveInstance(inst) {
     if (t?.text) text = t.text;
     if (t?.title) title = t.title;
   }
+  const innerN = inst.inner?.length || 0;
+  if (innerN > 0 && isBackpack(def)) {
+    text = `${text}\n(${innerN} inside)`;
+  }
   return {
     ...inst,
     title,
@@ -104,12 +127,22 @@ function resolveInstance(inst) {
   };
 }
 
+function walkInstances(fn) {
+  const visit = (inst, zone) => {
+    fn(inst, zone);
+    for (const child of inst.inner || []) visit(child, "inner");
+  };
+  for (const inst of state.hand) visit(inst, "hand");
+  for (const inst of state.field) visit(inst, "field");
+  for (const inst of state.fieldStash) visit(inst, "stash");
+}
+
 function findInstance(id) {
-  for (const zone of ["hand", "field"]) {
-    const found = state[zone].find((i) => i.instanceId === id);
-    if (found) return { instance: found, zone };
-  }
-  return null;
+  let found = null;
+  walkInstances((inst, zone) => {
+    if (inst.instanceId === id) found = { instance: inst, zone };
+  });
+  return found;
 }
 
 function nextInstanceId() {
@@ -123,30 +156,27 @@ function createInstance(definitionSlug, zone) {
   return inst;
 }
 
-function drawPixel(canvas, payload, large = false) {
-  if (!payload || payload.type !== "pixel/v1") return;
-  const ctx = canvas.getContext("2d");
-  const w = payload.w || 8;
-  const h = payload.h || 8;
-  const pal = payload.palette || ["#000", "#fff"];
-  const px = payload.pixels || [];
-  const parent = canvas.parentElement;
-  const cw = parent?.clientWidth || (large ? 320 : 160);
-  const ch = parent?.clientHeight || (large ? 280 : 140);
-  const scale = large ? 1 : 0.5;
-  const block = Math.max(large ? 12 : 3, Math.floor(Math.min(cw / w, ch / h) * 0.88 * scale));
-  canvas.width = w * block;
-  canvas.height = h * block;
-  ctx.imageSmoothingEnabled = false;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = px[y * w + x] ?? px[(y * w + x) % Math.max(px.length, 1)] ?? 0;
-      ctx.fillStyle = pal[i] ?? pal[0];
-      ctx.fillRect(x * block, y * block, block, block);
-    }
+function swatchColor(tags = []) {
+  for (const [tag, color] of SWATCH_BY_TAG) {
+    if (tags.includes(tag)) return color;
   }
-  canvas.style.width = `${w * block}px`;
-  canvas.style.height = `${h * block}px`;
+  return "#495057";
+}
+
+function drawCardSwatch(canvas, tags, large = false) {
+  const parent = canvas.parentElement;
+  const cw = parent?.clientWidth || (large ? 300 : 80);
+  const ch = parent?.clientHeight || (large ? 200 : 50);
+  const pad = large ? 10 : 4;
+  const w = Math.max(12, Math.floor(cw - pad * 2));
+  const h = Math.max(12, Math.floor(ch - pad * 2));
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = swatchColor(tags);
+  ctx.fillRect(0, 0, w, h);
+  canvas.style.width = `${w}px`;
+  canvas.style.height = `${h}px`;
 }
 
 function tagClass(tags) {
@@ -155,11 +185,22 @@ function tagClass(tags) {
   if (tags.includes("tutorial") || tags.includes("guide")) return "tag-guide";
   if (tags.includes("controller")) return "tag-controller";
   if (tags.includes("content")) return "tag-content";
-  if (tags.includes("container")) return "tag-container";
+  if (tags.includes("container") || tags.includes("deck")) return "tag-container";
   if (tags.includes("programming")) return "tag-programming";
   return "";
 }
 
+function isBackpack(def) {
+  if (!def?.tags) return false;
+  return def.tags.includes("container") || def.tags.includes("deck");
+}
+
+function isMetaCard(def) {
+  if (!def?.tags) return false;
+  if (def.tags.some((t) => META_TAGS.has(t))) return true;
+  if (def.tags.includes("reusable")) return true;
+  return playStyle(def) === "reusable";
+}
 
 function playStyle(def) {
   if (!def) return "consume";
@@ -167,6 +208,90 @@ function playStyle(def) {
   if (def.tags?.includes("reusable")) return "reusable";
   if (def.tags?.includes("echo")) return "echo";
   return "consume";
+}
+
+function ensureInner(inst) {
+  if (!inst.inner) inst.inner = [];
+  return inst.inner;
+}
+
+function recallBackpackToHand(instanceId) {
+  const loc = findInstance(instanceId);
+  if (!loc || loc.zone !== "field") return;
+  const def = getDef(loc.instance.definitionSlug);
+  if (!isBackpack(def)) {
+    moveInstance(instanceId, "hand");
+    return;
+  }
+  const others = state.field.filter((i) => i.instanceId !== instanceId);
+  state.fieldStash.push(...others);
+  state.field = state.field.filter((i) => i.instanceId === instanceId);
+  moveInstance(instanceId, "hand");
+  state.field = [];
+  renderAll();
+  persistSave();
+}
+
+function pourBackpackFromHand(instanceId) {
+  const loc = findInstance(instanceId);
+  if (!loc || loc.zone !== "hand") return false;
+  const inst = loc.instance;
+  const inner = ensureInner(inst);
+  if (state.field.length > 0 || inner.length === 0) return false;
+  for (const item of inner) {
+    item.zone = "field";
+    state.field.push(item);
+  }
+  inst.inner = [];
+  renderAll();
+  persistSave();
+  return true;
+}
+
+function closeBackpackFromHand(instanceId) {
+  const loc = findInstance(instanceId);
+  if (!loc || loc.zone !== "hand") return;
+  const inst = loc.instance;
+  const inner = ensureInner(inst);
+  for (const card of state.field) {
+    inner.push(card);
+  }
+  state.field = [];
+  moveInstance(instanceId, "field");
+  for (const card of state.fieldStash) {
+    card.zone = "field";
+    state.field.push(card);
+  }
+  state.fieldStash = [];
+  renderAll();
+  persistSave();
+}
+
+function playBackpackFromHand(instanceId) {
+  if (pourBackpackFromHand(instanceId)) return;
+  closeBackpackFromHand(instanceId);
+}
+
+function handleZoneDrop(instanceId, fromZone, toZone) {
+  const loc = findInstance(instanceId);
+  if (!loc) return;
+  const def = getDef(loc.instance.definitionSlug);
+
+  if (fromZone === "field" && toZone === "hand") {
+    if (isBackpack(def)) recallBackpackToHand(instanceId);
+    else moveInstance(instanceId, "hand");
+    return;
+  }
+
+  if (fromZone === "hand" && toZone === "field") {
+    if (isBackpack(def)) {
+      playBackpackFromHand(instanceId);
+      tryAutoFullscreen();
+      return;
+    }
+    playFromHand(instanceId);
+    tryAutoFullscreen();
+  }
 }
 
 function advanceGuide(playedSlug) {
@@ -204,10 +329,11 @@ function playFromHand(instanceId) {
   const loc = findInstance(instanceId);
   if (!loc || loc.zone !== "hand") return;
   const def = getDef(loc.instance.definitionSlug);
+  if (isBackpack(def)) return;
   const style = playStyle(def);
   const programId = resolveInstance(loc.instance).programs?.on_play;
 
-  if (style === "reusable") {
+  if (style === "reusable" || isMetaCard(def)) {
     if (programId) runPlayEffects(programId, instanceId);
     advanceGuide(loc.instance.definitionSlug);
     renderAll();
@@ -219,12 +345,8 @@ function playFromHand(instanceId) {
   const after = findInstance(instanceId);
   if (!after) return;
 
-  if (programId) {
-    runPlayEffects(programId, instanceId);
-  }
-  if (style === "echo") {
-    createInstance(loc.instance.definitionSlug, "hand");
-  }
+  if (programId) runPlayEffects(programId, instanceId);
+  if (style === "echo") createInstance(loc.instance.definitionSlug, "hand");
   advanceGuide(loc.instance.definitionSlug);
   renderAll();
   persistSave();
@@ -274,7 +396,7 @@ function buildCardEl(inst, zone, opts = {}) {
   imageWrap.className = "card-image";
   const canvas = document.createElement("canvas");
   imageWrap.appendChild(canvas);
-  drawPixel(canvas, r.image, large || forZoom);
+  drawCardSwatch(canvas, r.tags, large || forZoom);
 
   const text = document.createElement("div");
   text.className = "card-text";
@@ -309,7 +431,8 @@ function closeZoom() {
 
 function moveInstance(id, toZone) {
   const loc = findInstance(id);
-  if (!loc || loc.zone === toZone) return;
+  if (!loc || loc.zone === toZone || loc.zone === "inner" || loc.zone === "stash") return;
+  if (loc.zone !== "hand" && loc.zone !== "field") return;
   state[loc.zone] = state[loc.zone].filter((i) => i.instanceId !== id);
   loc.instance.zone = toZone;
   state[toZone].push(loc.instance);
@@ -329,13 +452,7 @@ function setupDropZone(container, zoneName) {
     const from = drag.from;
     drag.moved = true;
     if (from === zoneName) return;
-    if (from === "hand" && zoneName === "field") {
-      playFromHand(id);
-      tryAutoFullscreen();
-    } else if (from === "field" && zoneName === "hand") {
-      moveInstance(id, "hand");
-      persistSave();
-    }
+    handleZoneDrop(id, from, zoneName);
   });
 }
 
@@ -432,7 +549,6 @@ function runProgram(programId, ctx) {
       case "fullscreen_exit":
         exitFullscreen();
         break;
-
       case "guide_start":
         state.guideQueue = [...(node.params?.steps || [])];
         state.guideIndex = 0;
@@ -451,17 +567,6 @@ function runProgram(programId, ctx) {
     }
   };
   exec(program.entry);
-}
-
-function playCardOnField(instanceId) {
-  const loc = findInstance(instanceId);
-  if (!loc || loc.zone !== "field") return;
-  const programId = resolveInstance(loc.instance).programs?.on_play;
-  if (!programId) return;
-  runPlayEffects(programId, instanceId);
-  advanceGuide(loc.instance.definitionSlug);
-  renderAll();
-  persistSave();
 }
 
 async function loadJson(url) {
@@ -510,12 +615,10 @@ function applyStarter(bundle) {
   }
   programs = bundle.programs || {};
   const start = bundle.starterWorld || {};
-  state.hand = (start.hand || []).map((i) => ({ ...i }));
-  state.field = (start.field || []).map((i) => ({ ...i }));
-  for (const inst of [...state.hand, ...state.field]) {
-    const n = parseInt(inst.instanceId?.replace(/\D/g, "") || "0", 10);
-    if (n > instanceCounter) instanceCounter = n;
-  }
+  state.hand = (start.hand || []).map((i) => ({ ...i, inner: i.inner ? [...i.inner] : undefined }));
+  state.field = (start.field || []).map((i) => ({ ...i, inner: i.inner ? [...i.inner] : undefined }));
+  state.fieldStash = [];
+  for (const inst of [...state.hand, ...state.field]) bumpCounterFromInst(inst);
 }
 
 async function init() {

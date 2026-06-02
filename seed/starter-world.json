@@ -1,12 +1,41 @@
 {
-  "version": "0.3.0",
+  "version": "0.5.0",
   "hand": [
-    { "definitionSlug": "founders.world_controller", "instanceId": "inst_world_ctrl_1" },
-    { "definitionSlug": "seed.starter_deck", "instanceId": "inst_starter_deck_1" }
+    {
+      "definitionSlug": "founders.world_controller",
+      "instanceId": "inst_world_ctrl_1"
+    }
   ],
   "field": [
-    { "definitionSlug": "founders.tutorial", "instanceId": "inst_tutorial_1" },
-    { "definitionSlug": "founders.settings", "instanceId": "inst_settings_1" },
-    { "definitionSlug": "founders.guide_weave_1", "instanceId": "inst_gw1" }
+    {
+      "definitionSlug": "founders.tutorial",
+      "instanceId": "inst_tutorial_1"
+    },
+    {
+      "definitionSlug": "founders.settings",
+      "instanceId": "inst_settings_1"
+    },
+    {
+      "definitionSlug": "founders.guide_weave_1",
+      "instanceId": "inst_gw1"
+    },
+    {
+      "definitionSlug": "seed.starter_deck",
+      "instanceId": "inst_starter_deck_1",
+      "inner": [
+        {
+          "definitionSlug": "prog.on_play",
+          "instanceId": "inst_prog_on_play_1"
+        },
+        {
+          "definitionSlug": "prog.spawn",
+          "instanceId": "inst_prog_spawn_1"
+        },
+        {
+          "definitionSlug": "prog.set_slot",
+          "instanceId": "inst_prog_set_slot_1"
+        }
+      ]
+    }
   ]
 }
