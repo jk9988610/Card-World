@@ -23,11 +23,7 @@ import {
   uploadArtPng,
 } from "./art-storage.js";
 import { isCloudEnabled } from "./cloud-config.js";
-import {
-  BEAT_BATTLE_URL,
-  MUSIC_EMBED_SLUG_TO_MODE,
-  musicEmbedUrl,
-} from "./music-config.js";
+import { MUSIC_EMBED_SLUG_TO_MODE, MUSIC_PROD_URL, musicEmbedUrl } from "./music-config.js";
 import { clearSave, loadSave, writeSave } from "./storage.js";
 import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
 
@@ -35,7 +31,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.12.0";
+const APP_VERSION = "0.12.1";
 
 const SETTINGS_MENU_SLUGS = new Set([
   "founders.language_settings",
@@ -481,11 +477,35 @@ function ensureInner(inst) {
   return inst.inner;
 }
 
-function getContainerInHand() {
+function isStorableItem(def) {
+  if (!def) return false;
+  if (isContainerCard(def)) return false;
+  if (def.tags?.includes("settings")) return false;
+  if (def.tags?.includes("language")) return false;
+  if (def.tags?.includes("tutorial")) return false;
+  if (def.tags?.includes("guide")) return false;
+  return true;
+}
+
+function getOpenContainerOnField() {
+  if (!state.field.length) return null;
+  const head = state.field[0];
+  return isContainerCard(getDef(head.definitionSlug)) ? head : null;
+}
+
+function isContainerOpen() {
+  return !!getOpenContainerOnField();
+}
+
+function findContainerInHand() {
   for (const inst of state.hand) {
     if (isContainerCard(getDef(inst.definitionSlug))) return inst;
   }
   return null;
+}
+
+function fieldIndexOf(instanceId) {
+  return state.field.findIndex((i) => i.instanceId === instanceId);
 }
 
 function buildDefaultSettingsMenu() {
@@ -516,129 +536,143 @@ function ensureSettingsMenuInner() {
   }
 }
 
-function recallBackpackToHand(instanceId) {
-  const loc = findInstance(instanceId);
-  if (!loc || loc.zone !== "field") return;
-  const def = getDef(loc.instance.definitionSlug);
-  if (!isBackpack(def)) {
-    moveInstance(instanceId, "hand");
-    return;
-  }
-  const others = state.field.filter((i) => i.instanceId !== instanceId);
-  state.fieldStash.push(...others);
-  state.field = state.field.filter((i) => i.instanceId === instanceId);
-  moveInstance(instanceId, "hand");
-  state.field = [];
-  renderAll();
-  persistSave();
-}
-
-function pourContainerFromHand(instanceId) {
+function openContainerFromHand(instanceId) {
   const loc = findInstance(instanceId);
   if (!loc || loc.zone !== "hand") return false;
   const inst = loc.instance;
   const def = getDef(inst.definitionSlug);
-  if (!isContainerCard(def) || state.field.length > 0) return false;
+  if (!isContainerCard(def) || isContainerOpen()) return false;
+
+  state.fieldStash.push(...state.field);
+  state.field = [];
+  state.hand = state.hand.filter((i) => i.instanceId !== instanceId);
+  state.field.push(inst);
 
   const inner = ensureInner(inst);
-  const handOthers = state.hand.filter((i) => i.instanceId !== instanceId);
-  state.hand = state.hand.filter((i) => i.instanceId === instanceId);
-
+  let toPour;
   if (isSettingsContainer(def)) {
-    const toPour = inner.filter((i) => isSettingsMenuSlug(i.definitionSlug));
-    if (!toPour.length) return false;
-    const keep = inner.filter((i) => !isSettingsMenuSlug(i.definitionSlug));
-    inst.inner = [...keep, ...handOthers];
-    for (const item of toPour) state.field.push(item);
+    toPour = inner.filter((i) => isSettingsMenuSlug(i.definitionSlug));
+    inst.inner = inner.filter((i) => !isSettingsMenuSlug(i.definitionSlug));
+    if (!toPour.length) {
+      state.field = [];
+      state.hand.push(inst);
+      for (const c of state.fieldStash) state.field.push(c);
+      state.fieldStash = [];
+      return false;
+    }
     if (!state.guideQueue.length) setHintTarget("founders.language_settings");
   } else {
-    if (!inner.length) return false;
-    const toPour = [...inner];
-    inst.inner = [...handOthers];
-    for (const item of toPour) state.field.push(item);
+    if (!inner.length) {
+      state.hand.push(inst);
+      for (const c of state.fieldStash) state.field.push(c);
+      state.fieldStash = [];
+      return false;
+    }
+    toPour = [...inner];
+    inst.inner = [];
   }
+  for (const item of toPour) state.field.push(item);
 
   renderAll();
   persistSave();
   return true;
 }
 
-function collapseBackpackFromHand(instanceId) {
-  const loc = findInstance(instanceId);
-  if (!loc || loc.zone !== "hand") return;
-  const inst = loc.instance;
+function closeContainerOnField(containerId) {
+  const idx = fieldIndexOf(containerId);
+  if (idx !== 0) return;
+  const inst = state.field[0];
+  const def = getDef(inst.definitionSlug);
+  if (!isContainerCard(def)) return;
+
   const inner = ensureInner(inst);
-  for (const card of state.field) inner.push(card);
-  state.field = [];
-  const restore = [...inner];
-  inst.inner = [];
-  for (const card of restore) {
-    if (card.instanceId !== instanceId) state.hand.push(card);
-  }
-  for (const card of state.fieldStash) state.field.push(card);
-  state.fieldStash = [];
-  renderAll();
-  persistSave();
-}
+  const poured = state.field.slice(1);
 
-function collapseSettingsMenu(settingsInst) {
-  const settingsInner = ensureInner(settingsInst);
-  const langIdx = state.hand.findIndex((i) => i.definitionSlug === "founders.language_settings");
-  if (langIdx >= 0) {
-    const langInst = state.hand[langIdx];
-    state.hand.splice(langIdx, 1);
-    const langInner = ensureInner(langInst);
-    const pullLang = (list) => {
-      for (const c of list) {
-        if (LANGUAGE_MENU_SLUGS.has(c.definitionSlug)) langInner.push(c);
+  if (isSettingsContainer(def)) {
+    for (const c of poured) {
+      if (isSettingsMenuSlug(c.definitionSlug)) inner.push(c);
+      else if (LANGUAGE_MENU_SLUGS.has(c.definitionSlug)) {
+        let langMenu = inner.find((i) => i.definitionSlug === "founders.language_settings");
+        if (!langMenu) {
+          langMenu = {
+            definitionSlug: "founders.language_settings",
+            instanceId: nextInstanceId(),
+            inner: [],
+          };
+          inner.push(langMenu);
+        }
+        ensureInner(langMenu).push(c);
       }
-    };
-    pullLang(state.field);
-    pullLang(state.hand);
-    if (!settingsInner.some((i) => i.instanceId === langInst.instanceId)) {
-      settingsInner.push(langInst);
     }
+    const langHand = state.hand.findIndex((i) => i.definitionSlug === "founders.language_settings");
+    if (langHand >= 0) {
+      const langInst = state.hand.splice(langHand, 1)[0];
+      if (!inner.some((i) => i.instanceId === langInst.instanceId)) inner.push(langInst);
+    }
+  } else {
+    inner.push(...poured);
   }
 
-  for (const c of state.field) {
-    if (isSettingsMenuSlug(c.definitionSlug)) settingsInner.push(c);
-  }
   state.field = [];
-
-  const stash = settingsInner.filter((i) => !isSettingsMenuSlug(i.definitionSlug));
-  settingsInst.inner = settingsInner.filter((i) => isSettingsMenuSlug(i.definitionSlug));
-  for (const c of stash) {
-    if (c.instanceId !== settingsInst.instanceId) state.hand.push(c);
-  }
+  state.hand.push(inst);
+  for (const c of state.fieldStash) state.field.push(c);
+  state.fieldStash = [];
 
   renderAll();
   persistSave();
 }
 
-function collapseContainerFromHand(instanceId) {
-  const loc = findInstance(instanceId);
-  if (!loc || loc.zone !== "hand") return;
-  const def = getDef(loc.instance.definitionSlug);
-  if (isSettingsContainer(def)) collapseSettingsMenu(loc.instance);
-  else collapseBackpackFromHand(instanceId);
+function insertIntoOpenContainer(itemId, insertIndex = -1) {
+  const open = getOpenContainerOnField();
+  if (!open) return false;
+  const itemLoc = findInstance(itemId);
+  if (!itemLoc || itemLoc.zone !== "hand") return false;
+  const itemDef = getDef(itemLoc.instance.definitionSlug);
+  if (!isStorableItem(itemDef)) return false;
+
+  state.hand = state.hand.filter((i) => i.instanceId !== itemId);
+  let idx = insertIndex;
+  if (idx < 0) idx = state.field.length;
+  else idx = Math.max(1, Math.min(idx, state.field.length));
+  state.field.splice(idx, 0, itemLoc.instance);
+  renderAll();
+  persistSave();
+  return true;
 }
 
-function playContainerFromHand(instanceId) {
-  if (pourContainerFromHand(instanceId)) return;
-  collapseContainerFromHand(instanceId);
+function stashIntoClosedContainer(containerId, itemId) {
+  const containerLoc = findInstance(containerId);
+  const itemLoc = findInstance(itemId);
+  if (!containerLoc || containerLoc.zone !== "hand" || itemLoc?.zone !== "hand") return false;
+  if (!isContainerCard(getDef(containerLoc.instance.definitionSlug))) return false;
+  if (!isStorableItem(getDef(itemLoc.instance.definitionSlug))) return false;
+  if (containerId === itemId) return false;
+
+  state.hand = state.hand.filter((i) => i.instanceId !== itemId);
+  ensureInner(containerLoc.instance).push(itemLoc.instance);
+  renderAll();
+  persistSave();
+  return true;
 }
 
-function openLanguageSubmenu(settingsInst, langMenuInst) {
-  state.field = state.field.filter((i) => i.instanceId !== langMenuInst.instanceId);
+function stashIntoContainer(containerId, itemId, insertIndex = -1) {
+  const open = getOpenContainerOnField();
+  if (open?.instanceId === containerId) return insertIntoOpenContainer(itemId, insertIndex);
+  return stashIntoClosedContainer(containerId, itemId);
+}
+
+function openLanguageSubmenuOnField(settingsInst, langMenuInst) {
   const settingsInner = ensureInner(settingsInst);
-  const fieldRemainder = [...state.field];
-  for (const c of fieldRemainder) {
+  for (const c of state.field.slice(1)) {
+    if (c.instanceId === langMenuInst.instanceId) {
+      if (!settingsInner.some((i) => i.instanceId === langMenuInst.instanceId)) {
+        settingsInner.push(langMenuInst);
+      }
+      continue;
+    }
     if (isSettingsMenuSlug(c.definitionSlug)) settingsInner.push(c);
   }
-  state.field = [];
-  if (!state.hand.some((i) => i.instanceId === langMenuInst.instanceId)) {
-    state.hand.push(langMenuInst);
-  }
+  state.field = [settingsInst];
   const langInner = ensureInner(langMenuInst);
   const toPour = langInner.filter((i) => LANGUAGE_MENU_SLUGS.has(i.definitionSlug));
   langMenuInst.inner = langInner.filter((i) => !LANGUAGE_MENU_SLUGS.has(i.definitionSlug));
@@ -648,43 +682,87 @@ function openLanguageSubmenu(settingsInst, langMenuInst) {
   persistSave();
 }
 
-function selectOptionFromField(instanceId) {
-  const loc = findInstance(instanceId);
-  if (!loc || loc.zone !== "field") return;
-  const child = loc.instance;
-  const container = getContainerInHand();
-  if (!container) {
-    moveInstance(instanceId, "hand");
+function takeFromOpenContainer(instanceId) {
+  const open = getOpenContainerOnField();
+  const idx = fieldIndexOf(instanceId);
+  if (!open || idx <= 0) {
+    if (idx === 0 && open?.instanceId === instanceId) closeContainerOnField(instanceId);
+    else moveInstance(instanceId, "hand");
     return;
   }
 
-  if (
-    child.definitionSlug === "founders.language_settings" &&
-    container.definitionSlug === "founders.settings"
-  ) {
-    openLanguageSubmenu(container, child);
+  const inst = state.field[idx];
+  const openDef = getDef(open.definitionSlug);
+
+  if (isSettingsContainer(openDef)) {
+    if (inst.definitionSlug === "founders.language_settings") {
+      openLanguageSubmenuOnField(open, inst);
+      return;
+    }
+    state.field.splice(idx, 1);
+    state.hand.push(inst);
+    const programId = resolveInstance(inst).programs?.on_play;
+    if (programId) runPlayEffects(programId, instanceId);
+    closeContainerOnField(open.instanceId);
+    advanceGuide(inst.definitionSlug);
     return;
   }
 
-  moveInstance(instanceId, "hand");
-  const programId = resolveInstance(child).programs?.on_play;
-  if (programId) runPlayEffects(programId, instanceId);
-
-  if (container.definitionSlug === "founders.settings") {
-    collapseSettingsMenu(container);
-    advanceGuide(child.definitionSlug);
-  }
+  const itemDef = getDef(inst.definitionSlug);
+  if (!isStorableItem(itemDef)) return;
+  state.field.splice(idx, 1);
+  state.hand.push(inst);
+  renderAll();
+  persistSave();
 }
 
-function handleZoneDrop(instanceId, fromZone, toZone) {
+function playContainerFromHand(instanceId) {
+  openContainerFromHand(instanceId);
+}
+
+function fieldInsertIndexAtPoint(clientX, clientY) {
+  const cards = [...els.field.querySelectorAll(".card")];
+  if (!cards.length) return -1;
+  for (let i = 0; i < cards.length; i++) {
+    const rect = cards[i].getBoundingClientRect();
+    if (clientY < rect.top || clientY > rect.bottom) continue;
+    const mid = rect.left + rect.width / 2;
+    const id = cards[i].dataset.instanceId;
+    const idx = fieldIndexOf(id);
+    if (idx < 0) continue;
+    if (clientX < mid) return idx;
+    return idx + 1;
+  }
+  return state.field.length;
+}
+
+function containerCardAtPoint(clientX, clientY) {
+  const el = document.elementFromPoint(clientX, clientY)?.closest(".card");
+  if (!el) return null;
+  const id = el.dataset.instanceId;
+  const loc = findInstance(id);
+  if (!loc) return null;
+  const def = getDef(loc.instance.definitionSlug);
+  if (!isContainerCard(def)) return null;
+  return { instanceId: id, zone: loc.zone };
+}
+
+function handleZoneDrop(instanceId, fromZone, toZone, dropPoint = null) {
   clearLastCardTap();
   const loc = findInstance(instanceId);
   if (!loc) return;
   const def = getDef(loc.instance.definitionSlug);
 
+  if (fromZone === "hand" && toZone === "hand") {
+    const target = dropPoint ? containerCardAtPoint(dropPoint.x, dropPoint.y) : null;
+    if (target && target.instanceId !== instanceId) {
+      stashIntoContainer(target.instanceId, instanceId);
+    }
+    return;
+  }
+
   if (fromZone === "field" && toZone === "hand") {
-    if (isBackpack(def) && loc.zone === "field") recallBackpackToHand(instanceId);
-    else if (getContainerInHand()) selectOptionFromField(instanceId);
+    if (isContainerOpen()) takeFromOpenContainer(instanceId);
     else moveInstance(instanceId, "hand");
     return;
   }
@@ -693,6 +771,12 @@ function handleZoneDrop(instanceId, fromZone, toZone) {
     if (isContainerCard(def)) {
       playContainerFromHand(instanceId);
       tryAutoFullscreen();
+      return;
+    }
+    if (isContainerOpen() && isStorableItem(def)) {
+      const insertIdx = dropPoint ? fieldInsertIndexAtPoint(dropPoint.x, dropPoint.y) : -1;
+      const open = getOpenContainerOnField();
+      if (open) insertIntoOpenContainer(instanceId, insertIdx);
       return;
     }
     playFromHand(instanceId);
@@ -778,9 +862,7 @@ function playFromHand(instanceId) {
 function recallFieldToHand(instanceId) {
   const loc = findInstance(instanceId);
   if (!loc || loc.zone !== "field") return;
-  const def = getDef(loc.instance.definitionSlug);
-  if (isBackpack(def)) recallBackpackToHand(instanceId);
-  else if (getContainerInHand()) selectOptionFromField(instanceId);
+  if (isContainerOpen()) takeFromOpenContainer(instanceId);
   else moveInstance(instanceId, "hand");
 }
 
@@ -790,6 +872,14 @@ function clearLastCardTap() {
 
 /** Hand double-tap: play. Field double-tap: recall to hand (same as drag Field→Hand). */
 function playCard(instanceId, zone) {
+  if (zone === "hand" && isContainerOpen()) {
+    const def = getDef(findInstance(instanceId)?.instance?.definitionSlug);
+    const open = getOpenContainerOnField();
+    if (open && isStorableItem(def)) {
+      insertIntoOpenContainer(instanceId, -1);
+      return;
+    }
+  }
   if (zone === "hand") playFromHand(instanceId);
   else if (zone === "field") recallFieldToHand(instanceId);
 }
@@ -2069,10 +2159,15 @@ function finishPointerDragSession(e) {
   if (s.active) {
     clearLastCardTap();
     const toZone = zoneAtPoint(e.clientX, e.clientY);
+    const dropPoint = { x: e.clientX, y: e.clientY };
     endPointerDragVisual();
-    if (toZone && toZone !== s.from) {
+    if (toZone && toZone === s.from && s.from === "hand") {
       drag = { id: s.id, from: s.from, moved: true };
-      handleZoneDrop(s.id, s.from, toZone);
+      handleZoneDrop(s.id, s.from, toZone, dropPoint);
+      drag = null;
+    } else if (toZone && toZone !== s.from) {
+      drag = { id: s.id, from: s.from, moved: true };
+      handleZoneDrop(s.id, s.from, toZone, dropPoint);
       drag = null;
     }
   } else {
@@ -2268,8 +2363,13 @@ function setupDropZone(container, zoneName) {
     if (!id || !drag) return;
     const from = drag.from;
     drag.moved = true;
+    const dropPoint = { x: e.clientX, y: e.clientY };
+    if (from === zoneName && zoneName === "hand") {
+      handleZoneDrop(id, from, zoneName, dropPoint);
+      return;
+    }
     if (from === zoneName) return;
-    handleZoneDrop(id, from, zoneName);
+    handleZoneDrop(id, from, zoneName, dropPoint);
   });
 }
 
@@ -2485,7 +2585,7 @@ function runProgram(programId, ctx) {
         break;
       }
       case "open_url":
-        openExternalUrl(node.params?.url || BEAT_BATTLE_URL);
+        openExternalUrl(node.params?.url || MUSIC_PROD_URL);
         break;
       default:
         break;

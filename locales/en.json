@@ -10,7 +10,7 @@
     },
     "settings": {
       "title": "Settings",
-      "text": "Drag to Field — other hand cards stash inside; options pour onto Field. Drag an option to Hand to select. Drag Settings to Field again to close."
+      "text": "Drag to Field — clears the scene; options line up after Settings. Drag an option to Hand to select. Drag Settings back to Hand to close. Drag items onto Settings to stash (items only)."
     },
     "fullscreen": {
       "title": "Fullscreen",
@@ -50,11 +50,11 @@
     },
     "backpack": {
       "title": "Backpack",
-      "text": "Stays in Hand. Drag to Field — pour contents (other hand cards stash inside). Drag an item to Hand to take it. Drag Backpack to Field again to close and restore the scene."
+      "text": "Drag to Field — clears the scene; Backpack first, then items in order. Drag an item to Hand to take it. Drag Backpack to Hand to close and restore. When closed, drop items on Backpack to append. When open, double-tap a hand item to append; drop between field cards to insert."
     },
     "starter_deck": {
       "title": "Backpack",
-      "text": "Stays in Hand. Drag to Field — pour contents (other hand cards stash inside). Drag an item to Hand to take it. Drag Backpack to Field again to close and restore the scene."
+      "text": "Drag to Field — clears the scene; Backpack first, then items in order. Drag an item to Hand to take it. Drag Backpack to Hand to close and restore. When closed, drop items on Backpack to append. When open, double-tap a hand item to append; drop between field cards to insert."
     },
     "door": {
       "title": "Door",
