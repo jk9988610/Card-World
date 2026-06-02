@@ -4,7 +4,7 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.7.3";
+const APP_VERSION = "0.7.4";
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -98,7 +98,7 @@ let dragGhost = null;
 let pointerDocListenersOn = false;
 let lastCardTap = { instanceId: null, zone: null, at: 0, x: 0, y: 0 };
 let starterSnapshot = null;
-let fullscreenTried = false;
+let autoFullscreenBound = false;
 
 const els = {
   hand: document.getElementById("hand-cards"),
@@ -809,7 +809,9 @@ async function closeArtEditor() {
   els.artEditor?.setAttribute("aria-hidden", "true");
   try {
     if (document.fullscreenElement) await document.exitFullscreen();
+    else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
   } catch (_) {}
+  await ensureAppFullscreen();
 }
 
 function exportArtWork() {
@@ -874,7 +876,12 @@ function setupArtEditor() {
   });
 
   document.addEventListener("fullscreenchange", () => {
-    if (!document.fullscreenElement && artEditor.open) closeArtEditor();
+    syncFullscreenBodyClass();
+    if (!isFullscreenActive() && artEditor.open) closeArtEditor();
+  });
+  document.addEventListener("webkitfullscreenchange", () => {
+    syncFullscreenBodyClass();
+    if (!isFullscreenActive() && artEditor.open) closeArtEditor();
   });
 }
 
@@ -1197,23 +1204,71 @@ function setupDropZone(container, zoneName) {
   });
 }
 
-function tryAutoFullscreen() {
-  if (fullscreenTried) return;
-  fullscreenTried = true;
+function isFullscreenActive() {
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+
+function syncFullscreenBodyClass() {
+  const on = isFullscreenActive();
+  document.body.classList.toggle("app-fullscreen", on);
+  document.body.classList.toggle("app-immersive", !on);
+}
+
+async function ensureAppFullscreen() {
+  if (isFullscreenActive()) {
+    syncFullscreenBodyClass();
+    return true;
+  }
   const el = document.documentElement;
-  if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  try {
+    if (el.requestFullscreen) await el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+  } catch (_) {}
+  syncFullscreenBodyClass();
+  return isFullscreenActive();
+}
+
+function tryAutoFullscreen() {
+  ensureAppFullscreen();
 }
 
 async function enterFullscreen() {
-  try {
-    await document.documentElement.requestFullscreen();
-  } catch (_) {}
+  await ensureAppFullscreen();
 }
 
 async function exitFullscreen() {
   try {
     if (document.fullscreenElement) await document.exitFullscreen();
+    else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
   } catch (_) {}
+  syncFullscreenBodyClass();
+}
+
+function setupAutoFullscreenOnLoad() {
+  syncFullscreenBodyClass();
+  ensureAppFullscreen();
+
+  if (autoFullscreenBound) return;
+  autoFullscreenBound = true;
+
+  const retry = () => ensureAppFullscreen();
+
+  window.addEventListener("pageshow", () => {
+    ensureAppFullscreen();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && !artEditor.open) {
+      ensureAppFullscreen();
+    }
+  });
+
+  document.addEventListener("fullscreenchange", syncFullscreenBodyClass);
+  document.addEventListener("webkitfullscreenchange", syncFullscreenBodyClass);
+
+  document.addEventListener("pointerdown", retry, { once: true, passive: true });
+  document.addEventListener("keydown", retry, { once: true });
+  document.addEventListener("touchend", retry, { once: true, passive: true });
 }
 
 function applyZoneLabels() {
@@ -1409,6 +1464,7 @@ async function init() {
     applyStarter(bundle);
     captureStarterSnapshot();
     applySaved(loadSave());
+    migrateObsoleteCardsIfNeeded();
     migrateWorldLayoutIfNeeded();
     updateSceneChrome();
     renderAll();
@@ -1423,6 +1479,8 @@ async function init() {
     });
     renderAll();
   }
+
+  setupAutoFullscreenOnLoad();
 }
 
 init();
