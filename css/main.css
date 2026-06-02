@@ -195,3 +195,46 @@ body {
 .card.tag-log .card-text {
   font-size: clamp(0.8rem, 2.6vmin, 1rem);
 }
+
+/* Tap to enlarge */
+.card-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.card-zoom.hidden {
+  display: none;
+}
+
+.card-zoom-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+}
+
+.card-zoom-slot {
+  position: relative;
+  z-index: 1;
+  max-width: min(92vw, 420px);
+  max-height: 92dvh;
+}
+
+.card-zoom-slot .card-zoomed {
+  width: min(85vw, 380px);
+  height: calc(min(85vw, 380px) * 7 / 5);
+  cursor: default;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.65);
+}
+
+.card-zoom-slot .card-zoomed .card-title {
+  font-size: clamp(1.2rem, 4vmin, 1.6rem);
+}
+
+.card-zoom-slot .card-zoomed .card-text {
+  font-size: clamp(1rem, 3.5vmin, 1.2rem);
+}
