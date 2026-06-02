@@ -4,7 +4,7 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | native drag (mouse) | short long-press drag (touch)
  */
 
-const APP_VERSION = "0.6.4";
+const APP_VERSION = "0.6.5";
 
 const TOOL_SLUGS_ON_FIELD = [
   "founders.settings",

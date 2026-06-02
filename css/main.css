@@ -315,8 +315,20 @@ body.in-scene.scene-art .zone-field {
   touch-action: none;
 }
 
+/* Dragging card follows finger as ghost; slot collapses so others stay centered */
 .card.dragging-source {
-  opacity: 0.4;
+  flex: 0 0 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-width: 0 !important;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  box-shadow: none;
 }
 
 .drag-ghost {
