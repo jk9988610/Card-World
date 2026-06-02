@@ -309,15 +309,15 @@ body.in-scene.scene-art .zone-field {
 }
 
 .card-zoom-slot .card-image {
+  width: 100%;
   max-height: 62%;
   aspect-ratio: 5 / 7;
 }
 
 .card-zoom-slot .card-image canvas {
+  display: block;
   width: 100%;
   height: 100%;
-  max-width: 100%;
-  max-height: 100%;
 }
 
 .card-zoom-slot .card-title {

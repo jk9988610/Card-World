@@ -271,31 +271,28 @@ function drawPixelImage(ctx, img, destW, destH) {
 }
 
 function drawCardSwatch(canvas, tags, large = false, pixelImage = null) {
-  const parent = canvas.parentElement;
-  const boxW = parent?.clientWidth || (large ? 300 : 80);
-  const boxH = parent?.clientHeight || (large ? 420 : 112);
-  const pad = large ? 10 : 3;
-  const innerW = Math.max(12, boxW - pad * 2);
-  const innerH = Math.max(12, boxH - pad * 2);
-  let w = innerW;
-  let h = Math.floor((w * 7) / 5);
-  if (h > innerH) {
-    h = innerH;
-    w = Math.floor((h * 5) / 7);
-  }
-  w = Math.max(12, w);
-  h = Math.max(12, h);
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d");
-  if (pixelImage?.type === "pixel/v1") {
-    drawPixelImage(ctx, pixelImage, w, h);
-  } else {
-    ctx.fillStyle = swatchColor(tags);
-    ctx.fillRect(0, 0, w, h);
-  }
-  canvas.style.width = `${w}px`;
-  canvas.style.height = `${h}px`;
+  const paint = () => {
+    const parent = canvas.parentElement;
+    if (!parent) return;
+    const w = Math.max(1, Math.floor(parent.clientWidth));
+    const h = Math.max(1, Math.floor(parent.clientHeight));
+    if (w < 2 || h < 2) {
+      requestAnimationFrame(paint);
+      return;
+    }
+    canvas.width = w;
+    canvas.height = h;
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    const ctx = canvas.getContext("2d");
+    if (pixelImage?.type === "pixel/v1") {
+      drawPixelImage(ctx, pixelImage, w, h);
+    } else {
+      ctx.fillStyle = swatchColor(tags);
+      ctx.fillRect(0, 0, w, h);
+    }
+  };
+  paint();
 }
 
 function tagClass(tags) {
