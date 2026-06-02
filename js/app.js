@@ -4,7 +4,7 @@ import { loadSave, writeSave } from "./storage.js";
  * Card World v0.3 — tap zoom | drag Hand→Field play | Field→Hand take
  */
 
-const APP_VERSION = "0.3.3";
+const APP_VERSION = "0.3.4";
 
 const defBySlug = new Map();
 let programs = {};
@@ -28,6 +28,8 @@ let fullscreenTried = false;
 const els = {
   hand: document.getElementById("hand-cards"),
   field: document.getElementById("field-cards"),
+  zoneHand: document.getElementById("zone-hand"),
+  zoneField: document.getElementById("zone-field"),
   zoom: document.getElementById("card-zoom"),
   zoomBackdrop: document.getElementById("zoom-backdrop"),
   zoomSlot: document.getElementById("zoom-slot"),
@@ -131,7 +133,8 @@ function drawPixel(canvas, payload, large = false) {
   const parent = canvas.parentElement;
   const cw = parent?.clientWidth || (large ? 320 : 160);
   const ch = parent?.clientHeight || (large ? 280 : 140);
-  const block = Math.max(large ? 12 : 5, Math.floor(Math.min(cw / w, ch / h) * 0.88));
+  const scale = large ? 1 : 0.5;
+  const block = Math.max(large ? 12 : 3, Math.floor(Math.min(cw / w, ch / h) * 0.88 * scale));
   canvas.width = w * block;
   canvas.height = h * block;
   ctx.imageSmoothingEnabled = false;
@@ -232,13 +235,10 @@ function setHintTarget(slug) {
 }
 
 function shouldHint(slug, zone) {
-  if (!state.highlightOn) return false;
+  if (!state.highlightOn || zone !== "hand") return false;
   if (state.hintTarget && slug === state.hintTarget) return true;
   if (state.guideQueue.length) return false;
-  if (!state.bootstrapDone) {
-    if (slug === "founders.world_controller" && zone === "hand") return true;
-    if ((slug === "founders.tutorial" || slug === "founders.settings" || slug === "founders.guide_weave_1") && zone === "field") return true;
-  }
+  if (!state.bootstrapDone && slug === "founders.world_controller") return true;
   return false;
 }
 
@@ -519,8 +519,8 @@ function applyStarter(bundle) {
 }
 
 async function init() {
-  setupDropZone(els.hand, "hand");
-  setupDropZone(els.field, "field");
+  setupDropZone(els.zoneHand, "hand");
+  setupDropZone(els.zoneField, "field");
   els.zoomBackdrop.addEventListener("click", closeZoom);
 
   try {
