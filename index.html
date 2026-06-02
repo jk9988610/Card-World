@@ -8,11 +8,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#0d1117" />
   <meta http-equiv="Cache-Control" content="no-cache" />
-  <meta name="cw-app-version" content="0.12.3" />
-  <meta name="cw-app-build" content="0.12.3" />
+  <meta name="cw-app-version" content="0.12.4" />
+  <meta name="cw-app-build" content="0.12.4" />
   <title>Card World</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="css/main.css?v=0.12.3" />
+  <link rel="stylesheet" href="css/main.css?v=0.12.4" />
 </head>
 <body>
   <header id="app-chrome" class="app-chrome" aria-label="App toolbar">
@@ -21,10 +21,23 @@
       <span class="app-chrome-version">v<span class="app-version-value">—</span></span>
     </div>
     <div class="app-chrome-actions">
+      <button type="button" id="btn-logs" class="chrome-btn" data-i18n="view_logs">Logs</button>
+      <button type="button" id="btn-copy-logs" class="chrome-btn" data-i18n="copy_logs">Copy logs</button>
       <button type="button" id="btn-clear-storage" class="chrome-btn" data-i18n="clear_storage">Clear save</button>
       <button type="button" id="btn-update" class="chrome-btn chrome-btn-accent" data-i18n="update_app">Update</button>
     </div>
   </header>
+  <dialog id="log-dialog" class="log-dialog">
+    <form method="dialog" class="log-dialog-panel">
+      <h2 class="log-dialog-title" data-i18n-log="title">Run log</h2>
+      <pre id="log-content" class="log-dialog-content" readonly></pre>
+      <menu class="log-dialog-actions">
+        <button type="button" id="btn-log-copy" class="chrome-btn" data-i18n-log="copy">Copy</button>
+        <button type="button" id="btn-log-clear" class="chrome-btn" data-i18n-log="clear">Clear</button>
+        <button type="submit" class="chrome-btn" data-i18n-log="close">Close</button>
+      </menu>
+    </form>
+  </dialog>
   <header id="scene-bar" class="scene-bar hidden" aria-live="polite">
     <span id="scene-title" class="scene-title"></span>
   </header>
@@ -118,6 +131,6 @@
     <div class="card-zoom-backdrop" id="zoom-backdrop"></div>
     <div class="card-zoom-slot" id="zoom-slot"></div>
   </div>
-  <script type="module" src="js/app.js?v=0.12.3"></script>
+  <script type="module" src="js/app.js?v=0.12.4"></script>
 </body>
 </html>

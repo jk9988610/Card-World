@@ -1,6 +1,6 @@
 # Embedded apps (Card World local copies)
 
-Apps here are **vendored copies** shipped with Card World. They run on the same GitHub Pages origin as the card game, not as external iframes to other sites.
+Apps here are **vendored copies** shipped with Card World. They run on the same GitHub Pages origin as the card game — **no iframe to external github.io sites**. Edit here without affecting the upstream project.
 
 ## `harmonyforge/`
 

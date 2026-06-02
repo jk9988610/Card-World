@@ -4,7 +4,16 @@
     "zone_hand": "手牌",
     "clear_storage": "清存档",
     "update_app": "更新",
+    "view_logs": "日志",
+    "copy_logs": "复制日志",
+    "logs_copied": "已复制",
     "clear_storage_confirm": "清除本浏览器内所有 Card World 数据（存档、绘画草稿、作品仓库）并刷新页面？"
+  },
+  "log_dialog": {
+    "title": "运行日志",
+    "copy": "复制",
+    "clear": "清空",
+    "close": "关闭"
   },
   "cards": {
     "tutorial": {
@@ -116,8 +125,8 @@
   "music_embed": {
     "title_default": "HarmonyForge",
     "title_studio": "HarmonyForge",
-    "hint_default": "编曲制作应用（HarmonyForge）。",
-    "hint_studio": "作曲与发布；作品仓库、发布商店等在应用顶栏。"
+    "hint_default": "内置 HarmonyForge（已迁入 Card World，非外链站点）。",
+    "hint_studio": "本地副本在 embedded/harmonyforge，可随意改而不影响原站。"
   },
   "art_editor": {
     "title": "像素画板",

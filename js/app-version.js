@@ -3,6 +3,8 @@
  * Bundled version from meta tags; compares to remote version.json.
  */
 
+import { AppLogger } from "./app-logger.js";
+
 function readMeta(name) {
   return document.querySelector(`meta[name="${name}"]`)?.content?.trim() || "";
 }
@@ -80,21 +82,25 @@ export async function hydrateFromManifest() {
     noteRemote(remote);
     return remote;
   } catch (err) {
-    console.warn("Card World: could not load version.json", err);
+    AppLogger.warn("Could not load version.json", err?.message || err);
     return null;
   }
 }
 
 export async function checkUpdate() {
+  AppLogger.info("Checking for updates");
   try {
     const remote = await fetchRemote();
     noteRemote(remote);
     const bundled = getBundled();
     if (isNewer(remote)) {
+      AppLogger.warn("Update available", `v${remote.version} build ${remote.build}`);
       return { status: "available", remote, bundled };
     }
+    AppLogger.info("Already on latest version", `v${bundled.version}`);
     return { status: "latest", remote, bundled };
   } catch (err) {
+    AppLogger.error("Update check failed", err.message);
     return { status: "error", message: err.message };
   }
 }

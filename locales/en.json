@@ -4,7 +4,16 @@
     "zone_hand": "Hand",
     "clear_storage": "Clear save",
     "update_app": "Update",
+    "view_logs": "Logs",
+    "copy_logs": "Copy logs",
+    "logs_copied": "Copied",
     "clear_storage_confirm": "Clear all Card World data in this browser (save, art drafts, works)? The page will reload."
+  },
+  "log_dialog": {
+    "title": "Run log",
+    "copy": "Copy",
+    "clear": "Clear",
+    "close": "Close"
   },
   "cards": {
     "tutorial": {

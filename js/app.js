@@ -24,6 +24,7 @@ import {
 } from "./art-storage.js";
 import { isCloudEnabled } from "./cloud-config.js";
 import { MUSIC_EMBED_SLUG_TO_MODE, MUSIC_PROD_URL, musicEmbedUrl } from "./music-config.js";
+import { AppLogger } from "./app-logger.js";
 import { initAppVersionUI } from "./app-version.js";
 import { clearAllCardWorldStorage, clearSave, loadSave, writeSave } from "./storage.js";
 import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
@@ -32,7 +33,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.12.3";
+const APP_VERSION = "0.12.4";
 
 const SETTINGS_MENU_SLUGS = new Set([
   "founders.language_settings",
@@ -214,6 +215,12 @@ const els = {
   appChrome: document.getElementById("app-chrome"),
   btnClearStorage: document.getElementById("btn-clear-storage"),
   btnUpdate: document.getElementById("btn-update"),
+  btnLogs: document.getElementById("btn-logs"),
+  btnCopyLogs: document.getElementById("btn-copy-logs"),
+  logDialog: document.getElementById("log-dialog"),
+  logContent: document.getElementById("log-content"),
+  btnLogCopy: document.getElementById("btn-log-copy"),
+  btnLogClear: document.getElementById("btn-log-clear"),
 };
 
 function localeKeyForDef(def) {
@@ -1838,6 +1845,7 @@ function openMusicEmbed(mode = "studio") {
   if (els.musicConsoleTitle) els.musicConsoleTitle.textContent = musicTitleForMode(mode);
   if (els.musicConsoleHint) els.musicConsoleHint.textContent = musicEmbedHintForMode(mode);
   if (els.musicConsoleFrame) els.musicConsoleFrame.src = url;
+  AppLogger.info("Music embed opened (local bundle)", url);
   document.body.classList.add("music-console-open");
   els.musicConsole?.classList.remove("hidden");
   els.musicConsole?.setAttribute("aria-hidden", "false");
@@ -2445,14 +2453,52 @@ function setupAutoFullscreenOnLoad() {
 
 function applyZoneLabels() {
   const ui = locales[currentLocale]?.ui || locales.en?.ui || {};
+  const logDlg = locales[currentLocale]?.log_dialog || locales.en?.log_dialog || {};
   for (const el of document.querySelectorAll("[data-i18n]")) {
     const key = el.dataset.i18n;
     if (ui[key]) el.textContent = ui[key];
   }
+  for (const el of document.querySelectorAll("[data-i18n-log]")) {
+    const key = el.dataset.i18nLog;
+    if (logDlg[key]) el.textContent = logDlg[key];
+  }
+}
+
+function refreshLogPanel() {
+  if (els.logContent) els.logContent.textContent = AppLogger.formatAll();
+}
+
+function openLogDialog() {
+  refreshLogPanel();
+  els.logDialog?.showModal();
+  AppLogger.info("Log panel opened");
+}
+
+async function copyLogsToClipboard(feedbackBtn) {
+  const ok = await AppLogger.copyToClipboard();
+  refreshLogPanel();
+  if (feedbackBtn && ok) {
+    const ui = locales[currentLocale]?.ui || locales.en?.ui || {};
+    const prev = feedbackBtn.textContent;
+    feedbackBtn.textContent = ui.logs_copied || "Copied";
+    setTimeout(() => {
+      feedbackBtn.textContent = prev;
+      applyZoneLabels();
+    }, 1400);
+  }
+  return ok;
 }
 
 function setupAppChrome() {
   initAppVersionUI();
+
+  els.btnLogs?.addEventListener("click", () => openLogDialog());
+  els.btnCopyLogs?.addEventListener("click", () => copyLogsToClipboard(els.btnCopyLogs));
+  els.btnLogCopy?.addEventListener("click", () => copyLogsToClipboard(els.btnLogCopy));
+  els.btnLogClear?.addEventListener("click", () => {
+    AppLogger.clear();
+    refreshLogPanel();
+  });
 
   if (!els.btnClearStorage) return;
 
@@ -2462,6 +2508,7 @@ function setupAppChrome() {
       ui.clear_storage_confirm ||
       "Clear all Card World data in this browser (save, art drafts, works)? The page will reload.";
     if (!confirm(msg)) return;
+    AppLogger.info("Clearing all Card World localStorage");
     abortPointerDrag();
     closeZoom();
     closeArtEditor();
@@ -2677,6 +2724,7 @@ function applyStarter(bundle) {
 }
 
 async function init() {
+  AppLogger.info("Card World starting", `v${APP_VERSION}`);
   setupAppChrome();
   setupDropZone(els.zoneHand, "hand");
   setupDropZone(els.zoneField, "field");
@@ -2699,8 +2747,9 @@ async function init() {
     updateSceneChrome();
     renderAll();
     persistSave();
+    AppLogger.info("Ready", `locale=${currentLocale} hand=${state.hand.length} field=${state.field.length}`);
   } catch (err) {
-    console.error(err);
+    AppLogger.error("Init failed", err?.message || err);
     state.field.push({
       instanceId: "inst_err",
       definitionSlug: "founders.tutorial",
