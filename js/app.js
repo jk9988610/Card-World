@@ -35,7 +35,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.10.1";
+const APP_VERSION = "0.10.2";
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -661,19 +661,30 @@ function migrateObsoleteCardsIfNeeded() {
   state.field = drop(state.field);
 }
 
-/** Old localStorage saves miss new starter cards (e.g. Music Console in v0.10). */
-function migrateMissingStarterCardsIfNeeded() {
-  if (!starterSnapshot?.hand?.length) return;
-  if (state.currentSceneId || state.sceneStack.length) return;
-  const have = new Set(state.hand.map((i) => i.definitionSlug));
+/** Ensure starter hand includes cards added in newer versions (e.g. Music Console). */
+function patchHandWithMissingStarters(hand) {
+  if (!starterSnapshot?.hand?.length) return hand;
+  const list = cloneInstList(hand || []);
+  const have = new Set(list.map((i) => i.definitionSlug));
   for (const tmpl of starterSnapshot.hand) {
     if (have.has(tmpl.definitionSlug)) continue;
-    state.hand.push({
+    list.push({
       ...tmpl,
       instanceId: nextInstanceId(),
       inner: tmpl.inner ? cloneInstList(tmpl.inner) : undefined,
     });
     have.add(tmpl.definitionSlug);
+  }
+  return list;
+}
+
+function migrateMissingStarterCardsIfNeeded() {
+  if (!starterSnapshot?.hand?.length) return;
+  if (!state.currentSceneId) {
+    state.hand = patchHandWithMissingStarters(state.hand);
+  }
+  for (const frame of state.sceneStack) {
+    frame.hand = patchHandWithMissingStarters(frame.hand || []);
   }
 }
 
@@ -689,7 +700,10 @@ function migrateWorldLayoutIfNeeded() {
   if (toolOnField || tutorialInHand || guideOnField) {
     const doorInHand = state.hand.filter((i) => i.definitionSlug === "content.door");
     const doorOnField = state.field.filter((i) => i.definitionSlug === "content.door");
-    state.hand = [...cloneInstList(starterSnapshot.hand), ...doorInHand];
+    state.hand = patchHandWithMissingStarters([
+      ...cloneInstList(starterSnapshot.hand),
+      ...doorInHand,
+    ]);
     state.field = [...cloneInstList(starterSnapshot.field), ...doorOnField];
     state.fieldStash = [];
   }
@@ -731,9 +745,11 @@ function pushScene(sceneId) {
   const scene = scenes[sceneId];
   if (!scene) return;
   closeMusicEmbed();
+  const slice = worldSlice();
+  slice.hand = patchHandWithMissingStarters(slice.hand);
   state.sceneStack.push({
     sceneId: state.currentSceneId,
-    ...worldSlice(),
+    ...slice,
   });
   state.currentSceneId = sceneId;
   applyWorldSlice({
@@ -753,6 +769,9 @@ function popScene() {
   const frame = state.sceneStack.pop();
   state.currentSceneId = frame.sceneId ?? null;
   applyWorldSlice(frame);
+  if (!state.currentSceneId) {
+    state.hand = patchHandWithMissingStarters(state.hand);
+  }
   updateSceneChrome();
   renderAll();
   persistSave();
@@ -2288,10 +2307,11 @@ async function loadJson(url) {
 
 async function loadBundle() {
   const base = new URL("../", import.meta.url).href;
+  const v = APP_VERSION;
   const urls = [
-    new URL("dist/seed-bundle.json", base).href,
-    `${location.pathname.replace(/\/[^/]*$/, "/")}dist/seed-bundle.json`,
-    "dist/seed-bundle.json",
+    new URL(`dist/seed-bundle.json?v=${v}`, base).href,
+    `${location.pathname.replace(/\/[^/]*$/, "/")}dist/seed-bundle.json?v=${v}`,
+    `dist/seed-bundle.json?v=${v}`,
   ];
   let lastErr;
   for (const url of urls) {
