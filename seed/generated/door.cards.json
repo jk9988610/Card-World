@@ -1,0 +1,75 @@
+{
+  "exportedFrom": "seed/programs/door.on_play.json",
+  "programId": "door.on_play",
+  "program": {
+    "id": "door.on_play",
+    "slug": "door-on-play",
+    "version": "1.0.0",
+    "author": "official",
+    "entry": "n0",
+    "nodes": [
+      {
+        "id": "n0",
+        "op": "set_slot",
+        "label": "Open",
+        "params": {
+          "slot": "text",
+          "value": "Open"
+        }
+      }
+    ]
+  },
+  "programmingCards": [
+    {
+      "slug": "prog.export.door-on-play.n0",
+      "title": "Open",
+      "text": "Part of door.on_play",
+      "tags": [
+        "programming",
+        "exported",
+        "program:door.on_play"
+      ],
+      "meta": {
+        "programId": "door.on_play",
+        "nodeId": "n0",
+        "op": "set_slot",
+        "params": {
+          "slot": "text",
+          "value": "Open"
+        }
+      },
+      "image": {
+        "type": "pixel/v1",
+        "w": 8,
+        "h": 8,
+        "palette": [
+          "#1a1a2e",
+          "#4cc9f0"
+        ],
+        "pixels": [
+          0,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1
+        ]
+      }
+    }
+  ],
+  "metaExportCard": {
+    "slug": "prog.export",
+    "title": "Export Program",
+    "text": "Phase 1: bridge.export_program. Dev: npm run export-program",
+    "tags": [
+      "programming",
+      "meta"
+    ],
+    "meta": {
+      "implemented": false,
+      "exportsProgramId": "door.on_play"
+    }
+  }
+}

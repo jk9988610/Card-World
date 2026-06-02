@@ -1,0 +1,40 @@
+{
+  "id": "world.bootstrap",
+  "slug": "world-bootstrap",
+  "version": "1.0.0",
+  "author": "official",
+  "entry": "n0",
+  "nodes": [
+    {
+      "id": "n0",
+      "op": "sequence",
+      "label": "On Play",
+      "children": ["n1", "n2", "n3"]
+    },
+    {
+      "id": "n1",
+      "op": "deal",
+      "label": "Deal Starter",
+      "params": {
+        "cards": ["prog.on_play", "prog.spawn", "prog.to_field", "prog.set_slot", "prog.define_card", "prog.export"],
+        "toZone": "hand"
+      }
+    },
+    {
+      "id": "n2",
+      "op": "spawn",
+      "label": "Spawn Door",
+      "params": { "definitionSlug": "content.door", "zone": "field" }
+    },
+    {
+      "id": "n3",
+      "op": "set_slot",
+      "label": "Update Guide",
+      "params": {
+        "targetInstanceId": "inst_guide_1",
+        "slot": "text",
+        "value": "Bootstrap done. Play Door. Use programming cards to weave more."
+      }
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "slug": "official.computer",
+  "title": "Computer",
+  "version": "1.0.0",
+  "author": "official",
+  "kind": "computer",
+  "openSource": true,
+  "installTarget": "world"
+}

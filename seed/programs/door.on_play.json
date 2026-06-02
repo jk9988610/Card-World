@@ -1,0 +1,15 @@
+{
+  "id": "door.on_play",
+  "slug": "door-on-play",
+  "version": "1.0.0",
+  "author": "official",
+  "entry": "n0",
+  "nodes": [
+    {
+      "id": "n0",
+      "op": "set_slot",
+      "label": "Open",
+      "params": { "slot": "text", "value": "Open" }
+    }
+  ]
+}

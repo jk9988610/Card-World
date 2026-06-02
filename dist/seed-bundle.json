@@ -1,0 +1,663 @@
+{
+  "version": "0.1.0",
+  "builtAt": "2026-06-02T09:08:43.621Z",
+  "definitions": {
+    "version": "0.1.0",
+    "definitions": [
+      {
+        "slug": "prog.on_play",
+        "title": "On Play",
+        "text": "Runs when played.",
+        "tags": [
+          "programming",
+          "event"
+        ],
+        "image": {
+          "type": "pixel/v1",
+          "w": 8,
+          "h": 8,
+          "palette": [
+            "#1a1a2e",
+            "#f4d35e"
+          ],
+          "pixels": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "slug": "prog.on_tick",
+        "title": "On Tick",
+        "text": "Runs each tick.",
+        "tags": [
+          "programming",
+          "event"
+        ],
+        "image": {
+          "type": "pixel/v1",
+          "w": 8,
+          "h": 8,
+          "palette": [
+            "#1a1a2e",
+            "#f4d35e"
+          ],
+          "pixels": [
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            0
+          ]
+        }
+      },
+      {
+        "slug": "prog.sequence",
+        "title": "Sequence",
+        "text": "Steps in order.",
+        "tags": [
+          "programming",
+          "flow"
+        ],
+        "image": {
+          "type": "pixel/v1",
+          "w": 8,
+          "h": 8,
+          "palette": [
+            "#1a1a2e",
+            "#90be6d"
+          ],
+          "pixels": [
+            1,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            0
+          ]
+        }
+      },
+      {
+        "slug": "prog.spawn",
+        "title": "Spawn",
+        "text": "Create instance.",
+        "tags": [
+          "programming",
+          "action"
+        ],
+        "image": {
+          "type": "pixel/v1",
+          "w": 8,
+          "h": 8,
+          "palette": [
+            "#1a1a2e",
+            "#4cc9f0"
+          ],
+          "pixels": [
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "slug": "prog.set_slot",
+        "title": "Set Slot",
+        "text": "Set title/image/text.",
+        "tags": [
+          "programming",
+          "action"
+        ],
+        "image": {
+          "type": "pixel/v1",
+          "w": 8,
+          "h": 8,
+          "palette": [
+            "#1a1a2e",
+            "#4cc9f0"
+          ],
+          "pixels": [
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "slug": "prog.to_field",
+        "title": "To Field",
+        "text": "Zone: Field.",
+        "tags": [
+          "programming",
+          "zone"
+        ],
+        "image": {
+          "type": "pixel/v1",
+          "w": 8,
+          "h": 8,
+          "palette": [
+            "#1a1a2e",
+            "#e9c46a"
+          ],
+          "pixels": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      {
+        "slug": "prog.define_card",
+        "title": "Define Card",
+        "text": "New template.",
+        "tags": [
+          "programming",
+          "meta"
+        ],
+        "image": {
+          "type": "pixel/v1",
+          "w": 8,
+          "h": 8,
+          "palette": [
+            "#1a1a2e",
+            "#f72585"
+          ],
+          "pixels": [
+            1,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            0
+          ]
+        }
+      },
+      {
+        "slug": "prog.scene_push",
+        "title": "Scene Push",
+        "text": "Enter inner scene.",
+        "tags": [
+          "programming",
+          "scene"
+        ],
+        "image": {
+          "type": "pixel/v1",
+          "w": 8,
+          "h": 8,
+          "palette": [
+            "#1a1a2e",
+            "#b5179e"
+          ],
+          "pixels": [
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1
+          ]
+        }
+      },
+      {
+        "slug": "prog.export",
+        "title": "Export Program",
+        "text": "Dev: npm run export-program. Phase 1: download IR.",
+        "tags": [
+          "programming",
+          "meta"
+        ],
+        "meta": {
+          "implemented": false
+        },
+        "image": {
+          "type": "pixel/v1",
+          "w": 8,
+          "h": 8,
+          "palette": [
+            "#1a1a2e",
+            "#f72585"
+          ],
+          "pixels": [
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      {
+        "slug": "bridge.save_world",
+        "title": "Save World",
+        "text": "Persist state.",
+        "tags": [
+          "programming",
+          "bridge"
+        ],
+        "image": {
+          "type": "pixel/v1",
+          "w": 8,
+          "h": 8,
+          "palette": [
+            "#1a1a2e",
+            "#adb5bd"
+          ],
+          "pixels": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "slug": "seed.starter_deck",
+        "title": "Programming Starter",
+        "text": "Essential programming cards.",
+        "tags": [
+          "container",
+          "deck"
+        ],
+        "image": {
+          "type": "pixel/v1",
+          "w": 8,
+          "h": 8,
+          "palette": [
+            "#1a1a2e",
+            "#dee2e6"
+          ],
+          "pixels": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      {
+        "slug": "founders.world_controller",
+        "title": "World Controller",
+        "text": "Play to bootstrap world.",
+        "tags": [
+          "world",
+          "controller"
+        ],
+        "programs": {
+          "on_play": "world.bootstrap"
+        },
+        "image": {
+          "type": "pixel/v1",
+          "w": 8,
+          "h": 8,
+          "palette": [
+            "#1a1a2e",
+            "#4895ef"
+          ],
+          "pixels": [
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ]
+        }
+      },
+      {
+        "slug": "content.door",
+        "title": "Door",
+        "text": "Closed",
+        "tags": [
+          "content"
+        ],
+        "programs": {
+          "on_play": "door.on_play"
+        },
+        "image": {
+          "type": "pixel/v1",
+          "w": 8,
+          "h": 8,
+          "palette": [
+            "#1a1a2e",
+            "#6c757d"
+          ],
+          "pixels": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      },
+      {
+        "slug": "founders.computer",
+        "title": "Computer",
+        "text": "Play to open desktop.",
+        "tags": [
+          "container",
+          "computer"
+        ],
+        "container": true,
+        "innerSceneId": "scene.computer.desktop",
+        "programs": {
+          "on_play": "computer.enter"
+        },
+        "image": {
+          "type": "pixel/v1",
+          "w": 8,
+          "h": 8,
+          "palette": [
+            "#1a1a2e",
+            "#495057"
+          ],
+          "pixels": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      {
+        "slug": "founders.guide",
+        "title": "Guide",
+        "text": "Play World Controller first.",
+        "tags": [
+          "guide"
+        ],
+        "image": {
+          "type": "pixel/v1",
+          "w": 8,
+          "h": 8,
+          "palette": [
+            "#1a1a2e",
+            "#f94144"
+          ],
+          "pixels": [
+            1,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            0
+          ]
+        }
+      }
+    ]
+  },
+  "starterWorld": {
+    "version": "0.1.0",
+    "hand": [
+      {
+        "definitionSlug": "seed.starter_deck",
+        "instanceId": "inst_starter_deck_1"
+      }
+    ],
+    "field": [
+      {
+        "definitionSlug": "founders.world_controller",
+        "instanceId": "inst_world_ctrl_1"
+      },
+      {
+        "definitionSlug": "founders.guide",
+        "instanceId": "inst_guide_1"
+      }
+    ]
+  },
+  "programs": {
+    "computer.enter": {
+      "id": "computer.enter",
+      "slug": "computer-enter",
+      "version": "1.0.0",
+      "author": "official",
+      "entry": "n0",
+      "nodes": [
+        {
+          "id": "n0",
+          "op": "scene_push",
+          "label": "Desktop",
+          "params": {
+            "sceneId": "scene.computer.desktop"
+          }
+        }
+      ]
+    },
+    "door.on_play": {
+      "id": "door.on_play",
+      "slug": "door-on-play",
+      "version": "1.0.0",
+      "author": "official",
+      "entry": "n0",
+      "nodes": [
+        {
+          "id": "n0",
+          "op": "set_slot",
+          "label": "Open",
+          "params": {
+            "slot": "text",
+            "value": "Open"
+          }
+        }
+      ]
+    },
+    "flagship.main": {
+      "id": "flagship.main",
+      "slug": "flagship-main",
+      "version": "1.0.0",
+      "author": "official",
+      "entry": "n0",
+      "nodes": [
+        {
+          "id": "n0",
+          "op": "if",
+          "label": "Every 30 ticks",
+          "params": {
+            "condition": "tick_mod_30"
+          },
+          "children": [
+            "n1"
+          ]
+        },
+        {
+          "id": "n1",
+          "op": "spawn",
+          "label": "Spawn Note",
+          "params": {
+            "definitionSlug": "flagship.note",
+            "zone": "field"
+          }
+        }
+      ]
+    },
+    "world.bootstrap": {
+      "id": "world.bootstrap",
+      "slug": "world-bootstrap",
+      "version": "1.0.0",
+      "author": "official",
+      "entry": "n0",
+      "nodes": [
+        {
+          "id": "n0",
+          "op": "sequence",
+          "label": "On Play",
+          "children": [
+            "n1",
+            "n2",
+            "n3"
+          ]
+        },
+        {
+          "id": "n1",
+          "op": "deal",
+          "label": "Deal Starter",
+          "params": {
+            "cards": [
+              "prog.on_play",
+              "prog.spawn",
+              "prog.to_field",
+              "prog.set_slot",
+              "prog.define_card",
+              "prog.export"
+            ],
+            "toZone": "hand"
+          }
+        },
+        {
+          "id": "n2",
+          "op": "spawn",
+          "label": "Spawn Door",
+          "params": {
+            "definitionSlug": "content.door",
+            "zone": "field"
+          }
+        },
+        {
+          "id": "n3",
+          "op": "set_slot",
+          "label": "Update Guide",
+          "params": {
+            "targetInstanceId": "inst_guide_1",
+            "slot": "text",
+            "value": "Bootstrap done. Play Door. Use programming cards to weave more."
+          }
+        }
+      ]
+    }
+  },
+  "packs": {
+    "official.computer": {
+      "slug": "official.computer",
+      "title": "Computer",
+      "version": "1.0.0",
+      "author": "official",
+      "kind": "computer",
+      "openSource": true,
+      "installTarget": "world"
+    },
+    "official.flagship": {
+      "slug": "official.flagship",
+      "title": "Zone Runner",
+      "version": "1.0.0",
+      "author": "official",
+      "kind": "game",
+      "openSource": true,
+      "installTarget": "computer",
+      "includes": {
+        "definitions": [
+          {
+            "slug": "flagship.note",
+            "title": "Note",
+            "text": "Spawned by tick",
+            "tags": [
+              "game"
+            ],
+            "image": {
+              "type": "pixel/v1",
+              "w": 8,
+              "h": 8,
+              "palette": [
+                "#1a1a2e",
+                "#e63946"
+              ],
+              "pixels": [
+                0,
+                1,
+                1,
+                0,
+                1,
+                1,
+                0,
+                0
+              ]
+            }
+          },
+          {
+            "slug": "flagship.controller",
+            "title": "Game Controller",
+            "programs": {
+              "on_tick": "flagship.main"
+            },
+            "tags": [
+              "game"
+            ]
+          }
+        ]
+      }
+    },
+    "official.world-entry": {
+      "slug": "official.world-entry",
+      "title": "World Entry",
+      "version": "1.0.0",
+      "author": "official",
+      "kind": "world",
+      "openSource": true,
+      "installTarget": "world"
+    }
+  },
+  "scenes": {
+    "scene.computer.desktop": {
+      "id": "scene.computer.desktop",
+      "title": "Computer Desktop",
+      "field": [
+        {
+          "definitionSlug": "prog.export",
+          "instanceId": "inst_desk_export"
+        }
+      ],
+      "hand": []
+    }
+  }
+}

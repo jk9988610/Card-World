@@ -1,0 +1,15 @@
+{
+  "id": "computer.enter",
+  "slug": "computer-enter",
+  "version": "1.0.0",
+  "author": "official",
+  "entry": "n0",
+  "nodes": [
+    {
+      "id": "n0",
+      "op": "scene_push",
+      "label": "Desktop",
+      "params": { "sceneId": "scene.computer.desktop" }
+    }
+  ]
+}
