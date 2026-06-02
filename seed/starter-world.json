@@ -1,6 +1,10 @@
 {
-  "version": "0.6.2",
+  "version": "0.6.3",
   "hand": [
+    {
+      "definitionSlug": "founders.guide_weave_1",
+      "instanceId": "inst_gw1"
+    },
     {
       "definitionSlug": "founders.world_controller",
       "instanceId": "inst_world_ctrl_1"
@@ -23,10 +27,6 @@
     {
       "definitionSlug": "founders.tutorial",
       "instanceId": "inst_tutorial_1"
-    },
-    {
-      "definitionSlug": "founders.guide_weave_1",
-      "instanceId": "inst_gw1"
     }
   ]
 }

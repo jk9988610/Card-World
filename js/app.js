@@ -479,6 +479,27 @@ function captureStarterSnapshot() {
   };
 }
 
+/** Old saves had tools on field; restore canonical hand/field split. */
+function migrateWorldLayoutIfNeeded() {
+  if (state.currentSceneId || state.sceneStack.length) return;
+  if (!starterSnapshot) return;
+
+  const toolOnField = state.field.some((i) => TOOL_SLUGS_ON_FIELD.includes(i.definitionSlug));
+  const tutorialInHand = state.hand.some((i) => i.definitionSlug === "founders.tutorial");
+  const handMismatch = state.hand.some((i) => !STARTER_HAND_SLUGS.has(i.definitionSlug) && i.definitionSlug !== "content.door");
+  const fieldMismatch = state.field.some(
+    (i) => !STARTER_FIELD_SLUGS.has(i.definitionSlug) && i.definitionSlug !== "content.door"
+  );
+
+  if (toolOnField || tutorialInHand || (handMismatch && fieldMismatch)) {
+    const doorInHand = state.hand.filter((i) => i.definitionSlug === "content.door");
+    const doorOnField = state.field.filter((i) => i.definitionSlug === "content.door");
+    state.hand = [...cloneInstList(starterSnapshot.hand), ...doorInHand];
+    state.field = [...cloneInstList(starterSnapshot.field), ...doorOnField];
+    state.fieldStash = [];
+  }
+}
+
 function worldSlice() {
   return {
     hand: cloneInstList(state.hand),
@@ -1149,6 +1170,7 @@ async function init() {
     applyStarter(bundle);
     captureStarterSnapshot();
     applySaved(loadSave());
+    migrateWorldLayoutIfNeeded();
     updateSceneChrome();
     renderAll();
     persistSave();
