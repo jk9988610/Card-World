@@ -35,7 +35,18 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.11.0";
+const APP_VERSION = "0.12.0";
+
+const SETTINGS_MENU_SLUGS = new Set([
+  "founders.language_settings",
+  "founders.fullscreen",
+  "founders.exit_fullscreen",
+  "founders.highlight_on",
+  "founders.highlight_off",
+  "founders.reset_world",
+]);
+
+const LANGUAGE_MENU_SLUGS = new Set(["founders.lang_en", "founders.lang_zh"]);
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -283,7 +294,7 @@ function resolveInstance(inst) {
     if (t?.title) title = t.title;
   }
   const innerN = inst.inner?.length || 0;
-  if (innerN > 0 && isBackpack(def)) {
+  if (innerN > 0 && isContainerCard(def)) {
     text = `${text}\n(${innerN} inside)`;
   }
   const image = inst.image ?? def.image;
@@ -437,8 +448,21 @@ function isBackpack(def) {
   return def.tags.includes("container") || def.tags.includes("deck");
 }
 
+function isSettingsContainer(def) {
+  return def?.slug === "founders.settings";
+}
+
+function isContainerCard(def) {
+  return isBackpack(def) || isSettingsContainer(def);
+}
+
+function isSettingsMenuSlug(slug) {
+  return SETTINGS_MENU_SLUGS.has(slug);
+}
+
 function isMetaCard(def) {
   if (!def?.tags) return false;
+  if (isContainerCard(def)) return false;
   if (def.tags.some((t) => META_TAGS.has(t))) return true;
   if (def.tags.includes("reusable")) return true;
   return playStyle(def) === "reusable";
@@ -455,6 +479,41 @@ function playStyle(def) {
 function ensureInner(inst) {
   if (!inst.inner) inst.inner = [];
   return inst.inner;
+}
+
+function getContainerInHand() {
+  for (const inst of state.hand) {
+    if (isContainerCard(getDef(inst.definitionSlug))) return inst;
+  }
+  return null;
+}
+
+function buildDefaultSettingsMenu() {
+  return [
+    {
+      definitionSlug: "founders.language_settings",
+      instanceId: nextInstanceId(),
+      inner: [
+        { definitionSlug: "founders.lang_en", instanceId: nextInstanceId() },
+        { definitionSlug: "founders.lang_zh", instanceId: nextInstanceId() },
+      ],
+    },
+    { definitionSlug: "founders.fullscreen", instanceId: nextInstanceId() },
+    { definitionSlug: "founders.exit_fullscreen", instanceId: nextInstanceId() },
+    { definitionSlug: "founders.highlight_on", instanceId: nextInstanceId() },
+    { definitionSlug: "founders.highlight_off", instanceId: nextInstanceId() },
+    { definitionSlug: "founders.reset_world", instanceId: nextInstanceId() },
+  ];
+}
+
+function ensureSettingsMenuInner() {
+  const zones = [...state.hand, ...state.field];
+  for (const inst of zones) {
+    if (inst.definitionSlug !== "founders.settings") continue;
+    const inner = ensureInner(inst);
+    if (inner.some((i) => isSettingsMenuSlug(i.definitionSlug))) continue;
+    inst.inner = [...inner, ...buildDefaultSettingsMenu()];
+  }
 }
 
 function recallBackpackToHand(instanceId) {
@@ -474,44 +533,147 @@ function recallBackpackToHand(instanceId) {
   persistSave();
 }
 
-function pourBackpackFromHand(instanceId) {
+function pourContainerFromHand(instanceId) {
   const loc = findInstance(instanceId);
   if (!loc || loc.zone !== "hand") return false;
   const inst = loc.instance;
+  const def = getDef(inst.definitionSlug);
+  if (!isContainerCard(def) || state.field.length > 0) return false;
+
   const inner = ensureInner(inst);
-  if (state.field.length > 0 || inner.length === 0) return false;
-  for (const item of inner) {
-    item.zone = "field";
-    state.field.push(item);
+  const handOthers = state.hand.filter((i) => i.instanceId !== instanceId);
+  state.hand = state.hand.filter((i) => i.instanceId === instanceId);
+
+  if (isSettingsContainer(def)) {
+    const toPour = inner.filter((i) => isSettingsMenuSlug(i.definitionSlug));
+    if (!toPour.length) return false;
+    const keep = inner.filter((i) => !isSettingsMenuSlug(i.definitionSlug));
+    inst.inner = [...keep, ...handOthers];
+    for (const item of toPour) state.field.push(item);
+    if (!state.guideQueue.length) setHintTarget("founders.language_settings");
+  } else {
+    if (!inner.length) return false;
+    const toPour = [...inner];
+    inst.inner = [...handOthers];
+    for (const item of toPour) state.field.push(item);
   }
-  inst.inner = [];
+
   renderAll();
   persistSave();
   return true;
 }
 
-function closeBackpackFromHand(instanceId) {
+function collapseBackpackFromHand(instanceId) {
   const loc = findInstance(instanceId);
   if (!loc || loc.zone !== "hand") return;
   const inst = loc.instance;
   const inner = ensureInner(inst);
-  for (const card of state.field) {
-    inner.push(card);
-  }
+  for (const card of state.field) inner.push(card);
   state.field = [];
-  moveInstance(instanceId, "field");
-  for (const card of state.fieldStash) {
-    card.zone = "field";
-    state.field.push(card);
+  const restore = [...inner];
+  inst.inner = [];
+  for (const card of restore) {
+    if (card.instanceId !== instanceId) state.hand.push(card);
   }
+  for (const card of state.fieldStash) state.field.push(card);
   state.fieldStash = [];
   renderAll();
   persistSave();
 }
 
-function playBackpackFromHand(instanceId) {
-  if (pourBackpackFromHand(instanceId)) return;
-  closeBackpackFromHand(instanceId);
+function collapseSettingsMenu(settingsInst) {
+  const settingsInner = ensureInner(settingsInst);
+  const langIdx = state.hand.findIndex((i) => i.definitionSlug === "founders.language_settings");
+  if (langIdx >= 0) {
+    const langInst = state.hand[langIdx];
+    state.hand.splice(langIdx, 1);
+    const langInner = ensureInner(langInst);
+    const pullLang = (list) => {
+      for (const c of list) {
+        if (LANGUAGE_MENU_SLUGS.has(c.definitionSlug)) langInner.push(c);
+      }
+    };
+    pullLang(state.field);
+    pullLang(state.hand);
+    if (!settingsInner.some((i) => i.instanceId === langInst.instanceId)) {
+      settingsInner.push(langInst);
+    }
+  }
+
+  for (const c of state.field) {
+    if (isSettingsMenuSlug(c.definitionSlug)) settingsInner.push(c);
+  }
+  state.field = [];
+
+  const stash = settingsInner.filter((i) => !isSettingsMenuSlug(i.definitionSlug));
+  settingsInst.inner = settingsInner.filter((i) => isSettingsMenuSlug(i.definitionSlug));
+  for (const c of stash) {
+    if (c.instanceId !== settingsInst.instanceId) state.hand.push(c);
+  }
+
+  renderAll();
+  persistSave();
+}
+
+function collapseContainerFromHand(instanceId) {
+  const loc = findInstance(instanceId);
+  if (!loc || loc.zone !== "hand") return;
+  const def = getDef(loc.instance.definitionSlug);
+  if (isSettingsContainer(def)) collapseSettingsMenu(loc.instance);
+  else collapseBackpackFromHand(instanceId);
+}
+
+function playContainerFromHand(instanceId) {
+  if (pourContainerFromHand(instanceId)) return;
+  collapseContainerFromHand(instanceId);
+}
+
+function openLanguageSubmenu(settingsInst, langMenuInst) {
+  state.field = state.field.filter((i) => i.instanceId !== langMenuInst.instanceId);
+  const settingsInner = ensureInner(settingsInst);
+  const fieldRemainder = [...state.field];
+  for (const c of fieldRemainder) {
+    if (isSettingsMenuSlug(c.definitionSlug)) settingsInner.push(c);
+  }
+  state.field = [];
+  if (!state.hand.some((i) => i.instanceId === langMenuInst.instanceId)) {
+    state.hand.push(langMenuInst);
+  }
+  const langInner = ensureInner(langMenuInst);
+  const toPour = langInner.filter((i) => LANGUAGE_MENU_SLUGS.has(i.definitionSlug));
+  langMenuInst.inner = langInner.filter((i) => !LANGUAGE_MENU_SLUGS.has(i.definitionSlug));
+  for (const item of toPour) state.field.push(item);
+  if (!state.guideQueue.length) setHintTarget("founders.lang_zh");
+  renderAll();
+  persistSave();
+}
+
+function selectOptionFromField(instanceId) {
+  const loc = findInstance(instanceId);
+  if (!loc || loc.zone !== "field") return;
+  const child = loc.instance;
+  const container = getContainerInHand();
+  if (!container) {
+    moveInstance(instanceId, "hand");
+    return;
+  }
+
+  if (
+    child.definitionSlug === "founders.language_settings" &&
+    container.definitionSlug === "founders.settings"
+  ) {
+    openLanguageSubmenu(container, child);
+    return;
+  }
+
+  moveInstance(instanceId, "hand");
+  const programId = resolveInstance(child).programs?.on_play;
+  if (programId) runPlayEffects(programId, instanceId);
+
+  if (container.definitionSlug === "founders.settings") {
+    collapseSettingsMenu(container);
+    advanceGuide(child.definitionSlug);
+  }
 }
 
 function handleZoneDrop(instanceId, fromZone, toZone) {
@@ -521,14 +683,15 @@ function handleZoneDrop(instanceId, fromZone, toZone) {
   const def = getDef(loc.instance.definitionSlug);
 
   if (fromZone === "field" && toZone === "hand") {
-    if (isBackpack(def)) recallBackpackToHand(instanceId);
+    if (isBackpack(def) && loc.zone === "field") recallBackpackToHand(instanceId);
+    else if (getContainerInHand()) selectOptionFromField(instanceId);
     else moveInstance(instanceId, "hand");
     return;
   }
 
   if (fromZone === "hand" && toZone === "field") {
-    if (isBackpack(def)) {
-      playBackpackFromHand(instanceId);
+    if (isContainerCard(def)) {
+      playContainerFromHand(instanceId);
       tryAutoFullscreen();
       return;
     }
@@ -557,8 +720,6 @@ function runPlayEffects(programId, instanceId) {
   if (programId === "world.bootstrap") {
     state.bootstrapDone = true;
     if (!state.guideQueue.length) setHintTarget("founders.settings");
-  } else if (programId === "settings.open") {
-    if (!state.guideQueue.length) setHintTarget("founders.language_settings");
   } else if (programId === "language.open") {
     if (!state.guideQueue.length) setHintTarget("founders.lang_zh");
   } else if (programId === "language.set_zh" || programId === "language.set_en") {
@@ -587,7 +748,11 @@ function playFromHand(instanceId) {
   const loc = findInstance(instanceId);
   if (!loc || loc.zone !== "hand") return;
   const def = getDef(loc.instance.definitionSlug);
-  if (isBackpack(def)) return;
+  if (isContainerCard(def)) {
+    playContainerFromHand(instanceId);
+    tryAutoFullscreen();
+    return;
+  }
   const style = playStyle(def);
   const programId = resolveInstance(loc.instance).programs?.on_play;
 
@@ -615,6 +780,7 @@ function recallFieldToHand(instanceId) {
   if (!loc || loc.zone !== "field") return;
   const def = getDef(loc.instance.definitionSlug);
   if (isBackpack(def)) recallBackpackToHand(instanceId);
+  else if (getContainerInHand()) selectOptionFromField(instanceId);
   else moveInstance(instanceId, "hand");
 }
 
@@ -2403,6 +2569,7 @@ async function init() {
     migrateExitRemovedScenesIfNeeded();
     migrateMissingStarterCardsIfNeeded();
     migrateWorldLayoutIfNeeded();
+    ensureSettingsMenuInner();
     updateSceneChrome();
     renderAll();
     persistSave();

@@ -10,39 +10,39 @@
     },
     "settings": {
       "title": "Settings",
-      "text": "Double-tap or drag to Field — language settings and reset only."
+      "text": "Drag to Field — other hand cards stash inside; options pour onto Field. Drag an option to Hand to select. Drag Settings to Field again to close."
     },
     "fullscreen": {
       "title": "Fullscreen",
-      "text": "Drag to Field — enter fullscreen."
+      "text": "Drag to Hand — enter fullscreen."
     },
     "exit_fullscreen": {
       "title": "Exit Fullscreen",
-      "text": "Drag to Field — leave fullscreen."
+      "text": "Drag to Hand — leave fullscreen."
     },
     "language_settings": {
       "title": "Language Settings",
-      "text": "Drag to Field — get language cards in Hand."
+      "text": "While Settings is open: drag to Hand — English / 中文 appear on Field."
     },
     "lang_en": {
       "title": "English",
-      "text": "Drag to Field — UI and cards in English."
+      "text": "Drag to Hand — switch UI and cards to English."
     },
     "lang_zh": {
       "title": "中文",
-      "text": "Drag to Field — display in Chinese."
+      "text": "拖入手牌 — 切换为中文界面与卡牌文案。"
     },
     "highlight_on": {
       "title": "Highlight On",
-      "text": "Drag to Field — show play hints on key cards."
+      "text": "Drag to Hand — show play hints on key cards."
     },
     "highlight_off": {
       "title": "Highlight Off",
-      "text": "Drag to Field — hide play hints."
+      "text": "Drag to Hand — hide play hints."
     },
     "reset_world": {
       "title": "Reset Cards",
-      "text": "Drag to Field — restore starter world and clear save."
+      "text": "Drag to Hand — restore starter world and clear save."
     },
     "world_controller": {
       "title": "World Controller",
@@ -50,11 +50,11 @@
     },
     "backpack": {
       "title": "Backpack",
-      "text": "Recall to hand: field clears. Play to field: pour items, then close to restore."
+      "text": "Stays in Hand. Drag to Field — pour contents (other hand cards stash inside). Drag an item to Hand to take it. Drag Backpack to Field again to close and restore the scene."
     },
     "starter_deck": {
       "title": "Backpack",
-      "text": "Recall to hand: field clears. Play to field: pour items, then close to restore."
+      "text": "Stays in Hand. Drag to Field — pour contents (other hand cards stash inside). Drag an item to Hand to take it. Drag Backpack to Field again to close and restore the scene."
     },
     "door": {
       "title": "Door",

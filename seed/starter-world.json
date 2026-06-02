@@ -1,9 +1,24 @@
 {
-  "version": "0.11.0",
+  "version": "0.12.0",
   "hand": [
     {
       "definitionSlug": "founders.settings",
-      "instanceId": "inst_settings_1"
+      "instanceId": "inst_settings_1",
+      "inner": [
+        {
+          "definitionSlug": "founders.language_settings",
+          "instanceId": "inst_lang_menu_1",
+          "inner": [
+            { "definitionSlug": "founders.lang_en", "instanceId": "inst_lang_en_1" },
+            { "definitionSlug": "founders.lang_zh", "instanceId": "inst_lang_zh_1" }
+          ]
+        },
+        { "definitionSlug": "founders.fullscreen", "instanceId": "inst_fs_1" },
+        { "definitionSlug": "founders.exit_fullscreen", "instanceId": "inst_exit_fs_1" },
+        { "definitionSlug": "founders.highlight_on", "instanceId": "inst_hl_on_1" },
+        { "definitionSlug": "founders.highlight_off", "instanceId": "inst_hl_off_1" },
+        { "definitionSlug": "founders.reset_world", "instanceId": "inst_reset_1" }
+      ]
     },
     {
       "definitionSlug": "seed.starter_deck",

@@ -8,7 +8,7 @@
       "titleKey": "cards.backpack",
       "textKey": "cards.backpack",
       "title": "Backpack",
-      "text": "Drag to hand to clear the field. Drag to field to pour or close.",
+      "text": "Drag to Field — pour contents (other hand cards stashed inside). Drag an item to Hand to take it. Drag to Field again to close.",
       "tags": [
         "container",
         "deck"
@@ -109,13 +109,11 @@
       "titleKey": "cards.settings",
       "textKey": "cards.settings",
       "title": "Settings",
-      "text": "Open settings.",
+      "text": "Drag to Field — pour options. Drag an option to Hand to select.",
       "tags": [
-        "settings"
+        "settings",
+        "container"
       ],
-      "programs": {
-        "on_play": "settings.open"
-      },
       "image": {
         "type": "pixel/v1",
         "w": 8,
@@ -209,13 +207,10 @@
       "titleKey": "cards.language_settings",
       "textKey": "cards.language_settings",
       "title": "Language Settings",
-      "text": "Languages.",
+      "text": "Drag to Hand — pour language choices on Field.",
       "tags": [
         "settings"
       ],
-      "programs": {
-        "on_play": "language.open"
-      },
       "image": {
         "type": "pixel/v1",
         "w": 8,

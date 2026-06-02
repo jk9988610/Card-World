@@ -1,14 +1,5 @@
 {
   "id": "settings.open",
   "entry": "n0",
-  "nodes": [
-    {
-      "id": "n0",
-      "op": "deal",
-      "params": {
-        "toZone": "hand",
-        "cards": ["founders.language_settings", "founders.reset_world"]
-      }
-    }
-  ]
+  "nodes": [{ "id": "n0", "op": "sequence", "children": [] }]
 }
