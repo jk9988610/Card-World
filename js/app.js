@@ -431,9 +431,9 @@ function drawCardSwatch(canvas, tags, large = false, pixelImage = null) {
     canvas.style.height = "100%";
     const ctx = canvas.getContext("2d");
     if (pixelImage?.type === "pixel/v1") {
-      drawPixelImage(ctx, pixelImage, w, h, { fit: true, background: "#e9ecef" });
+      drawPixelImage(ctx, pixelImage, w, h, { fit: true, background: "#000000" });
     } else {
-      ctx.fillStyle = swatchColor(tags);
+      ctx.fillStyle = "#000000";
       ctx.fillRect(0, 0, w, h);
     }
   };
@@ -528,6 +528,13 @@ function getOpenContainerOnField() {
 
 function isContainerOpen() {
   return !!getOpenContainerOnField();
+}
+
+/** Backpack open: field is logically active but must not render any field cards. */
+function isBackpackOpen() {
+  const open = getOpenContainerOnField();
+  if (!open) return false;
+  return isBackpack(getDef(open.definitionSlug));
 }
 
 function findContainerInHand() {
@@ -2461,15 +2468,26 @@ function buildCardEl(inst, zone, opts = {}) {
 
 function renderAll() {
   if (pointerDrag?.active || dragGhost) abortPointerDrag();
+  const backpackOpen = isBackpackOpen();
   document.body.classList.toggle("container-open", isContainerOpen());
-  renderZone("field", els.field, state.field);
-  renderZone("hand", els.hand, state.hand);
+  document.body.classList.toggle("backpack-open", backpackOpen);
+
+  const fieldInstances = backpackOpen ? [] : state.field;
+  const handInstances = backpackOpen && state.field[0] ? [...state.hand, state.field[0]] : state.hand;
+  const handZoneOverrides = {};
+  if (backpackOpen && state.field[0]) {
+    handZoneOverrides[state.field[0].instanceId] = "field";
+  }
+
+  renderZone("field", els.field, fieldInstances);
+  renderZone("hand", els.hand, handInstances, handZoneOverrides);
 }
 
-function renderZone(zoneName, container, instances) {
+function renderZone(zoneName, container, instances, zoneOverrides = {}) {
   container.innerHTML = "";
   for (const inst of instances) {
-    container.appendChild(buildCardEl(inst, zoneName));
+    const dragZone = zoneOverrides[inst.instanceId] ?? zoneName;
+    container.appendChild(buildCardEl(inst, dragZone));
   }
 }
 
