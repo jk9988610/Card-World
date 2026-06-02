@@ -4,7 +4,7 @@ import { clearSave, loadSave, writeSave } from "./storage.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.6.9";
+const APP_VERSION = "0.7.0";
 
 const DOUBLE_TAP_MS = 450;
 const DOUBLE_TAP_MAX_PX = 18;
@@ -64,12 +64,18 @@ const ART_PALETTE = [
   "#ff922b",
 ];
 
+const ART_BG = "#1a1a2e";
+const ART_GRID_W = 32;
+const ART_GRID_H = 32;
+
 const artEditor = {
   open: false,
-  w: 8,
-  h: 8,
-  pixels: new Array(64).fill(0),
-  colorIndex: 2,
+  w: ART_GRID_W,
+  h: ART_GRID_H,
+  grid: [],
+  brushColor: "#e03131",
+  tool: "brush",
+  painting: false,
 };
 let currentLocale = "en";
 
@@ -106,12 +112,16 @@ const els = {
   sceneBar: document.getElementById("scene-bar"),
   sceneTitle: document.getElementById("scene-title"),
   artEditor: document.getElementById("art-editor"),
-  artEditorBackdrop: document.getElementById("art-editor-backdrop"),
   artEditorClose: document.getElementById("art-editor-close"),
   artEditorTitle: document.getElementById("art-editor-title"),
   artEditorHint: document.getElementById("art-editor-hint"),
+  artEditorTools: document.getElementById("art-editor-tools"),
   artPixelCanvas: document.getElementById("art-pixel-canvas"),
   artPalette: document.getElementById("art-palette"),
+  artColorPicker: document.getElementById("art-color-picker"),
+  artColorHex: document.getElementById("art-color-hex"),
+  artColorApply: document.getElementById("art-color-apply"),
+  artBrushPreview: document.getElementById("art-brush-preview"),
   artExportBtn: document.getElementById("art-export-btn"),
   appVersion: document.getElementById("app-version"),
 };
@@ -470,21 +480,22 @@ function playFromHand(instanceId) {
   persistSave();
 }
 
-function playFromField(instanceId) {
+function recallFieldToHand(instanceId) {
   const loc = findInstance(instanceId);
   if (!loc || loc.zone !== "field") return;
   const def = getDef(loc.instance.definitionSlug);
-  if (isBackpack(def)) return;
-  runCardPlay(instanceId, "field");
+  if (isBackpack(def)) recallBackpackToHand(instanceId);
+  else moveInstance(instanceId, "hand");
 }
 
 function clearLastCardTap() {
   lastCardTap = { instanceId: null, zone: null, at: 0, x: 0, y: 0 };
 }
 
+/** Hand double-tap: play. Field double-tap: recall to hand (same as drag Field→Hand). */
 function playCard(instanceId, zone) {
   if (zone === "hand") playFromHand(instanceId);
-  else if (zone === "field") playFromField(instanceId);
+  else if (zone === "field") recallFieldToHand(instanceId);
 }
 
 function tryDoubleTapPlay(inst, zone, clientX, clientY) {
@@ -600,80 +611,206 @@ function popScene() {
   persistSave();
 }
 
+function initArtGrid(fillColor = ART_BG) {
+  artEditor.grid = new Array(artEditor.w * artEditor.h).fill(fillColor);
+}
+
+function normalizeHex(raw) {
+  if (!raw) return ART_BG;
+  let s = String(raw).trim().toLowerCase();
+  if (!s.startsWith("#")) s = `#${s}`;
+  if (/^#[0-9a-f]{3}$/.test(s)) {
+    s = `#${s[1]}${s[1]}${s[2]}${s[2]}${s[3]}${s[3]}`;
+  }
+  return /^#[0-9a-f]{6}$/.test(s) ? s : ART_BG;
+}
+
+function setArtBrushColor(hex) {
+  artEditor.brushColor = normalizeHex(hex);
+  if (els.artColorPicker) els.artColorPicker.value = artEditor.brushColor;
+  if (els.artColorHex) els.artColorHex.value = artEditor.brushColor;
+  if (els.artBrushPreview) els.artBrushPreview.style.background = artEditor.brushColor;
+  rebuildArtPaletteUI();
+}
+
 function artPixelImageFromEditor() {
+  const colorToIndex = new Map();
+  colorToIndex.set(ART_BG, 0);
+  let next = 1;
+  const pixels = artEditor.grid.map((hex) => {
+    const c = normalizeHex(hex);
+    if (!colorToIndex.has(c)) colorToIndex.set(c, next++);
+    return colorToIndex.get(c);
+  });
+  const palette = new Array(colorToIndex.size);
+  for (const [hex, i] of colorToIndex) palette[i] = hex;
   return {
     type: "pixel/v1",
     w: artEditor.w,
     h: artEditor.h,
-    palette: [...ART_PALETTE],
-    pixels: [...artEditor.pixels],
+    palette,
+    pixels,
   };
 }
 
-function paintArtPixel(cellX, cellY) {
+function cellFromArtEvent(e) {
+  const canvas = els.artPixelCanvas;
+  if (!canvas) return null;
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor(((e.clientX - rect.left) / rect.width) * artEditor.w);
+  const y = Math.floor(((e.clientY - rect.top) / rect.height) * artEditor.h);
+  if (x < 0 || y < 0 || x >= artEditor.w || y >= artEditor.h) return null;
+  return { x, y };
+}
+
+function floodFillArt(startX, startY, fillColor) {
+  const i0 = startY * artEditor.w + startX;
+  const target = artEditor.grid[i0];
+  const fill = normalizeHex(fillColor);
+  if (target === fill) return;
+  const stack = [[startX, startY]];
+  const seen = new Set();
+  while (stack.length) {
+    const [x, y] = stack.pop();
+    const key = `${x},${y}`;
+    if (seen.has(key)) continue;
+    if (x < 0 || y < 0 || x >= artEditor.w || y >= artEditor.h) continue;
+    const i = y * artEditor.w + x;
+    if (artEditor.grid[i] !== target) continue;
+    seen.add(key);
+    artEditor.grid[i] = fill;
+    stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+  }
+}
+
+function applyArtToolAt(cellX, cellY) {
   if (cellX < 0 || cellY < 0 || cellX >= artEditor.w || cellY >= artEditor.h) return;
-  artEditor.pixels[cellY * artEditor.w + cellX] = artEditor.colorIndex;
+  const i = cellY * artEditor.w + cellX;
+  switch (artEditor.tool) {
+    case "eraser":
+      artEditor.grid[i] = ART_BG;
+      break;
+    case "fill":
+      floodFillArt(cellX, cellY, artEditor.brushColor);
+      break;
+    case "picker": {
+      const picked = artEditor.grid[i] || ART_BG;
+      setArtBrushColor(picked);
+      artEditor.tool = "brush";
+      updateArtToolUI();
+      showBrushColorFlash();
+      break;
+    }
+    default:
+      artEditor.grid[i] = artEditor.brushColor;
+      break;
+  }
   redrawArtPixelCanvas();
 }
 
 function redrawArtPixelCanvas() {
   const canvas = els.artPixelCanvas;
   if (!canvas) return;
+  canvas.width = artEditor.w;
+  canvas.height = artEditor.h;
   const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, artEditor.w, artEditor.h);
-  drawPixelImage(ctx, artPixelImageFromEditor(), artEditor.w, artEditor.h);
+  for (let y = 0; y < artEditor.h; y++) {
+    for (let x = 0; x < artEditor.w; x++) {
+      ctx.fillStyle = artEditor.grid[y * artEditor.w + x] || ART_BG;
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
 }
 
 function rebuildArtPaletteUI() {
   if (!els.artPalette) return;
   els.artPalette.innerHTML = "";
-  ART_PALETTE.forEach((hex, i) => {
+  ART_PALETTE.forEach((hex) => {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = `art-palette-swatch${i === artEditor.colorIndex ? " active" : ""}`;
+    const active = normalizeHex(hex) === normalizeHex(artEditor.brushColor);
+    btn.className = `art-palette-swatch${active ? " active" : ""}`;
     btn.style.background = hex;
     btn.title = hex;
-    btn.addEventListener("click", () => {
-      artEditor.colorIndex = i;
-      rebuildArtPaletteUI();
-    });
+    btn.addEventListener("click", () => setArtBrushColor(hex));
     els.artPalette.appendChild(btn);
   });
 }
 
-function openArtEditor() {
+function updateArtToolUI() {
+  if (!els.artEditorTools) return;
+  for (const btn of els.artEditorTools.querySelectorAll(".art-tool-btn")) {
+    btn.classList.toggle("active", btn.dataset.tool === artEditor.tool);
+  }
+}
+
+function rebuildArtToolUI() {
+  if (!els.artEditorTools) return;
+  const t = locales[currentLocale]?.art_editor || locales.en?.art_editor || {};
+  const labels = t.tools || {};
+  els.artEditorTools.innerHTML = "";
+  for (const tool of ["brush", "eraser", "fill", "picker"]) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "art-tool-btn";
+    btn.dataset.tool = tool;
+    btn.textContent = labels[tool] || tool;
+    btn.addEventListener("click", () => {
+      artEditor.tool = tool;
+      updateArtToolUI();
+    });
+    els.artEditorTools.appendChild(btn);
+  }
+  updateArtToolUI();
+}
+
+async function openArtEditor() {
   artEditor.open = true;
-  artEditor.pixels = new Array(64).fill(0);
-  artEditor.colorIndex = 2;
+  artEditor.tool = "brush";
+  initArtGrid(ART_BG);
+  setArtBrushColor(artEditor.brushColor || "#e03131");
   const t = locales[currentLocale]?.art_editor || locales.en?.art_editor || {};
   if (els.artEditorTitle) els.artEditorTitle.textContent = t.title || "Pixel Board";
   if (els.artEditorHint) els.artEditorHint.textContent = t.hint || "";
   if (els.artExportBtn) els.artExportBtn.textContent = t.export || "Export work card";
-  rebuildArtPaletteUI();
+  if (els.artColorApply) els.artColorApply.textContent = t.apply_color || "Apply";
+  rebuildArtToolUI();
   redrawArtPixelCanvas();
+  document.body.classList.add("art-editor-open");
   els.artEditor?.classList.remove("hidden");
+  els.artEditor?.setAttribute("aria-hidden", "false");
+  try {
+    await document.documentElement.requestFullscreen();
+  } catch (_) {}
+  tryAutoFullscreen();
 }
 
-function closeArtEditor() {
+async function closeArtEditor() {
   artEditor.open = false;
+  artEditor.painting = false;
+  document.body.classList.remove("art-editor-open");
   els.artEditor?.classList.add("hidden");
+  els.artEditor?.setAttribute("aria-hidden", "true");
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+  } catch (_) {}
 }
 
 function brushPalettePreviewImage() {
-  const idx = artEditor.colorIndex % ART_PALETTE.length;
+  const hex = normalizeHex(artEditor.brushColor);
   return {
     type: "pixel/v1",
     w: 8,
     h: 8,
-    palette: ART_PALETTE,
-    pixels: new Array(64).fill(idx),
+    palette: [ART_BG, hex],
+    pixels: new Array(64).fill(1),
   };
 }
 
 let brushFlashTimer = null;
 
 function showBrushColorFlash() {
-  const hex = ART_PALETTE[artEditor.colorIndex];
+  const hex = normalizeHex(artEditor.brushColor);
   let el = document.getElementById("brush-color-flash");
   if (!el) {
     el = document.createElement("div");
@@ -696,10 +833,12 @@ function showBrushColorFlash() {
 }
 
 function cycleArtPalette() {
-  artEditor.colorIndex = (artEditor.colorIndex + 1) % ART_PALETTE.length;
-  rebuildArtPaletteUI();
-  if (artEditor.open) redrawArtPixelCanvas();
+  const presets = ART_PALETTE;
+  let idx = presets.findIndex((h) => normalizeHex(h) === normalizeHex(artEditor.brushColor));
+  if (idx < 0) idx = 0;
+  setArtBrushColor(presets[(idx + 1) % presets.length]);
   showBrushColorFlash();
+  if (artEditor.open) redrawArtPixelCanvas();
   renderAll();
 }
 
@@ -724,32 +863,50 @@ function setupArtEditor() {
   const canvas = els.artPixelCanvas;
   if (!canvas) return;
 
-  const paintAtEvent = (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * artEditor.w;
-    const y = ((e.clientY - rect.top) / rect.height) * artEditor.h;
-    paintArtPixel(Math.floor(x), Math.floor(y));
+  const strokeAtEvent = (e) => {
+    const cell = cellFromArtEvent(e);
+    if (!cell) return;
+    applyArtToolAt(cell.x, cell.y);
   };
 
   canvas.addEventListener("pointerdown", (e) => {
     e.preventDefault();
+    artEditor.painting = true;
     canvas.setPointerCapture(e.pointerId);
-    paintAtEvent(e);
+    strokeAtEvent(e);
   });
   canvas.addEventListener("pointermove", (e) => {
-    if (!canvas.hasPointerCapture(e.pointerId)) return;
+    if (!artEditor.painting || !canvas.hasPointerCapture(e.pointerId)) return;
     e.preventDefault();
-    paintAtEvent(e);
+    if (artEditor.tool === "brush" || artEditor.tool === "eraser") strokeAtEvent(e);
   });
   canvas.addEventListener("pointerup", (e) => {
+    artEditor.painting = false;
     try {
       canvas.releasePointerCapture(e.pointerId);
     } catch (_) {}
   });
+  canvas.addEventListener("pointercancel", () => {
+    artEditor.painting = false;
+  });
 
-  els.artEditorClose?.addEventListener("click", closeArtEditor);
-  els.artEditorBackdrop?.addEventListener("click", closeArtEditor);
+  els.artEditorClose?.addEventListener("click", () => closeArtEditor());
   els.artExportBtn?.addEventListener("click", exportArtWork);
+
+  els.artColorPicker?.addEventListener("input", (e) => {
+    setArtBrushColor(e.target.value);
+  });
+  els.artColorHex?.addEventListener("change", () => {
+    setArtBrushColor(els.artColorHex.value);
+  });
+  els.artColorApply?.addEventListener("click", () => {
+    setArtBrushColor(els.artColorHex?.value || artEditor.brushColor);
+    showBrushColorFlash();
+  });
+
+  document.addEventListener("fullscreenchange", () => {
+    if (!document.fullscreenElement && artEditor.open) closeArtEditor();
+  });
 }
 
 function resetWorld() {
@@ -1108,6 +1265,12 @@ function setLocale(code) {
   if (!locales[code]) return;
   currentLocale = code;
   applyZoneLabels();
+  if (artEditor.open) {
+    const t = locales[currentLocale]?.art_editor || locales.en?.art_editor || {};
+    if (els.artEditorHint) els.artEditorHint.textContent = t.hint || "";
+    if (els.artColorApply) els.artColorApply.textContent = t.apply_color || "Apply";
+    rebuildArtToolUI();
+  }
   renderAll();
   persistSave();
   if (els.zoom && !els.zoom.classList.contains("hidden")) {

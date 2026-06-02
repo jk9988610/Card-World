@@ -6,7 +6,7 @@
   "cards": {
     "tutorial": {
       "title": "Tutorial",
-      "text": "DOUBLE-TAP to play, or drag Hand→Field (both work).\nSingle tap does nothing.\nDrag Field→Hand to take back."
+      "text": "Hand: double-tap or drag to Field to play.\nField: double-tap or drag to Hand to recall.\nSingle tap does nothing."
     },
     "settings": {
       "title": "Settings",
@@ -98,11 +98,11 @@
     },
     "art_tool_pixel": {
       "title": "Pixel Board",
-      "text": "Double-tap — open the 8×8 pixel editor."
+      "text": "Recall to Hand, double-tap — fullscreen 32×32 editor with tools and RGB."
     },
     "art_tool_palette": {
       "title": "Palette",
-      "text": "Double-tap or drag to Field — cycle brush; card + flash show the color."
+      "text": "Recall to Hand, then double-tap to cycle color. Or pick RGB in the editor."
     },
     "art_tool_export": {
       "title": "Export Work",
@@ -120,7 +120,14 @@
   },
   "art_editor": {
     "title": "Pixel Board",
-    "hint": "Tap cells to paint. Pick a color, then drag to draw.",
-    "export": "Export work card"
+    "hint": "Brush, eraser, fill, eyedropper. Presets or custom RGB. Canvas fills the screen; auto fullscreen.",
+    "export": "Export work card",
+    "apply_color": "Apply",
+    "tools": {
+      "brush": "Brush",
+      "eraser": "Eraser",
+      "fill": "Fill",
+      "picker": "Pick"
+    }
   }
 }
