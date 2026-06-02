@@ -36,6 +36,10 @@
       "title": "高亮关闭",
       "text": "拖到场 — 关闭打出提示。"
     },
+    "reset_world": {
+      "title": "重置卡牌",
+      "text": "拖到场 — 恢复开局场面并清除存档。"
+    },
     "world_controller": {
       "title": "世界控制器",
       "text": "拖到场 — 启动世界。"

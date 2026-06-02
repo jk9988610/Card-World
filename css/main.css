@@ -85,6 +85,7 @@ body {
   display: flex;
   flex-direction: column;
   cursor: grab;
+  touch-action: none;
   user-select: none;
   color: #212529;
   box-shadow: calc(2px * var(--card-scale)) calc(4px * var(--card-scale)) calc(10px * var(--card-scale))
@@ -216,6 +217,34 @@ body {
 
 .card-zoom-slot .card-text {
   font-size: 0.95rem;
+}
+
+.card.dragging-source {
+  opacity: 0.35;
+}
+
+.drag-ghost {
+  position: fixed;
+  z-index: 300;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  opacity: 0.94;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+}
+
+body.card-dragging {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body.card-dragging .zone-hand {
+  overflow: hidden;
+}
+
+.zone-hand.zone-drop-target,
+.zone-field.zone-drop-target {
+  outline: 3px dashed #4dabf7;
+  outline-offset: -3px;
 }
 
 /* Fullscreen: hand zone +50% taller (2:1 -> 2:1.5) */

@@ -1,10 +1,13 @@
-import { loadSave, writeSave } from "./storage.js";
+import { clearSave, loadSave, writeSave } from "./storage.js";
 
 /**
- * Card World — tap zoom | drag play | backpack pour/close flow
+ * Card World — tap zoom | pointer drag | backpack pour/close flow
  */
 
-const APP_VERSION = "0.5.0";
+const APP_VERSION = "0.5.2";
+const DRAG_START_PX = 2;
+const TAP_MAX_PX = 12;
+const TAP_MAX_MS = 450;
 
 const SWATCH_BY_TAG = [
   ["programming", "#6f42c1"],
@@ -38,6 +41,9 @@ const state = {
 
 let instanceCounter = 0;
 let drag = null;
+let pointerDrag = null;
+let dragGhost = null;
+let starterSnapshot = null;
 let fullscreenTried = false;
 
 const els = {
@@ -356,6 +362,144 @@ function setHintTarget(slug) {
   state.hintTarget = slug || null;
 }
 
+function cloneInstList(list) {
+  return list.map((i) => ({
+    ...i,
+    inner: i.inner ? i.inner.map((c) => ({ ...c })) : undefined,
+  }));
+}
+
+function captureStarterSnapshot() {
+  starterSnapshot = {
+    hand: cloneInstList(state.hand),
+    field: cloneInstList(state.field),
+  };
+}
+
+function resetWorld() {
+  if (!starterSnapshot) return;
+  closeZoom();
+  clearSave();
+  state.bootstrapDone = false;
+  state.highlightOn = true;
+  state.hintTarget = "founders.world_controller";
+  state.guideQueue = [];
+  state.guideIndex = 0;
+  state.hand = cloneInstList(starterSnapshot.hand);
+  state.field = cloneInstList(starterSnapshot.field);
+  state.fieldStash = [];
+  instanceCounter = 0;
+  for (const inst of [...state.hand, ...state.field]) bumpCounterFromInst(inst);
+  renderAll();
+  persistSave();
+}
+
+function zoneAtPoint(clientX, clientY) {
+  const el = document.elementFromPoint(clientX, clientY);
+  if (!el) return null;
+  if (els.zoneHand.contains(el)) return "hand";
+  if (els.zoneField.contains(el)) return "field";
+  return null;
+}
+
+function highlightDropZone(zone) {
+  const from = pointerDrag?.from;
+  els.zoneHand.classList.toggle("zone-drop-target", zone === "hand" && from !== "hand");
+  els.zoneField.classList.toggle("zone-drop-target", zone === "field" && from !== "field");
+}
+
+function clearDropHighlight() {
+  els.zoneHand.classList.remove("zone-drop-target");
+  els.zoneField.classList.remove("zone-drop-target");
+}
+
+function beginPointerDrag(clientX, clientY) {
+  if (!pointerDrag) return;
+  pointerDrag.active = true;
+  drag = { id: pointerDrag.id, from: pointerDrag.from, moved: false };
+  const loc = findInstance(pointerDrag.id);
+  if (!loc) return;
+  dragGhost = buildCardEl(loc.instance, pointerDrag.from);
+  dragGhost.classList.add("drag-ghost");
+  dragGhost.style.left = `${clientX}px`;
+  dragGhost.style.top = `${clientY}px`;
+  document.body.appendChild(dragGhost);
+  pointerDrag.sourceEl.classList.add("dragging-source");
+  document.body.classList.add("card-dragging");
+}
+
+function movePointerDrag(clientX, clientY) {
+  if (!dragGhost) return;
+  dragGhost.style.left = `${clientX}px`;
+  dragGhost.style.top = `${clientY}px`;
+  highlightDropZone(zoneAtPoint(clientX, clientY));
+}
+
+function endPointerDragVisual() {
+  dragGhost?.remove();
+  dragGhost = null;
+  pointerDrag?.sourceEl?.classList.remove("dragging-source");
+  document.body.classList.remove("card-dragging");
+  clearDropHighlight();
+  setTimeout(() => {
+    drag = null;
+  }, 50);
+}
+
+function setupCardPointer(el, inst, zone) {
+  el.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    e.preventDefault();
+    pointerDrag = {
+      id: inst.instanceId,
+      from: zone,
+      startX: e.clientX,
+      startY: e.clientY,
+      active: false,
+      pointerId: e.pointerId,
+      startedAt: Date.now(),
+      sourceEl: el,
+    };
+    el.setPointerCapture(e.pointerId);
+  });
+
+  el.addEventListener("pointermove", (e) => {
+    if (!pointerDrag || pointerDrag.pointerId !== e.pointerId) return;
+    const dist = Math.hypot(e.clientX - pointerDrag.startX, e.clientY - pointerDrag.startY);
+    if (!pointerDrag.active && dist >= DRAG_START_PX) {
+      beginPointerDrag(e.clientX, e.clientY);
+    }
+    if (pointerDrag.active) {
+      movePointerDrag(e.clientX, e.clientY);
+    }
+  });
+
+  const finishPointer = (e) => {
+    if (!pointerDrag || pointerDrag.pointerId !== e.pointerId) return;
+    try {
+      el.releasePointerCapture(e.pointerId);
+    } catch (_) {}
+    if (pointerDrag.active) {
+      const toZone = zoneAtPoint(e.clientX, e.clientY);
+      if (toZone && toZone !== pointerDrag.from) {
+        drag = { id: pointerDrag.id, from: pointerDrag.from, moved: true };
+        handleZoneDrop(pointerDrag.id, pointerDrag.from, toZone);
+      }
+      endPointerDragVisual();
+    } else {
+      const dist = Math.hypot(e.clientX - pointerDrag.startX, e.clientY - pointerDrag.startY);
+      const dt = Date.now() - pointerDrag.startedAt;
+      if (dist < TAP_MAX_PX && dt < TAP_MAX_MS) {
+        openZoom(inst);
+      }
+    }
+    pointerDrag = null;
+  };
+
+  el.addEventListener("pointerup", finishPointer);
+  el.addEventListener("pointercancel", finishPointer);
+}
+
 function shouldHint(slug, zone) {
   if (!state.highlightOn || zone !== "hand") return false;
   if (state.hintTarget && slug === state.hintTarget) return true;
@@ -375,17 +519,7 @@ function buildCardEl(inst, zone, opts = {}) {
   if (!forZoom && shouldHint(r.definitionSlug, zone)) el.classList.add("hint");
 
   if (!forZoom) {
-    el.draggable = true;
-    el.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (drag?.moved) return;
-      openZoom(inst);
-    });
-    el.addEventListener("dragstart", (e) => {
-      drag = { id: inst.instanceId, from: zone, moved: false };
-      e.dataTransfer.setData("text/plain", inst.instanceId);
-    });
-    el.addEventListener("dragend", () => setTimeout(() => { drag = null; }, 50));
+    setupCardPointer(el, inst, zone);
   }
 
   const title = document.createElement("div");
@@ -440,21 +574,6 @@ function moveInstance(id, toZone) {
   persistSave();
 }
 
-function setupDropZone(container, zoneName) {
-  container.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  });
-  container.addEventListener("drop", (e) => {
-    e.preventDefault();
-    const id = e.dataTransfer.getData("text/plain");
-    if (!id || !drag) return;
-    const from = drag.from;
-    drag.moved = true;
-    if (from === zoneName) return;
-    handleZoneDrop(id, from, zoneName);
-  });
-}
 
 function tryAutoFullscreen() {
   if (fullscreenTried) return;
@@ -562,6 +681,9 @@ function runProgram(programId, ctx) {
         renderAll();
         persistSave();
         break;
+      case "reset_world":
+        resetWorld();
+        break;
       default:
         break;
     }
@@ -622,14 +744,13 @@ function applyStarter(bundle) {
 }
 
 async function init() {
-  setupDropZone(els.zoneHand, "hand");
-  setupDropZone(els.zoneField, "field");
   els.zoomBackdrop.addEventListener("click", closeZoom);
 
   try {
     await loadLocales();
     const bundle = await loadBundle();
     applyStarter(bundle);
+    captureStarterSnapshot();
     applySaved(loadSave());
     renderAll();
     persistSave();

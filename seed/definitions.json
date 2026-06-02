@@ -458,6 +458,41 @@
       }
     },
     {
+      "slug": "founders.reset_world",
+      "localeKey": "reset_world",
+      "titleKey": "cards.reset_world",
+      "textKey": "cards.reset_world",
+      "title": "Reset Cards",
+      "text": "Play to restore the starter world and clear saved progress.",
+      "tags": [
+        "settings",
+        "reusable"
+      ],
+      "programs": {
+        "on_play": "action.reset_world"
+      },
+      "image": {
+        "type": "pixel/v1",
+        "w": 8,
+        "h": 8,
+        "palette": [
+          "#1a1a2e",
+          "#e03131",
+          "#ffd43b"
+        ],
+        "pixels": [
+          1,
+          0,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0
+        ]
+      }
+    },
+    {
       "slug": "founders.guide_weave_1",
       "localeKey": "guide_weave_1",
       "titleKey": "cards.guide_weave_1",

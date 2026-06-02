@@ -1,0 +1,5 @@
+{
+  "id": "action.reset_world",
+  "entry": "n0",
+  "nodes": [{ "id": "n0", "op": "reset_world", "label": "Reset to starter world" }]
+}

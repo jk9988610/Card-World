@@ -36,6 +36,10 @@
       "title": "Highlight Off",
       "text": "Drag to Field — hide play hints."
     },
+    "reset_world": {
+      "title": "Reset Cards",
+      "text": "Drag to Field — restore starter world and clear save."
+    },
     "world_controller": {
       "title": "World Controller",
       "text": "Drag to Field to bootstrap the world."
