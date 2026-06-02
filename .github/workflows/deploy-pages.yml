@@ -32,6 +32,9 @@ jobs:
         run: node tools/build-seed.mjs
 
       - name: Write version manifest
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
         run: node tools/write-version.mjs
 
       - name: Prepare site

@@ -20,8 +20,9 @@ let remoteVersion = null;
 let remoteBuild = null;
 
 function versionUrl() {
-  const base = location.pathname.replace(/\/[^/]*$/, "/");
-  return `${base}version.json?t=${Date.now()}`;
+  const url = new URL("version.json", document.baseURI || location.href);
+  url.searchParams.set("t", String(Date.now()));
+  return url.href;
 }
 
 export function getBundled() {
