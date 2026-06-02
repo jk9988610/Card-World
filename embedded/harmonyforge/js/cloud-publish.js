@@ -6,8 +6,13 @@ const CloudPublish = (() => {
     typeof window.HF_T === "function" ? window.HF_T(key, params) : key;
 
   const LS_SESSION = "harmonyforge-cloud-session";
+  /** Legacy session key from older embedded builds */
   const LS_SESSION_LEGACY = "beat-battle-cloud-session";
-  const LS_CLOUD_KEYS = ["cardworld-cloud-config", "beat-battle-cloud-config"];
+  const LS_CLOUD_KEYS = [
+    "cardworld-cloud-config",
+    /** @deprecated legacy config key */
+    "beat-battle-cloud-config",
+  ];
 
   const DEFAULT_CLOUD_CONFIG = {
     url: "https://yjqkotqmglxjhlrhynsu.supabase.co",
@@ -882,6 +887,3 @@ const CloudPublish = (() => {
     initUI,
   };
 })();
-
-/** @deprecated Use CloudPublish */
-const BeatBattleCloud = CloudPublish;

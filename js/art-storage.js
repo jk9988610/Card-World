@@ -1,5 +1,5 @@
 /**
- * Supabase art 桶：美术商店（对标 Beat-Battle 制作库 + audio 桶）
+ * Supabase art 桶：美术商店（云端作品库，与编曲发布共用 Supabase 项目）
  */
 import { ART_BUCKET, ART_STORE_PREFIX, isCloudEnabled } from "./cloud-config.js";
 import { shouldUseCloud } from "./net-policy.js";
