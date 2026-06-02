@@ -12,10 +12,10 @@ Card World is designed for **disconnected use**. Network is only needed when you
 | App update check | — | User taps **Update** |
 | Art shop upload / cloud gallery | — | **Cloud on** in top bar |
 
-## Top bar **Cloud**
+## Cloud (upload only)
 
-- **Cloud off** (default): no Supabase calls, no CDN SDK load.
-- **Cloud on**: uses vendored `vendor/supabase-js.mjs` and built-in Supabase project (same as before).
+- **Default**: cloud off — no Supabase calls.
+- **Upload / art shop**: cloud turns on automatically while online (no top-bar toggle).
 
 ## Technical notes
 

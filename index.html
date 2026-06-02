@@ -8,20 +8,19 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#0d1117" />
   <meta http-equiv="Cache-Control" content="no-cache" />
-  <meta name="cw-app-version" content="0.13.0" />
-  <meta name="cw-app-build" content="0.13.0" />
+  <meta name="cw-app-version" content="0.13.1" />
+  <meta name="cw-app-build" content="0.13.1" />
   <title>Card World</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="css/main.css?v=0.13.0" />
+  <link rel="stylesheet" href="css/main.css?v=0.13.1" />
 </head>
 <body>
   <header id="app-chrome" class="app-chrome" aria-label="App toolbar">
     <div class="app-chrome-brand">
-      <span class="app-chrome-title">Card World</span>
+      <span class="app-chrome-title" data-i18n="app_title">Card World</span>
       <span class="app-chrome-version">v<span class="app-version-value">—</span></span>
     </div>
     <div class="app-chrome-actions">
-      <button type="button" id="btn-cloud" class="chrome-btn" data-i18n="cloud_off" title="Cloud sync">Cloud</button>
       <button type="button" id="btn-logs" class="chrome-btn" data-i18n="view_logs">Logs</button>
       <button type="button" id="btn-copy-logs" class="chrome-btn" data-i18n="copy_logs">Copy logs</button>
       <button type="button" id="btn-clear-storage" class="chrome-btn" data-i18n="clear_storage">Clear save</button>
@@ -55,7 +54,7 @@
       <header class="art-editor-top">
         <span id="art-editor-title" class="art-editor-title"></span>
         <span id="art-draft-status" class="art-draft-status" aria-live="polite"></span>
-        <button type="button" id="art-editor-close" class="art-editor-btn art-editor-btn-icon" aria-label="Close">×</button>
+        <button type="button" id="art-editor-close" class="art-editor-btn art-editor-btn-icon" data-i18n-aria="close" aria-label="Close">×</button>
       </header>
       <div class="art-editor-toolbar" id="art-editor-tools" role="toolbar"></div>
       <div class="art-editor-toolbar art-editor-toolbar-secondary" id="art-editor-tools-extra" role="toolbar"></div>
@@ -64,7 +63,7 @@
       </div>
       <div class="art-editor-colors">
         <div class="art-rgb-picker-wrap">
-          <label class="art-rgb-label" id="art-rgb-label" for="art-color-picker">RGB</label>
+          <label class="art-rgb-label" id="art-rgb-label" for="art-color-picker" data-i18n="rgb_label">RGB</label>
           <input type="color" id="art-color-picker" value="#e03131" class="art-rgb-input" />
           <div id="art-brush-preview" class="art-brush-preview" title="Brush"></div>
         </div>
@@ -95,8 +94,8 @@
         <canvas id="art-export-preview" width="210" height="150"></canvas>
       </div>
       <div class="art-modal-actions">
-        <button type="button" id="art-export-cancel" class="art-editor-btn"></button>
-        <button type="button" id="art-export-confirm" class="art-editor-btn art-editor-btn-primary"></button>
+        <button type="button" id="art-export-cancel" class="art-editor-btn" data-i18n-export="cancel"></button>
+        <button type="button" id="art-export-confirm" class="art-editor-btn art-editor-btn-primary" data-i18n-export="confirm"></button>
       </div>
     </div>
   </div>
@@ -104,7 +103,7 @@
     <div class="music-console-shell">
       <header class="music-console-top">
         <span id="music-console-title" class="music-console-title">HarmonyForge</span>
-        <button type="button" id="music-console-close" class="art-editor-btn art-editor-btn-icon" aria-label="Close">×</button>
+        <button type="button" id="music-console-close" class="art-editor-btn art-editor-btn-icon" data-i18n-aria="close" aria-label="Close">×</button>
       </header>
       <p id="music-console-hint" class="music-console-hint"></p>
       <iframe
@@ -121,7 +120,7 @@
     <div class="art-modal-panel art-works-panel" role="dialog" aria-labelledby="art-works-title">
       <header class="art-works-header">
         <h2 id="art-works-title" class="art-modal-title"></h2>
-        <button type="button" id="art-works-close" class="art-editor-btn art-editor-btn-icon" aria-label="Close">×</button>
+        <button type="button" id="art-works-close" class="art-editor-btn art-editor-btn-icon" data-i18n-aria="close" aria-label="Close">×</button>
       </header>
       <div class="art-works-tabs" id="art-works-tabs" role="tablist"></div>
       <p class="art-works-hint" id="art-works-hint"></p>
@@ -132,6 +131,6 @@
     <div class="card-zoom-backdrop" id="zoom-backdrop"></div>
     <div class="card-zoom-slot" id="zoom-slot"></div>
   </div>
-  <script type="module" src="js/app.js?v=0.13.0"></script>
+  <script type="module" src="js/app.js?v=0.13.1"></script>
 </body>
 </html>

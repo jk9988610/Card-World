@@ -1,12 +1,13 @@
 {
   "ui": {
+    "app_title": "卡牌世界",
     "zone_field": "场",
     "zone_hand": "手牌",
+    "close": "关闭",
+    "rgb_label": "RGB",
     "clear_storage": "清存档",
     "update_app": "更新",
-    "cloud_off": "云关闭",
-    "cloud_on": "云开启",
-    "cloud_need_network": "开启网络后才能打开云同步（上传 / 美术商店）。",
+    "cloud_need_network": "上传需要网络；上传时会自动开启云同步。",
     "view_logs": "日志",
     "copy_logs": "复制日志",
     "logs_copied": "已复制",
@@ -25,39 +26,39 @@
     },
     "settings": {
       "title": "设置",
-      "text": "拖到场 — 清空场面后选项依次排在设置后；拖选项入手牌即选中。拖设置回手牌收起。手牌物品可拖入设置（仅物品）。"
+      "text": "拖到场倒出菜单。拖菜单项到手牌区即选中生效（不会留在手牌）。拖设置回手牌收起。仅物品可放入设置。"
     },
     "fullscreen": {
       "title": "全屏",
-      "text": "拖入手牌 — 进入全屏。"
+      "text": "选择 — 进入全屏。"
     },
     "exit_fullscreen": {
       "title": "退出全屏",
-      "text": "拖入手牌 — 退出全屏。"
+      "text": "选择 — 退出全屏。"
     },
     "language_settings": {
-      "title": "语言设置",
-      "text": "设置打开时：拖入手牌 — 中英文选项倒出场。"
+      "title": "语言",
+      "text": "选择 — 在场上显示 English / 中文。"
     },
     "lang_en": {
       "title": "English",
-      "text": "拖入手牌 — 切换为英文界面与卡牌文案。"
+      "text": "选择 — 界面与卡牌为英文。"
     },
     "lang_zh": {
       "title": "中文",
-      "text": "拖入手牌 — 切换为中文界面与卡牌文案。"
+      "text": "选择 — 界面与卡牌为中文。"
     },
     "highlight_on": {
       "title": "高亮开启",
-      "text": "拖入手牌 — 关键卡显示打出提示。"
+      "text": "选择 — 显示打出提示。"
     },
     "highlight_off": {
       "title": "高亮关闭",
-      "text": "拖入手牌 — 关闭打出提示。"
+      "text": "选择 — 关闭打出提示。"
     },
     "reset_world": {
       "title": "重置卡牌",
-      "text": "拖入手牌 — 恢复开局场面并清除存档。"
+      "text": "选择 — 恢复开局并清除存档。"
     },
     "world_controller": {
       "title": "世界控制器",
@@ -97,7 +98,7 @@
     },
     "guide_weave_5": {
       "title": "编织 5",
-      "text": "把设置拖到场打开菜单，再拖选项入手牌：全屏、语言、高亮等。"
+      "text": "设置拖到场打开菜单，再拖到手牌区选择：全屏、语言、高亮等（功能项，不会留在手牌）。"
     },
     "load_error": {
       "title": "加载失败",

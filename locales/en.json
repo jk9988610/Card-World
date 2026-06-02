@@ -1,12 +1,13 @@
 {
   "ui": {
+    "app_title": "Card World",
     "zone_field": "Field",
     "zone_hand": "Hand",
+    "close": "Close",
+    "rgb_label": "RGB",
     "clear_storage": "Clear save",
     "update_app": "Update",
-    "cloud_off": "Cloud off",
-    "cloud_on": "Cloud on",
-    "cloud_need_network": "Turn on network to enable cloud sync (upload / art shop).",
+    "cloud_need_network": "Upload needs a network connection. Cloud turns on automatically for uploads.",
     "view_logs": "Logs",
     "copy_logs": "Copy logs",
     "logs_copied": "Copied",
@@ -25,39 +26,39 @@
     },
     "settings": {
       "title": "Settings",
-      "text": "Drag to Field — clears the scene; options line up after Settings. Drag an option to Hand to select. Drag Settings back to Hand to close. Drag items onto Settings to stash (items only)."
+      "text": "Drag to Field — clear scene, pour menu. Drag a menu row to Hand to activate (not kept in hand). Drag Settings to Hand to close."
     },
     "fullscreen": {
       "title": "Fullscreen",
-      "text": "Drag to Hand — enter fullscreen."
+      "text": "Select — enter fullscreen."
     },
     "exit_fullscreen": {
       "title": "Exit Fullscreen",
-      "text": "Drag to Hand — leave fullscreen."
+      "text": "Select — leave fullscreen."
     },
     "language_settings": {
-      "title": "Language Settings",
-      "text": "While Settings is open: drag to Hand — English / 中文 appear on Field."
+      "title": "Language",
+      "text": "Select — show English / 中文 on Field."
     },
     "lang_en": {
       "title": "English",
-      "text": "Drag to Hand — switch UI and cards to English."
+      "text": "Select — UI and cards in English."
     },
     "lang_zh": {
       "title": "中文",
-      "text": "拖入手牌 — 切换为中文界面与卡牌文案。"
+      "text": "选择 — 界面与卡牌显示中文。"
     },
     "highlight_on": {
       "title": "Highlight On",
-      "text": "Drag to Hand — show play hints on key cards."
+      "text": "Select — show play hints."
     },
     "highlight_off": {
       "title": "Highlight Off",
-      "text": "Drag to Hand — hide play hints."
+      "text": "Select — hide play hints."
     },
     "reset_world": {
       "title": "Reset Cards",
-      "text": "Drag to Hand — restore starter world and clear save."
+      "text": "Select — restore starter world and clear save."
     },
     "world_controller": {
       "title": "World Controller",

@@ -34,3 +34,10 @@ export function canUseNetwork() {
 export function shouldUseCloud() {
   return isCloudOptIn() && canUseNetwork();
 }
+
+/** Turn cloud on for an upload (default off until user uploads). */
+export function ensureCloudForUpload() {
+  if (!canUseNetwork()) return false;
+  setCloudOptIn(true);
+  return true;
+}

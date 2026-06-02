@@ -22,14 +22,8 @@ import {
   publishToArtShop,
   uploadArtPng,
 } from "./art-storage.js";
-import { isCloudEnabled } from "./cloud-config.js";
-import {
-  canUseNetwork,
-  isCloudOptIn,
-  setCloudOptIn,
-  shouldUseCloud,
-} from "./net-policy.js";
-import { resetSupabaseClient } from "./supabase-client.js";
+import { canUseNetwork, ensureCloudForUpload, shouldUseCloud } from "./net-policy.js";
+import { invalidateSupabaseClient } from "./supabase-client.js";
 import { MUSIC_EMBED_SLUG_TO_MODE, MUSIC_PROD_URL, musicEmbedUrl } from "./music-config.js";
 import { AppLogger } from "./app-logger.js";
 import { initAppVersionUI } from "./app-version.js";
@@ -40,7 +34,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.13.0";
+const APP_VERSION = "0.13.1";
 
 const SETTINGS_MENU_SLUGS = new Set([
   "founders.language_settings",
@@ -222,7 +216,6 @@ const els = {
   appChrome: document.getElementById("app-chrome"),
   btnClearStorage: document.getElementById("btn-clear-storage"),
   btnUpdate: document.getElementById("btn-update"),
-  btnCloud: document.getElementById("btn-cloud"),
   btnLogs: document.getElementById("btn-logs"),
   btnCopyLogs: document.getElementById("btn-copy-logs"),
   logDialog: document.getElementById("log-dialog"),
@@ -495,13 +488,25 @@ function ensureInner(inst) {
   return inst.inner;
 }
 
+function isMenuActionSlug(slug) {
+  return isSettingsMenuSlug(slug) || LANGUAGE_MENU_SLUGS.has(slug);
+}
+
+/** Menu / function cards (language, settings options) — select on Field→Hand, not stashed as items. */
+function isMenuAction(def) {
+  if (!def) return false;
+  if (isMenuActionSlug(def.slug)) return true;
+  if (def.tags?.includes("language")) return true;
+  if (def.tags?.includes("settings") && !isContainerCard(def)) return true;
+  return false;
+}
+
+/** Physical items (tools, artworks) that can live in the backpack. */
 function isStorableItem(def) {
   if (!def) return false;
   if (isContainerCard(def)) return false;
-  if (def.tags?.includes("settings")) return false;
-  if (def.tags?.includes("language")) return false;
-  if (def.tags?.includes("tutorial")) return false;
-  if (def.tags?.includes("guide")) return false;
+  if (isMenuAction(def)) return false;
+  if (def.tags?.includes("tutorial") || def.tags?.includes("guide")) return false;
   return true;
 }
 
@@ -700,34 +705,57 @@ function openLanguageSubmenuOnField(settingsInst, langMenuInst) {
   persistSave();
 }
 
+function activateMenuActionFromField(instanceId) {
+  const open = getOpenContainerOnField();
+  const idx = fieldIndexOf(instanceId);
+  if (!open || idx <= 0) return false;
+  const inst = state.field[idx];
+  const def = getDef(inst.definitionSlug);
+  if (!isMenuAction(def)) return false;
+
+  if (
+    isSettingsContainer(getDef(open.definitionSlug)) &&
+    inst.definitionSlug === "founders.language_settings"
+  ) {
+    openLanguageSubmenuOnField(open, inst);
+    return true;
+  }
+
+  state.field.splice(idx, 1);
+  const programId = resolveInstance(inst).programs?.on_play;
+  if (programId) runPlayEffects(programId, instanceId);
+  if (isSettingsContainer(getDef(open.definitionSlug))) {
+    closeContainerOnField(open.instanceId);
+    advanceGuide(inst.definitionSlug);
+  } else {
+    renderAll();
+    persistSave();
+  }
+  return true;
+}
+
 function takeFromOpenContainer(instanceId) {
   const open = getOpenContainerOnField();
   const idx = fieldIndexOf(instanceId);
   if (!open || idx <= 0) {
     if (idx === 0 && open?.instanceId === instanceId) closeContainerOnField(instanceId);
-    else moveInstance(instanceId, "hand");
+    else {
+      const pick = findInstance(instanceId);
+      if (pick && !isMenuAction(getDef(pick.instance.definitionSlug))) {
+        moveInstance(instanceId, "hand");
+      }
+    }
     return;
   }
 
   const inst = state.field[idx];
-  const openDef = getDef(open.definitionSlug);
-
-  if (isSettingsContainer(openDef)) {
-    if (inst.definitionSlug === "founders.language_settings") {
-      openLanguageSubmenuOnField(open, inst);
-      return;
-    }
-    state.field.splice(idx, 1);
-    state.hand.push(inst);
-    const programId = resolveInstance(inst).programs?.on_play;
-    if (programId) runPlayEffects(programId, instanceId);
-    closeContainerOnField(open.instanceId);
-    advanceGuide(inst.definitionSlug);
+  const def = getDef(inst.definitionSlug);
+  if (isMenuAction(def)) {
+    activateMenuActionFromField(instanceId);
     return;
   }
 
-  const itemDef = getDef(inst.definitionSlug);
-  if (!isStorableItem(itemDef)) return;
+  if (!isStorableItem(def)) return;
   state.field.splice(idx, 1);
   state.hand.push(inst);
   renderAll();
@@ -780,8 +808,10 @@ function handleZoneDrop(instanceId, fromZone, toZone, dropPoint = null) {
   }
 
   if (fromZone === "field" && toZone === "hand") {
-    if (isContainerOpen()) takeFromOpenContainer(instanceId);
-    else moveInstance(instanceId, "hand");
+    if (isContainerOpen()) {
+      if (isMenuAction(def)) activateMenuActionFromField(instanceId);
+      else takeFromOpenContainer(instanceId);
+    } else if (!isMenuAction(def)) moveInstance(instanceId, "hand");
     return;
   }
 
@@ -880,8 +910,11 @@ function playFromHand(instanceId) {
 function recallFieldToHand(instanceId) {
   const loc = findInstance(instanceId);
   if (!loc || loc.zone !== "field") return;
-  if (isContainerOpen()) takeFromOpenContainer(instanceId);
-  else moveInstance(instanceId, "hand");
+  const def = getDef(loc.instance.definitionSlug);
+  if (isContainerOpen()) {
+    if (isMenuAction(def)) activateMenuActionFromField(instanceId);
+    else takeFromOpenContainer(instanceId);
+  } else if (!isMenuAction(def)) moveInstance(instanceId, "hand");
 }
 
 function clearLastCardTap() {
@@ -899,7 +932,11 @@ function playCard(instanceId, zone) {
     }
   }
   if (zone === "hand") playFromHand(instanceId);
-  else if (zone === "field") recallFieldToHand(instanceId);
+  else if (zone === "field") {
+    const def = getDef(inst.definitionSlug);
+    if (isContainerOpen() && isMenuAction(def)) activateMenuActionFromField(instanceId);
+    else recallFieldToHand(instanceId);
+  }
 }
 
 function tryDoubleTapPlay(inst, zone, clientX, clientY) {
@@ -1504,7 +1541,8 @@ async function confirmArtExport() {
     storagePath: null,
     publicUrl: null,
   });
-  if (isCloudEnabled()) {
+  if (ensureCloudForUpload()) {
+    invalidateSupabaseClient();
     try {
       const blob = await pixelImageToPngBlob(image, 12);
       const pub = await publishToArtShop({ id: workId, title, text, image, pngBlob: blob });
@@ -1535,8 +1573,14 @@ function loadImageIntoArtEditor(image) {
 
 async function uploadCurrentPaintingToShop() {
   const t = locales[currentLocale]?.art_editor || locales.en?.art_editor || {};
+  const ui = locales[currentLocale]?.ui || locales.en?.ui || {};
+  if (!ensureCloudForUpload()) {
+    alert(ui.cloud_need_network || "Upload needs a network connection.");
+    return;
+  }
+  invalidateSupabaseClient();
   if (!(await isArtStorageConfigured())) {
-    alert(t.cloud_off || "云同步未就绪");
+    alert(t.upload_fail || "Upload failed: cloud not ready.");
     return;
   }
   const title = prompt(t.upload_title_prompt || "作品名", t.upload_default_title || "我的作品");
@@ -1753,6 +1797,12 @@ function renderWorksGallery() {
 
 async function uploadWorkToSupabase(workId, btn) {
   const t = locales[currentLocale]?.art_works || locales.en?.art_works || {};
+  const ui = locales[currentLocale]?.ui || locales.en?.ui || {};
+  if (!ensureCloudForUpload()) {
+    alert(ui.cloud_need_network || "Upload needs a network connection.");
+    return;
+  }
+  invalidateSupabaseClient();
   const work = loadWorks().find((w) => w.id === workId);
   if (!work?.image) return;
   if (btn) {
@@ -1810,7 +1860,7 @@ function renderGalleryTabs() {
 }
 
 async function refreshArtShopCache() {
-  if (!isCloudEnabled()) {
+  if (!shouldUseCloud()) {
     artEditor.shopCache = [];
     return;
   }
@@ -1826,7 +1876,11 @@ async function openWorksGallery() {
   applyWorksGalleryI18n();
   if (!artEditor.galleryTab) artEditor.galleryTab = "mine";
   renderGalleryTabs();
-  if (artEditor.galleryTab === "shop") await refreshArtShopCache();
+  if (artEditor.galleryTab === "shop") {
+    ensureCloudForUpload();
+    invalidateSupabaseClient();
+    await refreshArtShopCache();
+  }
   renderWorksGallery();
   els.artWorksGallery?.classList.remove("hidden");
   els.artWorksGallery?.setAttribute("aria-hidden", "false");
@@ -1897,10 +1951,9 @@ async function openArtEditor(instanceId) {
   const session = loadSessionDraft();
   let restored = false;
   if (session?.grid?.length === ART_GRID_W * ART_GRID_H && session.w === ART_GRID_W) {
-    if (window.confirm(t.restore_session || "恢复未保存的本地草稿？")) {
-      artEditor.grid = session.grid.slice();
-      restored = true;
-    }
+    artEditor.grid = session.grid.slice();
+    restored = true;
+    AppLogger.info("Pixel board restored session draft");
   }
   if (!restored) {
     if (loc?.instance?.image) loadArtGridFromImage(loc.instance.image);
@@ -2471,6 +2524,7 @@ function setupAutoFullscreenOnLoad() {
 function applyZoneLabels() {
   const ui = locales[currentLocale]?.ui || locales.en?.ui || {};
   const logDlg = locales[currentLocale]?.log_dialog || locales.en?.log_dialog || {};
+  if (ui.app_title) document.title = ui.app_title;
   for (const el of document.querySelectorAll("[data-i18n]")) {
     const key = el.dataset.i18n;
     if (ui[key]) el.textContent = ui[key];
@@ -2479,7 +2533,10 @@ function applyZoneLabels() {
     const key = el.dataset.i18nLog;
     if (logDlg[key]) el.textContent = logDlg[key];
   }
-  syncCloudToggleUi();
+  for (const el of document.querySelectorAll("[data-i18n-aria]")) {
+    const key = el.dataset.i18nAria;
+    if (ui[key]) el.setAttribute("aria-label", ui[key]);
+  }
 }
 
 function refreshLogPanel() {
@@ -2507,40 +2564,11 @@ async function copyLogsToClipboard(feedbackBtn) {
   return ok;
 }
 
-function syncCloudToggleUi() {
-  if (!els.btnCloud) return;
-  const on = isCloudOptIn();
-  els.btnCloud.classList.toggle("chrome-btn-accent", on);
-  els.btnCloud.setAttribute("aria-pressed", on ? "true" : "false");
-  const ui = locales[currentLocale]?.ui || locales.en?.ui || {};
-  els.btnCloud.textContent = on ? ui.cloud_on || "Cloud on" : ui.cloud_off || "Cloud off";
-}
-
 function setupAppChrome() {
   initAppVersionUI();
-  syncCloudToggleUi();
 
-  window.addEventListener("online", () => {
-    AppLogger.info("Network online");
-    syncCloudToggleUi();
-  });
-  window.addEventListener("offline", () => {
-    AppLogger.warn("Network offline — cloud sync paused");
-    syncCloudToggleUi();
-  });
-
-  els.btnCloud?.addEventListener("click", () => {
-    const ui = locales[currentLocale]?.ui || locales.en?.ui || {};
-    const next = !isCloudOptIn();
-    if (next && !canUseNetwork()) {
-      alert(ui.cloud_need_network || "Cloud sync needs a network connection.");
-      return;
-    }
-    setCloudOptIn(next);
-    resetSupabaseClient();
-    syncCloudToggleUi();
-    AppLogger.info(next ? "Cloud sync enabled" : "Cloud sync disabled (offline-first)");
-  });
+  window.addEventListener("online", () => AppLogger.info("Network online"));
+  window.addEventListener("offline", () => AppLogger.warn("Network offline"));
 
   els.btnLogs?.addEventListener("click", () => openLogDialog());
   els.btnCopyLogs?.addEventListener("click", () => copyLogsToClipboard(els.btnCopyLogs));
@@ -2786,7 +2814,7 @@ async function init() {
   AppLogger.info("Card World starting", `v${APP_VERSION}`);
   AppLogger.info(
     "Offline-first mode",
-    `cloud=${isCloudOptIn() ? "on" : "off"} online=${canUseNetwork()}`
+    `cloud=auto-on-upload online=${canUseNetwork()}`
   );
   registerServiceWorker();
   setupAppChrome();

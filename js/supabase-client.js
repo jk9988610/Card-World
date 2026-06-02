@@ -33,3 +33,8 @@ export function resetSupabaseClient() {
   client = null;
   libPromise = null;
 }
+
+/** Call after toggling cloud opt-in so the next request rebuilds the client. */
+export function invalidateSupabaseClient() {
+  resetSupabaseClient();
+}
