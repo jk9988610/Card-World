@@ -161,21 +161,23 @@ const InstrumentRegistry = (() => {
       },
       duration: { melodicMin: 0.2, preview: 0.5 },
       synthesis: "Sampler: offline Salamander piano multisamples in samples/INS-008/.",
+      fallbackPresetId: "INS-008-FM",
+    },
+    {
+      id: "INS-008-FM",
+      kind: "synth",
+      type: "melodic",
+      toneClass: "PolySynth",
+      polyClass: "FMSynth",
+      polyOptions: { maxPolyphony: 8 },
+      trigger: "sampler_melodic",
+      options: { volume: -2 },
+      duration: { melodicGate: true, preview: 0.38 },
+      synthesis: "Fallback FM piano when Salamander samples fail to load.",
+      hidden: true,
     },
 
-    {
-      id: "INS-009",
-      kind: "sampler",
-      type: "melodic",
-      toneClass: "Sampler",
-      trigger: "chord_triad",
-      sampler: {
-        baseUrl: "samples/INS-009/",
-        urls: { C3: "pad.mp3" },
-      },
-      duration: { chordHold: true, preview: 0.55 },
-      synthesis: "Sampler: offline pad; chord_triad triggers three mapped notes.",
-    },
+
   ];
 
   const userPresets = new Map();

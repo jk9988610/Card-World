@@ -27,15 +27,27 @@ const Instruments = (() => {
     chord: "piano",
   };
 
+  /** UI id → sampler registry id (InstrumentRegistry) */
+  const ENGINE_ID = {
+    kick: "INS-001",
+    snare: "INS-002",
+    hihat: "INS-003",
+    openhat: "INS-004",
+    tom: "INS-005",
+    cymbal: "INS-006",
+    bass: "INS-007",
+    piano: "INS-008",
+  };
+
   const CATALOG = [
-    { id: "kick", name: "底鼓", type: "drum", voice: "kick", class: "drum-kick" },
-    { id: "snare", name: "军鼓", type: "drum", voice: "snare", class: "drum-snare" },
-    { id: "hihat", name: "闭镲", type: "drum", voice: "hihat", class: "drum-hat" },
-    { id: "openhat", name: "开镲", type: "drum", voice: "openhat", class: "drum-open" },
-    { id: "tom", name: "通鼓", type: "drum", voice: "tom", class: "drum-tom" },
-    { id: "cymbal", name: "碎音镲", type: "drum", voice: "cymbal", class: "drum-cymbal" },
-    { id: "bass", name: "电贝斯", type: "melodic", voice: "bass", class: "bass" },
-    { id: "piano", name: "钢琴", type: "melodic", voice: "piano", class: "melodic-piano" },
+    { id: "kick", name: "底鼓", type: "drum", voice: "kick", class: "drum-kick", engineId: "INS-001" },
+    { id: "snare", name: "军鼓", type: "drum", voice: "snare", class: "drum-snare", engineId: "INS-002" },
+    { id: "hihat", name: "闭镲", type: "drum", voice: "hihat", class: "drum-hat", engineId: "INS-003" },
+    { id: "openhat", name: "开镲", type: "drum", voice: "openhat", class: "drum-open", engineId: "INS-004" },
+    { id: "tom", name: "通鼓", type: "drum", voice: "tom", class: "drum-tom", engineId: "INS-005" },
+    { id: "cymbal", name: "碎音镲", type: "drum", voice: "cymbal", class: "drum-cymbal", engineId: "INS-006" },
+    { id: "bass", name: "电贝斯", type: "melodic", voice: "bass", class: "bass", engineId: "INS-007" },
+    { id: "piano", name: "钢琴", type: "melodic", voice: "piano", class: "melodic-piano", engineId: "INS-008" },
     { id: "eguitar", name: "电吉他", type: "melodic", voice: "eguitar", class: "melodic-eguitar" },
     { id: "lead", name: "合成主音", type: "melodic", voice: "lead", class: "lead" },
     { id: "sax", name: "萨克斯", type: "melodic", voice: "sax", class: "melodic-sax" },
@@ -53,6 +65,7 @@ const Instruments = (() => {
     { trackId: "hihat", instrumentId: "hihat" },
     { trackId: "openhat", instrumentId: "openhat" },
     { trackId: "bass", instrumentId: "bass" },
+    { trackId: "piano", instrumentId: "piano" },
     { trackId: "lead", instrumentId: "lead" },
   ];
 
@@ -68,7 +81,17 @@ const Instruments = (() => {
 
   function get(id) {
     const resolved = resolveId(id);
-    return byId[resolved] || null;
+    const entry = byId[resolved];
+    if (!entry) return null;
+    if (!entry.engineId && ENGINE_ID[resolved]) {
+      return { ...entry, engineId: ENGINE_ID[resolved] };
+    }
+    return entry;
+  }
+
+  function engineIdFor(id) {
+    const inst = get(id);
+    return inst?.engineId || ENGINE_ID[resolveId(id)] || resolveId(id);
   }
 
   function list(typeFilter) {
@@ -93,7 +116,9 @@ const Instruments = (() => {
     CATALOG,
     DEFAULT_LAYOUT,
     LEGACY_IDS,
+    ENGINE_ID,
     resolveId,
+    engineIdFor,
     get,
     list,
     defaultVolume,

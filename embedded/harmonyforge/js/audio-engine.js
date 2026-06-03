@@ -32,7 +32,6 @@ const AudioEngine = (() => {
       "INS-006",
       "INS-007",
       "INS-008",
-      "INS-009",
     ].forEach((id) => {
       InstrumentEngine.createAsync(id).catch(() => {});
     });
