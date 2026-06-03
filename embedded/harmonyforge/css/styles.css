@@ -546,6 +546,8 @@ select.pitch-select:focus {
 .step-cell.on.melodic-trombone { background: linear-gradient(135deg, #b45309, #fdba74); }
 .step-cell.on.melodic-eguitar { background: linear-gradient(135deg, #4c1d95, #e879f9); }
 
+.track-name-btn.inst-drum,
+.track-name.inst-drum,
 .track-name-btn.drum-kick,
 .track-name.drum-kick { color: var(--drum); }
 .track-name-btn.drum-snare,
