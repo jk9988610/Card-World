@@ -465,8 +465,11 @@ select.pitch-select:focus {
   margin: 0;
   border: none;
   background: transparent;
+  color: var(--text);
   cursor: pointer;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-align: left;
   border-radius: 4px;
   line-height: 1.2;
