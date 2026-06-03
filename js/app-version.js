@@ -20,9 +20,8 @@ let remoteVersion = null;
 let remoteBuild = null;
 
 function versionUrl() {
-  const url = new URL("version.json", document.baseURI || location.href);
-  url.searchParams.set("t", String(Date.now()));
-  return url.href;
+  const base = location.pathname.replace(/\/[^/]*$/, "/");
+  return `${base}version.json?t=${Date.now()}`;
 }
 
 export function getBundled() {
@@ -157,8 +156,8 @@ export function initAppVersionUI() {
         else btnUpdate.textContent = prev;
       } else if (result.status === "latest") {
         const msg = isZh
-          ? `已是最新版本\n运行 v${bundled.version} (build ${bundled.build})`
-          : `Already up to date\nRunning v${bundled.version} (build ${bundled.build})`;
+          ? `已是最新版本\nv${bundled.version}`
+          : `Already up to date\nv${bundled.version}`;
         alert(msg);
         btnUpdate.textContent = prev;
       } else {

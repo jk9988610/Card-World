@@ -468,7 +468,7 @@
       requestAnimationFrame(() => logModuleShellMetrics());
     }
 
-    AppLogger.info("HarmonyForge 启动", `v${AppVersion.CURRENT} · build ${AppVersion.BUILD}`);
+    AppLogger.info("HarmonyForge 启动", `v${AppVersion.CURRENT}`);
     AppVersion.initUI();
     wireAudioUnlock();
     if (typeof DraftStation !== "undefined") {

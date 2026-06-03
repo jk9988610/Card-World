@@ -3,8 +3,8 @@
  * 以页面内嵌的 BUNDLED_* 为「当前运行版本」；与远端 version.json 比较决定是否可更新
  */
 const AppVersion = (() => {
-  let BUNDLED_VERSION = "2.2.0";
-  let BUNDLED_BUILD = "dev";
+  let BUNDLED_VERSION = "2.3.1";
+  let BUNDLED_BUILD = "2.3.1";
 
   (function applyMetaBundled() {
     const mv = document.querySelector('meta[name="hf-app-version"]')?.content;
@@ -23,9 +23,7 @@ const AppVersion = (() => {
   let remoteBuild = null;
 
   function versionUrl() {
-    const url = new URL("version.json", document.baseURI || location.href);
-    url.searchParams.set("t", String(Date.now()));
-    return url.href;
+    return `version.json?t=${Date.now()}`;
   }
 
   async function fetchRemote() {
@@ -65,13 +63,6 @@ const AppVersion = (() => {
     document.querySelectorAll(".app-version-value").forEach((el) => {
       el.textContent = BUNDLED_VERSION;
     });
-    const buildShort =
-      BUNDLED_BUILD && BUNDLED_BUILD !== "dev"
-        ? ` · ${String(BUNDLED_BUILD).slice(-8)}`
-        : "";
-    document.querySelectorAll(".app-build-value").forEach((el) => {
-      el.textContent = buildShort;
-    });
     const home = document.querySelector(".home-version");
     if (!home) return;
     const hasUpdate =
@@ -79,8 +70,8 @@ const AppVersion = (() => {
       isNewer({ version: remoteVersion, build: remoteBuild });
     home.classList.toggle("has-update", !!hasUpdate);
     home.title = hasUpdate
-      ? `运行 v${BUNDLED_VERSION} (build ${BUNDLED_BUILD}) · 可更新至 v${remoteVersion}`
-      : `当前 v${BUNDLED_VERSION} · build ${BUNDLED_BUILD}`;
+      ? `v${BUNDLED_VERSION} → v${remoteVersion}`
+      : `v${BUNDLED_VERSION}`;
   }
 
   function noteRemote(remote) {
@@ -107,11 +98,11 @@ const AppVersion = (() => {
       const remote = await fetchRemote();
       noteRemote(remote);
       const bundled = getBundled();
-      AppLogger.info("远端版本", `${remote.version} · build ${remote.build}`);
-      AppLogger.info("当前运行", `v${bundled.version} · build ${bundled.build}`);
+      AppLogger.info("远端版本", `v${remote.version}`);
+      AppLogger.info("当前运行", `v${bundled.version}`);
 
       if (isNewer(remote)) {
-        AppLogger.warn(`发现新版本 v${remote.version} (build ${remote.build})`);
+        AppLogger.warn(`发现新版本 v${remote.version}`);
         return { status: "available", remote, bundled };
       }
       AppLogger.info("当前已是最新版本", `v${bundled.version}`);
@@ -129,7 +120,7 @@ const AppVersion = (() => {
       remote = result.remote;
     }
 
-    AppLogger.info("正在更新到最新版本…", `${remote.version} · ${remote.build}`);
+    AppLogger.info("正在更新到最新版本…", `v${remote.version}`);
 
     if (typeof caches !== "undefined") {
       try {
@@ -203,16 +194,13 @@ const AppVersion = (() => {
           if (result.status === "available") {
             btnUpdate.textContent = "更新中…";
             const ok = confirm(
-              `发现新版本 v${result.remote.version} (build ${result.remote.build})\n` +
-                `当前运行 v${bundled.version} (build ${bundled.build})\n\n是否立即更新？`
+              `发现新版本 v${result.remote.version}\n` +
+                `当前 v${bundled.version}\n\n是否立即更新？`
             );
             if (ok) await applyUpdate(result.remote);
             else btnUpdate.textContent = prev;
           } else if (result.status === "latest") {
-            alert(
-              `已是最新版本\n运行 v${bundled.version} (build ${bundled.build})\n` +
-                `线上 v${result.remote?.version ?? bundled.version} (build ${result.remote?.build ?? bundled.build})`
-            );
+            alert(`已是最新版本\nv${bundled.version}`);
             btnUpdate.textContent = prev;
           } else {
             alert(`检查更新失败：${result.message || "未知错误"}`);

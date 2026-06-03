@@ -42,7 +42,7 @@ function formatEntry(e) {
 function versionLine() {
   const meta = document.querySelector('meta[name="cw-app-version"]')?.content;
   const build = document.querySelector('meta[name="cw-app-build"]')?.content;
-  if (meta) return `Card World v${meta} · build ${build || meta}`;
+  if (meta) return `Card World v${meta}`;
   return "Card World";
 }
 

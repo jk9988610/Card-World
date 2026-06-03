@@ -43,7 +43,7 @@ const AppLogger = (() => {
   function versionLine() {
     if (typeof AppVersion !== "undefined" && AppVersion.getInfo) {
       const v = AppVersion.getInfo();
-      return `HarmonyForge v${v.version} · build ${v.build}`;
+      return `HarmonyForge v${v.version}`;
     }
     return "HarmonyForge (version unknown)";
   }

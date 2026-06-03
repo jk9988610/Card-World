@@ -388,7 +388,7 @@ const LayoutManager = (() => {
     const lines = [];
     const ver =
       typeof AppVersion !== "undefined" && AppVersion.getInfo
-        ? `v${AppVersion.getInfo().version} · build ${AppVersion.getInfo().build}`
+        ? `v${AppVersion.getInfo().version}`
         : "unknown";
     lines.push("=== HarmonyForge 模块布局报告 ===");
     lines.push(ver);
