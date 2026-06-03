@@ -82,7 +82,9 @@
     "step_loop": "Step loop",
     "step_loop_title": "Loop selected step column at BPM",
     "mixer_legend": "Mixer",
-    "mixer_aria": "Mixer"
+    "mixer_aria": "Mixer",
+    "undo_title": "Undo (Ctrl+Z)",
+    "redo_title": "Redo (Ctrl+Y)"
   },
   "footer": {
     "ready": "Ready"
@@ -305,7 +307,24 @@
     "loaded_draft": "Loaded from drafts: {name}",
     "loaded_work": "Loaded: {title} ({file})",
     "loaded_work_simple": "Loaded: {title}",
-    "loaded_republish_hint": " — edit then “Republish” in My works"
+    "loaded_republish_hint": " — edit then “Republish” in My works",
+    "type_loop_off": "Pattern loop off",
+    "step_loop_off": "Step loop off",
+    "seq_follow_on": "Seq follow on",
+    "pick_pitch_first": "Pick a pitch first",
+    "sections_reduced": "Now {n} sections",
+    "tracks_reduced": "Now {n} tracks",
+    "insert_pos_before": "before",
+    "insert_pos_after": "after",
+    "export_failed_prefix": "Export failed: {msg}",
+    "import_failed_prefix": "Import failed: {msg}",
+    "load_failed_prefix": "Load failed: {msg}",
+    "min_tracks": "Keep at least {min} tracks",
+    "import_archive": "Backup before import",
+    "switch_archive": "Backup before loading work",
+    "draft_fallback": "Draft",
+    "work_fallback": "Work",
+    "load_work_confirm": "Load {label} and replace the current project?"
   },
   "cloud": {
     "cloud_off": "Cloud sync off. Enable in Card World when online.",
@@ -407,5 +426,18 @@
     "load_builtin": "Load builtin",
     "load_builtin_hint": "Synth builtins only; for drums/samples create a new patch",
     "builtin_unsupported": "This builtin cannot be loaded in Tone Lab; create a new patch instead"
+  },
+  "sequencer": {
+    "type_count": "{n} pat",
+    "track_count": "{n} trk",
+    "step_count": "{n} stp",
+    "step_loop_pick": "Use step {n} for step loop",
+    "track_switch_title": "Switch sound (current: {name})",
+    "step_cell_aria": "{track}, step {step}",
+    "sections_count": "{n} sec",
+    "type_loop_label": "Pattern loop",
+    "step_loop_label": "Step loop",
+    "track_fallback": "Track",
+    "step_density_title": "Step density (relative to master BPM)"
   }
 }

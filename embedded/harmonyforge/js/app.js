@@ -136,7 +136,7 @@
       syncSequencerToSection(index);
       const sec = Arranger.getSection(index);
       const pi = sec?.patternIndex ?? 0;
-      setStatus(`§${index + 1} · 类型 ${patternLabel(pi)}（音序已同步）`);
+      setStatus(t("status.section_synced", { n: index + 1, pattern: patternLabel(pi) }));
     }
   }
 
@@ -146,7 +146,7 @@
       ? last[last.length - 1].patternIndex
       : Sequencer.currentPattern();
     openChoiceDialog({
-      title: "新段落使用类型",
+      title: t("status.new_section_pattern"),
       columns: Math.min(4, Sequencer.patternCount),
       currentValue: defaultPi,
       items: Array.from({ length: Sequencer.patternCount }, (_, i) => ({
@@ -160,7 +160,7 @@
           renderArrangement();
           syncSequencerToSection(r.index);
         });
-        setStatus(`已添加 §${Arranger.getSectionCount()}（类型 ${patternLabel(Number(value))}）`);
+        setStatus(t("status.section_added", { n: Arranger.getSectionCount(), pattern: patternLabel(Number(value)) }));
       },
     });
   }
@@ -173,7 +173,7 @@
       label: inst.name,
     }));
     openChoiceDialog({
-      title: `切换音色 · 当前 ${track.name}`,
+      title: t("status.switch_instrument", { name: track.name }),
       columns: 4,
       currentValue: track.instrumentId,
       items,
@@ -187,14 +187,14 @@
           renderMixer();
         });
         const inst = Instruments.get(String(value));
-        setStatus(`已切换为 ${inst?.name ?? value}`);
+        setStatus(t("status.switched_instrument", { name: inst?.name ?? value }));
       },
     });
   }
 
   function openAddTrackDialog() {
     if (Sequencer.trackCount >= Sequencer.MAX_TRACKS) {
-      setStatus(`已达最大 ${Sequencer.MAX_TRACKS} 轨`);
+      setStatus(t("status.max_tracks", { max: Sequencer.MAX_TRACKS }));
       return;
     }
     const items = Sequencer.listInstruments().map((inst) => ({
@@ -202,7 +202,7 @@
       label: inst.name,
     }));
     openChoiceDialog({
-      title: "添加轨道 · 选择音色",
+      title: t("status.add_track"),
       columns: 4,
       currentValue: "kick",
       items,
@@ -216,7 +216,7 @@
           updateTrackCountUI();
         });
         const inst = Instruments.get(String(value));
-        setStatus(`已添加轨：${inst?.name ?? value}`);
+        setStatus(t("status.track_added", { name: inst?.name ?? value }));
       },
     });
   }
@@ -225,7 +225,7 @@
     const track = Sequencer.TRACKS.find((t) => t.id === trackId);
     const current = Sequencer.getTrackRate(trackId);
     openChoiceDialog({
-      title: `${track?.name ?? "轨"} · 步进密度`,
+      title: t("status.step_density", { name: track?.name ?? t("sequencer.track_fallback") }),
       columns: 4,
       currentValue: current,
       items: TrackTiming.RATE_OPTIONS.map((o) => ({
@@ -239,7 +239,7 @@
         });
         scheduleAutosave();
         setStatus(
-          `${track?.name ?? "轨"} 步进密度 ${TrackTiming.rateLabel(Sequencer.getTrackRate(trackId))}`
+          t("status.step_density_set", { name: track?.name ?? t("sequencer.track_fallback"), rate: TrackTiming.rateLabel(Sequencer.getTrackRate(trackId)) })
         );
       },
     });
@@ -247,19 +247,19 @@
 
   function copyArrangeSection() {
     if (selectedArrangeSection < 0) {
-      setStatus("请先单击选中一个段落");
+      setStatus(t("status.select_section_first"));
       return;
     }
     const sec = Arranger.getSection(selectedArrangeSection);
     if (!sec) return;
     arrangeSectionClipboard = { ...sec };
     arrangeClipboardFromCut = false;
-    setStatus(`已复制 §${selectedArrangeSection + 1}（类型 ${patternLabel(sec.patternIndex)}）`);
+    setStatus(t("status.section_copied", { n: selectedArrangeSection + 1, pattern: patternLabel(sec.patternIndex) }));
   }
 
   function cutArrangeSection() {
     if (selectedArrangeSection < 0) {
-      setStatus("请先单击选中一个段落");
+      setStatus(t("status.select_section_first"));
       return;
     }
     const idx = selectedArrangeSection;
@@ -272,19 +272,19 @@
       if (!r.ok) {
         arrangeSectionClipboard = null;
         arrangeClipboardFromCut = false;
-        setStatus("至少保留 1 个编曲段");
+        setStatus(t("status.section_cut_min"));
         return;
       }
       selectedArrangeSection = Math.min(idx, r.count - 1);
       renderArrangement();
-      setStatus(`已剪切 §${idx + 1}（类型 ${patternLabel(sec.patternIndex)}）`);
+      setStatus(t("status.section_cut", { n: idx + 1, pattern: patternLabel(sec.patternIndex) }));
       scheduleAutosave();
     });
   }
 
   function insertArrangeSection(before) {
     if (!arrangeSectionClipboard) {
-      setStatus("请先复制或剪切段落");
+      setStatus(t("status.paste_section_first"));
       return;
     }
     let insertAt = before ? 0 : Arranger.getSectionCount();
@@ -300,8 +300,8 @@
       }
       selectedArrangeSection = r.index;
       renderArrangement();
-      const pos = before ? "前" : "后";
-      setStatus(`已在 §${insertAt + 1} ${pos}插入段落`);
+      const pos = before ? t("status.insert_pos_before") : t("status.insert_pos_after");
+      setStatus(t("status.section_inserted", { n: insertAt + 1, pos }));
     });
     scheduleAutosave();
   }
@@ -310,7 +310,7 @@
     const sections = Arranger.getSections();
     const current = sections[sectionIndex]?.patternIndex ?? 0;
     openChoiceDialog({
-      title: `§${sectionIndex + 1} 选择类型`,
+      title: t("status.pick_section_pattern", { n: sectionIndex + 1 }),
       columns: Math.min(4, Sequencer.patternCount),
       currentValue: current,
       items: Array.from({ length: Sequencer.patternCount }, (_, i) => ({
@@ -326,7 +326,7 @@
           }
         });
         scheduleAutosave();
-        setStatus(`§${sectionIndex + 1} → 类型 ${patternLabel(Number(value))}`);
+        setStatus(t("status.section_pattern_set", { n: sectionIndex + 1, pattern: patternLabel(Number(value)) }));
       },
     });
   }
@@ -451,6 +451,7 @@
     if (typeof Sequencer !== "undefined" && Sequencer.refreshScaleLabels) {
       Sequencer.refreshScaleLabels();
     }
+    if (window.HFI18n?.applyDomI18n) window.HFI18n.applyDomI18n();
     if (new URLSearchParams(location.search).get("debug") === "layers") {
       document.documentElement.setAttribute("data-debug-layers", "");
       requestAnimationFrame(() => logModuleShellMetrics());
@@ -464,12 +465,12 @@
         getProjectData,
         setStatus,
         onLoadDraft: (project, meta) => {
-          if (!confirm(`加载草稿「${meta.name}」将替换当前编曲，是否继续？`)) return false;
+          if (!confirm(t("status.load_draft_confirm", { name: meta.name }))) return false;
           return loadExternalProject(project, {
             ...meta,
             fromDraftStation: true,
             skipConfirm: true,
-            archiveReason: `加载草稿「${meta.name}」前备份`,
+            archiveReason: t("status.load_draft_archive", { name: meta.name }),
           });
         },
       });
@@ -550,7 +551,7 @@
 
   function onLayoutOrViewChanged() {
     if (seqFollowEnabled) {
-      setSeqFollowEnabled(false, "已切换模块显示，音序跟随已关闭");
+      setSeqFollowEnabled(false, t("status.seq_follow_off"));
     }
   }
 
@@ -567,15 +568,15 @@
     if (stepLoopEnabled && playing && playMode === "step") {
       setStatus(stepLoopStatusText());
     } else {
-      setStatus(`循环步进：第 ${loopStepIndex + 1} 步`);
+      setStatus(t("status.loop_step", { n: loopStepIndex + 1 }));
     }
   }
 
   function stepLoopStatusText() {
     const pi = Sequencer.currentPattern();
     const has = Sequencer.stepColumnHasContent(pi, loopStepIndex);
-    const hint = has ? "" : "（该列为空）";
-    return `单步循环：类型 ${patternLabel(pi)} 第 ${loopStepIndex + 1} 步${hint}`;
+    const hint = has ? "" : t("status.step_loop_empty");
+    return t("status.step_loop_col", { pattern: patternLabel(pi), n: loopStepIndex + 1, hint });
   }
 
   function interruptPlaybackForPreview() {
@@ -636,7 +637,7 @@
 
   function selectPattern(index, options = {}) {
     if (options.userInitiated && seqFollowEnabled) {
-      setSeqFollowEnabled(false, "已切换类型，音序跟随已关闭");
+      setSeqFollowEnabled(false, t("status.seq_follow_off"));
     }
     Sequencer.setCurrentPattern(index);
     renderPatternTabs();
@@ -644,22 +645,22 @@
     if (playing) updatePlayhead(currentStep, currentArrangeSection);
     if (options.fromArrangeSelection) return;
     if (playing && playMode === "pattern" && typeLoopEnabled) {
-      setStatus(`类型循环：${patternLabel(index)}`);
+      setStatus(t("status.type_loop_on", { pattern: patternLabel(index) }));
     } else if (!options.silent) {
-      setStatus(`类型 ${patternLabel(index)}`);
+      setStatus(t("status.type_label", { pattern: patternLabel(index) }));
     }
     if (!options.silent) scheduleAutosave();
   }
 
   function updateTypeCountUI() {
     if (els.typeCountInfo) {
-      els.typeCountInfo.textContent = `${Sequencer.patternCount}型`;
+      els.typeCountInfo.textContent = t("sequencer.type_count", { n: Sequencer.patternCount });
     }
   }
 
   function updateTrackCountUI() {
     if (els.trackCountInfo) {
-      els.trackCountInfo.textContent = `${Sequencer.trackCount}轨`;
+      els.trackCountInfo.textContent = t("sequencer.track_count", { n: Sequencer.trackCount });
     }
     if (els.btnAddTrack) {
       els.btnAddTrack.disabled = Sequencer.trackCount >= Sequencer.MAX_TRACKS;
@@ -674,7 +675,7 @@
       loopStepIndex = Math.max(0, Sequencer.steps - 1);
     }
     if (els.stepCountInfo) {
-      els.stepCountInfo.textContent = `${Sequencer.steps}步`;
+      els.stepCountInfo.textContent = t("sequencer.step_count", { n: Sequencer.steps });
     }
     if (els.btnAddSteps) {
       els.btnAddSteps.disabled = Sequencer.steps >= Sequencer.MAX_STEPS;
@@ -694,7 +695,7 @@
       if (s === loopStepIndex) cls += " loop-step-target";
       btn.className = cls;
       btn.textContent = s + 1;
-      btn.title = `选择为单步循环列（第 ${s + 1} 步）`;
+      btn.title = t("sequencer.step_loop_pick", { n: s + 1 });
       btn.addEventListener("click", () => setLoopStepIndex(s));
       els.stepLabels.appendChild(btn);
     }
@@ -716,7 +717,7 @@
       nameBtn.type = "button";
       nameBtn.className = `track-name-btn ${track.class}`;
       nameBtn.textContent = track.name;
-      nameBtn.title = `点击切换音色（当前：${track.name}）`;
+      nameBtn.title = t("sequencer.track_switch_title", { name: track.name });
       nameBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         openInstrumentPicker(track.id);
@@ -726,7 +727,7 @@
       const rateBtn = document.createElement("button");
       rateBtn.type = "button";
       rateBtn.className = "note-btn pitch-pick-btn track-rate-btn";
-      rateBtn.title = "步进密度（相对主 BPM）";
+      rateBtn.title = t("sequencer.step_density_title");
       rateBtn.textContent = TrackTiming.rateLabel(Sequencer.getTrackRate(track.id));
       rateBtn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -742,7 +743,7 @@
         btn.className = `step-cell ${cell.on ? "on " + track.class : ""}`;
         btn.dataset.track = track.id;
         btn.dataset.step = step;
-        btn.setAttribute("aria-label", `${track.name} 第 ${step + 1} 步`);
+        btn.setAttribute("aria-label", t("sequencer.step_cell_aria", { track: track.name, step: step + 1 }));
 
         if (cell.on && track.type === "melodic" && cell.note != null) {
           const lbl = document.createElement("span");
@@ -824,7 +825,7 @@
           });
           notePendingMidi = midi;
           highlightNoteGridSelection();
-          setStatus(`试听 ${Sequencer.noteLabel(midi)}（${track?.name ?? ""}）`);
+          setStatus(t("status.preview_note", { note: Sequencer.noteLabel(midi), track: track?.name ?? "" }));
           return;
         }
         commitNoteSelection(midi);
@@ -839,7 +840,7 @@
     notePendingMidi = cell.on && cell.note != null ? cell.note : null;
     const track = Sequencer.TRACKS.find((t) => t.id === trackId);
     if (els.noteDialogTitle && track) {
-      els.noteDialogTitle.textContent = `选择音高 · ${track.name} · 第 ${step + 1} 步`;
+      els.noteDialogTitle.textContent = t("status.pick_pitch", { track: track.name, step: step + 1 });
     }
     if (els.notePreview) els.notePreview.checked = true;
     if (els.noteGrid) {
@@ -863,7 +864,7 @@
       slot.type = "button";
       slot.className =
         "arrange-slot" + (i === selectedArrangeSection ? " active" : "");
-      slot.title = "单击选中；双击选择类型";
+      slot.title = t("status.arrange_slot_title");
       slot.innerHTML = `
         <span class="arrange-slot-index">§${i + 1}</span>
         <span class="arrange-slot-pattern">${patternLabel(sec.patternIndex)}</span>
@@ -884,7 +885,7 @@
       els.arrangeTimeline.appendChild(slot);
     });
 
-    els.arrangeInfo.textContent = `${sections.length}段`;
+    els.arrangeInfo.textContent = t("sequencer.sections_count", { n: sections.length });
     if (els.btnRemoveSection) {
       els.btnRemoveSection.disabled = sections.length <= Arranger.MIN_SECTIONS;
     }
@@ -944,11 +945,11 @@
           if (playing && playMode === "arrange") pause({ keepLoopFlags: true });
           setTypeLoopEnabled(true);
           startPlay("pattern");
-          setStatus(`类型循环：${patternLabel(Sequencer.currentPattern())}`);
+          setStatus(t("status.type_loop_on", { pattern: patternLabel(Sequencer.currentPattern()) }));
         } else {
           setTypeLoopEnabled(false);
           if (playing && playMode === "pattern") pause({ keepLoopFlags: true });
-          setStatus("类型循环已关闭");
+          setStatus(t("status.type_loop_off"));
         }
       });
     }
@@ -965,7 +966,7 @@
         } else {
           setStepLoopEnabled(false);
           if (playing && playMode === "step") pause({ keepLoopFlags: true });
-          setStatus("单步循环已关闭");
+          setStatus(t("status.step_loop_off"));
         }
       });
     }
@@ -977,10 +978,10 @@
           if (playing && playMode === "arrange" && playingPatternIndex >= 0) {
             followPlaybackPattern(playingPatternIndex);
           }
-          setStatus("音序跟随已开启");
+          setStatus(t("status.seq_follow_on"));
         } else {
           setSeqFollowEnabled(false);
-          setStatus("音序跟随已关闭");
+          setStatus(t("status.seq_follow_off"));
         }
       });
     }
@@ -990,7 +991,7 @@
         if (notePendingMidi != null) {
           commitNoteSelection(notePendingMidi);
         } else {
-          setStatus("请先点击一个音高");
+          setStatus(t("status.pick_pitch_first"));
         }
       });
     }
@@ -1000,11 +1001,11 @@
         runEdit(() => {
           const r = Arranger.removeSection();
           if (!r.ok) {
-            setStatus("至少保留 1 个编曲段");
+            setStatus(t("status.section_cut_min"));
             return;
           }
           renderArrangement();
-          setStatus(`已减少至 ${r.count} 段`);
+          setStatus(t("status.sections_reduced", { n: r.count }));
         });
         scheduleAutosave();
       });
@@ -1023,13 +1024,13 @@
         runEdit(() => {
           const r = Sequencer.removeTrack();
           if (!r.ok) {
-            setStatus(`至少保留 ${Sequencer.MIN_TRACKS} 轨`);
+            setStatus(t("status.min_tracks", { min: Sequencer.MIN_TRACKS }));
             return;
           }
           renderSequencer();
           renderMixer();
           updateTrackCountUI();
-          setStatus(`已减少至 ${r.count} 轨`);
+          setStatus(t("status.tracks_reduced", { n: r.count }));
         });
       });
     }
@@ -1051,7 +1052,7 @@
       btn.addEventListener("click", () => {
         if (typeof EditHistory !== "undefined" && EditHistory.undo()) {
           scheduleAutosave();
-          setStatus("已撤销");
+          setStatus(t("status.undo"));
         }
       });
     });
@@ -1059,7 +1060,7 @@
       btn.addEventListener("click", () => {
         if (typeof EditHistory !== "undefined" && EditHistory.redo()) {
           scheduleAutosave();
-          setStatus("已重做");
+          setStatus(t("status.redo"));
         }
       });
     });
@@ -1069,14 +1070,14 @@
         runEdit(() => {
           const r = Sequencer.addSteps(Sequencer.STEP_ADD);
           if (!r.ok) {
-            setStatus(`已达最大 ${Sequencer.MAX_STEPS} 步`);
+            setStatus(t("status.max_steps", { max: Sequencer.MAX_STEPS }));
             return;
           }
           renderStepLabels();
           renderSequencer();
           renderArrangement();
           updateStepCountUI();
-          setStatus(`已增加至 ${Sequencer.steps} 步`);
+          setStatus(t("status.steps_increased", { n: Sequencer.steps }));
         });
       });
     }
@@ -1085,14 +1086,14 @@
         runEdit(() => {
           const r = Sequencer.removeSteps(Sequencer.STEP_ADD);
           if (!r.ok) {
-            setStatus(`最少保留 ${Sequencer.MIN_STEPS} 步`);
+            setStatus(t("status.min_steps", { min: Sequencer.MIN_STEPS }));
             return;
           }
           renderStepLabels();
           renderSequencer();
           renderArrangement();
           updateStepCountUI();
-          setStatus(`已减少至 ${Sequencer.steps} 步`);
+          setStatus(t("status.steps_reduced", { n: Sequencer.steps }));
         });
       });
     }
@@ -1102,12 +1103,12 @@
         runEdit(() => {
           const r = Sequencer.addPattern();
           if (!r.ok) {
-            setStatus(`已达最大 ${Sequencer.MAX_PATTERNS} 个类型`);
+            setStatus(t("status.max_patterns", { max: Sequencer.MAX_PATTERNS }));
             return;
           }
           renderPatternTabs();
           renderArrangement();
-          setStatus(`已增加至 ${r.count} 个类型（${patternLabel(r.count - 1)}）`);
+          setStatus(t("status.pattern_added", { n: r.count, label: patternLabel(r.count - 1) }));
         });
       });
     }
@@ -1116,7 +1117,7 @@
         runEdit(() => {
           const r = Sequencer.removePattern();
           if (!r.ok) {
-            setStatus(`至少保留 ${Sequencer.MIN_PATTERNS} 个类型`);
+            setStatus(t("status.min_patterns", { min: Sequencer.MIN_PATTERNS }));
             return;
           }
           Arranger.getSections().forEach((sec) => {
@@ -1130,7 +1131,7 @@
           renderPatternTabs();
           renderSequencer();
           renderArrangement();
-          setStatus(`已减少至 ${r.count} 个类型`);
+          setStatus(t("status.patterns_reduced", { n: r.count }));
         });
       });
     }
@@ -1164,17 +1165,17 @@
         const prevLabel = btnConfirm?.textContent;
         if (isAudio && btnConfirm) {
           btnConfirm.disabled = true;
-          btnConfirm.textContent = "渲染中…";
+          btnConfirm.textContent = t("status.rendering");
         } else {
           els.exportDialog.close();
         }
         try {
           setStatus(
             format === "json"
-              ? "正在导出项目…"
+              ? t("status.export_project")
               : isAudio
-                ? "请选择保存位置，随后将渲染音频（约数秒）…"
-                : "正在渲染并导出音频，请稍候…"
+                ? t("status.export_save")
+                : t("status.export_rendering")
           );
           const result = await ProjectIO.exportProject(getProjectData(), { format, name });
           AppLogger.info("已导出", result.filename);
@@ -1182,19 +1183,19 @@
             const hint = document.getElementById("exportDownloadHint");
             if (hint) {
               hint.hidden = false;
-              hint.textContent = "若未自动下载，请点击下方按钮保存：";
+              hint.textContent = t("export_dialog.manual_save_hint", { default: "If download did not start, use the button below:" });
               hint.appendChild(result.manualLink);
             }
-            setStatus(`渲染完成 — 已尝试下载 ${result.filename}`);
+            setStatus(t("status.export_done_dl", { name: result.filename }));
           } else {
-            setStatus(`已导出 ${result.filename}`);
+            setStatus(t("status.export_done", { name: result.filename }));
             if (isAudio) els.exportDialog.close();
           }
         } catch (err) {
           AppLogger.error("导出失败", err.message);
-          setStatus("导出失败：" + err.message);
-          if (err.message !== "已取消保存") {
-            alert("导出失败：\n" + err.message);
+          setStatus(t("status.export_failed_prefix", { msg: err.message }));
+          if (err.message !== t("status.export_cancelled") {
+            alert(t("status.export_failed_prefix", { msg: err.message }));
           }
         } finally {
           if (btnConfirm) {
@@ -1212,9 +1213,9 @@
         els.projectFileInput.value = "";
         if (!file) return;
         try {
-          if (!confirm(`导入「${file.name}」将覆盖当前编曲与布局，是否继续？`)) return;
+          if (!confirm(t("status.import_confirm", { name: file.name }))) return;
           if (typeof DraftStation !== "undefined") {
-            DraftStation.archiveBeforeLoad(getProjectData, "导入文件前备份");
+            DraftStation.archiveBeforeLoad(getProjectData, t("status.import_archive"));
           }
           const project = await ProjectIO.importFromFile(file);
           editingPublishedWorkId = null;
@@ -1225,10 +1226,10 @@
           }
           scheduleAutosave();
           AppLogger.info("项目已导入", file.name);
-          setStatus(`已导入 ${file.name}`);
+          setStatus(t("status.import_done", { name: file.name }));
         } catch (err) {
           AppLogger.error("导入失败", err.message);
-          setStatus("导入失败：" + err.message);
+          setStatus(t("status.import_failed_prefix", { msg: err.message }));
         }
       });
     }
@@ -1267,7 +1268,7 @@
         e.preventDefault();
         if (typeof EditHistory !== "undefined" && EditHistory.undo()) {
           scheduleAutosave();
-          setStatus("已撤销");
+          setStatus(t("status.undo"));
         }
         return;
       }
@@ -1278,7 +1279,7 @@
         e.preventDefault();
         if (typeof EditHistory !== "undefined" && EditHistory.redo()) {
           scheduleAutosave();
-          setStatus("已重做");
+          setStatus(t("status.redo"));
         }
         return;
       }
@@ -1362,9 +1363,9 @@
     }
     schedule();
     if (mode === "arrange") {
-      setStatus("播放编曲时间轴…");
+      setStatus(t("status.playing_timeline"));
     } else if (mode === "pattern") {
-      setStatus(`类型循环：${patternLabel(Sequencer.currentPattern())}`);
+      setStatus(t("status.type_loop_on", { pattern: patternLabel(Sequencer.currentPattern()) }));
     } else if (mode === "step") {
       setStatus(stepLoopStatusText());
     }
@@ -1386,7 +1387,7 @@
       clearLoopModes();
     }
     if (!playing) {
-      setStatus(keepLoopFlags ? "已暂停" : "已暂停");
+      setStatus(t("status.paused"));
     }
   }
 
@@ -1398,7 +1399,7 @@
     playingPatternIndex = -1;
     stepCounter = 0;
     lastScheduledStepIndex = -1;
-    setStatus("已停止");
+    setStatus(t("status.stopped"));
   }
 
   function schedule() {
@@ -1479,7 +1480,7 @@
     if (playMode === "arrange" && step === Sequencer.steps - 1) {
       const nextSec = (currentArrangeSection + 1) % sections.length;
       if (nextSec === 0 && stepIndex > 0) {
-        setStatus("编曲循环播放中…");
+        setStatus(t("status.arrange_loop"));
       }
     }
   }
@@ -1533,13 +1534,13 @@
   function loadExternalProject(project, meta = {}) {
     if (!project) return false;
     if (!meta.skipConfirm) {
-      const label = meta.title ? `「${meta.title}」` : meta.name ? `「${meta.name}」` : "该作品";
-      if (!confirm(`加载 ${label} 将替换当前编曲，是否继续？`)) return false;
+      const label = meta.title ? `「${meta.title}」` : meta.name ? `「${meta.name}」` : t("status.work_fallback");
+      if (!confirm(t("status.load_work_confirm", { label }))) return false;
     }
     if (typeof DraftStation !== "undefined") {
       DraftStation.archiveBeforeLoad(
         getProjectData,
-        meta.archiveReason || "切换前自动保存"
+        meta.archiveReason || t("status.switch_archive")
       );
     }
     applyProjectData(project);
@@ -1548,11 +1549,11 @@
     else if (!meta.fromDraftStation) editingPublishedWorkId = null;
 
     let statusMsg = meta.fromDraftStation
-      ? `已从草稿站加载：${meta.name || "草稿"}`
+      ? t("status.loaded_draft", { name: meta.name || t("status.draft_fallback") })
       : meta.filename
-        ? `已加载：${meta.title || "作品"}（${meta.filename}）`
-        : `已加载：${meta.title || "作品"}`;
-    if (meta.workId) statusMsg += " — 修改后可在作品仓库「重新发布」";
+        ? t("status.loaded_work", { title: meta.title || t("status.work_fallback"), file: meta.filename })
+        : t("status.loaded_work_simple", { title: meta.title || t("status.work_fallback") });
+    if (meta.workId) statusMsg += t("status.loaded_republish_hint");
     setStatus(statusMsg);
     return true;
   }
@@ -1627,23 +1628,23 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
     AppLogger.info("项目已保存");
-    setStatus("已保存（含草稿）");
+    setStatus(t("status.saved"));
   }
 
   function loadProject() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) {
-        setStatus("没有已保存的项目");
+        setStatus(t("status.no_saved"));
         return;
       }
       applyProjectData(JSON.parse(raw));
       scheduleAutosave();
       AppLogger.info("项目已加载");
-      setStatus("项目已加载");
+      setStatus(t("status.project_loaded"));
     } catch (err) {
       AppLogger.error("加载失败", err.message);
-      setStatus("加载失败：" + err.message);
+      setStatus(t("status.load_failed_prefix", { msg: err.message }));
     }
   }
 

@@ -147,18 +147,29 @@ const AudioEngine = (() => {
     if (inst) InstrumentEngine.trigger(inst, t, noteMidi, duration, velocity);
   }
 
+
+  function playVelocityFor(instrumentId) {
+    const preset = InstrumentRegistry.get(instrumentId);
+    if (!preset) return 0.78;
+    if (InstrumentEngine.isDrumPreset(instrumentId)) return 0.85;
+    if (preset.trigger === "chord_triad") return 0.55;
+    if (preset.id === "INS-008") return 0.95;
+    if (preset.id === "INS-007") return 0.82;
+    return 0.78;
+  }
+
   function playInstrumentOn(trackId, instrumentId, time, noteMidi, stepDuration) {
     const dur = InstrumentEngine.melodicDuration(instrumentId, stepDuration);
     const preset = InstrumentRegistry.get(instrumentId);
     if (preset?.trigger === "chord_triad" && noteMidi != null) {
-      triggerInstrument(trackId, instrumentId, time, noteMidi, stepDuration * 0.9, 0.42);
+      triggerInstrument(trackId, instrumentId, time, noteMidi, stepDuration * 0.9, playVelocityFor(instrumentId));
       return;
     }
     if (InstrumentEngine.isDrumPreset(instrumentId)) {
       triggerInstrument(trackId, instrumentId, time, null, dur, 0.85);
       return;
     }
-    triggerInstrument(trackId, instrumentId, time, noteMidi, dur, 0.42);
+    triggerInstrument(trackId, instrumentId, time, noteMidi, dur, playVelocityFor(instrumentId));
   }
 
   function playTrackSoundOn(_c, _outGetter, trackId, time, noteMidi, stepDuration) {
@@ -187,7 +198,7 @@ const AudioEngine = (() => {
       duration != null ? duration : InstrumentEngine.previewDuration(instrumentId)
     );
     unlockAudio()
-      .then(() => triggerInstrument(trackId, instrumentId, Tone.now() + 0.03, midi, stepDur, 0.8))
+      .then(() => triggerInstrument(trackId, instrumentId, Tone.now() + 0.03, midi, stepDur, playVelocityFor(instrumentId)));
       .catch(() => {});
   }
 

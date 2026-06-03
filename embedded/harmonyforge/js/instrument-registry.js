@@ -154,6 +154,7 @@ const InstrumentRegistry = (() => {
       type: "melodic",
       toneClass: "Sampler",
       trigger: "sampler_melodic",
+      postChain: "piano_eq",
       sampler: {
         baseUrl: "samples/INS-008/",
         urls: PIANO_URLS,

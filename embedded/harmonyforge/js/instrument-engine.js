@@ -156,8 +156,10 @@ const InstrumentEngine = (() => {
       });
       synth.connect(mudCut);
       mudCut.connect(bright);
-      bright.connect(destination);
-      return [mudCut, bright];
+      const gain = new Tone.Volume(5);
+      bright.connect(gain);
+      gain.connect(destination);
+      return [mudCut, bright, gain];
     }
     synth.connect(destination);
     return [];
@@ -212,7 +214,12 @@ const InstrumentEngine = (() => {
       case "sampler_melodic":
         if (noteMidi == null || !synth?.triggerAttackRelease) return;
         {
-          const vel = preset.id === "INS-007" ? velocity * 0.75 : velocity * 0.88;
+          const vel =
+            preset.id === "INS-008"
+              ? Math.min(1, velocity * 1.02)
+              : preset.id === "INS-007"
+                ? velocity * 0.78
+                : velocity * 0.88;
           synth.triggerAttackRelease(midiToNote(noteMidi), dur, t, vel);
         }
         break;

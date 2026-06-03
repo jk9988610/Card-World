@@ -82,7 +82,9 @@
     "step_loop": "单步循环",
     "step_loop_title": "按顶栏 BPM 循环播放所选步进列（点步进号选择）",
     "mixer_legend": "混音",
-    "mixer_aria": "混音"
+    "mixer_aria": "混音",
+    "undo_title": "撤销 (Ctrl+Z)",
+    "redo_title": "重做 (Ctrl+Y)"
   },
   "footer": {
     "ready": "就绪"
@@ -305,7 +307,24 @@
     "loaded_draft": "Loaded from drafts: {name}",
     "loaded_work": "Loaded: {title} ({file})",
     "loaded_work_simple": "Loaded: {title}",
-    "loaded_republish_hint": " — edit then “Republish” in My works"
+    "loaded_republish_hint": " — edit then “Republish” in My works",
+    "type_loop_off": "类型循环已关闭",
+    "step_loop_off": "单步循环已关闭",
+    "seq_follow_on": "音序跟随已开启",
+    "pick_pitch_first": "请先点击一个音高",
+    "sections_reduced": "已减少至 {n} 段",
+    "tracks_reduced": "已减少至 {n} 轨",
+    "insert_pos_before": "前",
+    "insert_pos_after": "后",
+    "export_failed_prefix": "导出失败：{msg}",
+    "import_failed_prefix": "导入失败：{msg}",
+    "load_failed_prefix": "加载失败：{msg}",
+    "min_tracks": "至少保留 {min} 轨",
+    "import_archive": "导入前备份",
+    "switch_archive": "加载作品前备份",
+    "draft_fallback": "草稿",
+    "work_fallback": "作品",
+    "load_work_confirm": "加载 {label} 将替换当前编曲，是否继续？"
   },
   "cloud": {
     "cloud_off": "云同步未开启。请在卡牌世界联网并开启云同步。",
@@ -407,5 +426,18 @@
     "load_builtin": "从内置加载",
     "load_builtin_hint": "仅可编辑合成器类内置；鼓/采样请用音色合成器新建",
     "builtin_unsupported": "该内置音色无法在合成器中直接编辑，请新建自定义音色"
+  },
+  "sequencer": {
+    "type_count": "{n} 型",
+    "track_count": "{n} 轨",
+    "step_count": "{n} 步",
+    "step_loop_pick": "选择为单步循环列（第 {n} 步）",
+    "track_switch_title": "点击切换音色（当前：{name}）",
+    "step_cell_aria": "{track} 第 {step} 步",
+    "sections_count": "{n} 段",
+    "type_loop_label": "类型循环",
+    "step_loop_label": "单步循环",
+    "track_fallback": "轨",
+    "step_density_title": "步进密度（相对主 BPM）"
   }
 }
