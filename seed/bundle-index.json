@@ -1,0 +1,31 @@
+{
+  "programs": [
+    "action.exit_fullscreen",
+    "action.fullscreen",
+    "action.highlight_off",
+    "action.highlight_on",
+    "action.reset_world",
+    "art.editor.open",
+    "art.gallery.open",
+    "computer.enter",
+    "door.on_play",
+    "flagship.main",
+    "guide.deal_weave_rest",
+    "guide.start",
+    "language.open",
+    "language.set_en",
+    "language.set_zh",
+    "music.embed.open",
+    "scene.back",
+    "settings.open",
+    "world.bootstrap"
+  ],
+  "packs": [
+    "official.computer",
+    "official.flagship",
+    "official.world-entry"
+  ],
+  "scenes": [
+    "scene.computer.desktop"
+  ]
+}

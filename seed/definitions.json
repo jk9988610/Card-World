@@ -2,72 +2,10 @@
   "version": "0.3.3",
   "definitions": [
     {
-      "slug": "seed.starter_deck",
-      "slugKey": "backpack",
-      "localeKey": "backpack",
-      "titleKey": "cards.backpack",
-      "textKey": "cards.backpack",
-      "title": "Backpack",
-      "text": "Drag to Field — pour contents (other hand cards stashed inside). Drag an item to Hand to take it. Drag to Field again to close.",
-      "tags": [
-        "container",
-        "deck"
-      ],
-      "image": {
-        "type": "pixel/v1",
-        "w": 8,
-        "h": 8,
-        "palette": [
-          "#1a1a2e",
-          "#dee2e6"
-        ],
-        "pixels": [
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1
-        ]
-      }
-    },
-    {
-      "slug": "founders.tutorial",
-      "localeKey": "tutorial",
-      "titleKey": "cards.tutorial",
-      "textKey": "cards.tutorial",
-      "title": "Tutorial",
-      "text": "Help.",
-      "tags": [
-        "tutorial"
-      ],
-      "image": {
-        "type": "pixel/v1",
-        "w": 8,
-        "h": 8,
-        "palette": [
-          "#1a1a2e",
-          "#f94144"
-        ],
-        "pixels": [
-          1,
-          0,
-          1,
-          0,
-          1,
-          0,
-          1,
-          0
-        ]
-      }
-    },
-    {
       "slug": "founders.shop_script",
       "localeKey": "shop_script",
       "title": "Shop Script",
-      "text": "Drag to Field \u2014 step-by-step play hints.",
+      "text": "Drag to Field — step-by-step play hints.",
       "tags": [
         "settings",
         "guide"
@@ -270,7 +208,7 @@
       "localeKey": "lang_zh",
       "titleKey": "cards.lang_zh",
       "textKey": "cards.lang_zh",
-      "title": "\u4e2d\u6587",
+      "title": "中文",
       "text": "ZH",
       "tags": [
         "settings",
@@ -638,14 +576,31 @@
       "textKey": "cards.back",
       "title": "Back",
       "text": "Return to the world.",
-      "tags": ["tool", "reusable"],
-      "programs": { "on_play": "scene.back" },
+      "tags": [
+        "tool",
+        "reusable"
+      ],
+      "programs": {
+        "on_play": "scene.back"
+      },
       "image": {
         "type": "pixel/v1",
         "w": 8,
         "h": 8,
-        "palette": ["#1a1a2e", "#dee2e6"],
-        "pixels": [0, 1, 1, 0, 0, 0, 0, 0]
+        "palette": [
+          "#1a1a2e",
+          "#dee2e6"
+        ],
+        "pixels": [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
       }
     },
     {
@@ -655,15 +610,42 @@
       "textKey": "cards.music_tool_studio",
       "title": "HarmonyForge",
       "text": "Play — open the music production app (no review).",
-      "tags": ["music", "tool", "reusable"],
+      "tags": [
+        "music",
+        "tool",
+        "reusable"
+      ],
       "playStyle": "enter",
-      "programs": { "on_play": "music.embed.open" },
+      "programs": {
+        "on_play": "music.embed.open"
+      },
       "image": {
         "type": "pixel/v1",
         "w": 8,
         "h": 8,
-        "palette": ["#1a1a2e", "#51cf66", "#2f9e44"],
-        "pixels": [0, 1, 1, 1, 1, 1, 1, 0, 1, 2, 2, 2, 2, 2, 2, 1]
+        "palette": [
+          "#1a1a2e",
+          "#51cf66",
+          "#2f9e44"
+        ],
+        "pixels": [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          1
+        ]
       }
     },
     {
@@ -673,15 +655,42 @@
       "textKey": "cards.art_tool_pixel",
       "title": "Pixel Board",
       "text": "Play — open the 7:5 pixel editor and art shop.",
-      "tags": ["art", "tool", "reusable"],
+      "tags": [
+        "art",
+        "tool",
+        "reusable"
+      ],
       "playStyle": "enter",
-      "programs": { "on_play": "art.editor.open" },
+      "programs": {
+        "on_play": "art.editor.open"
+      },
       "image": {
         "type": "pixel/v1",
         "w": 8,
         "h": 8,
-        "palette": ["#1a1a2e", "#495057", "#868e96"],
-        "pixels": [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1]
+        "palette": [
+          "#1a1a2e",
+          "#495057",
+          "#868e96"
+        ],
+        "pixels": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1
+        ]
       }
     },
     {
@@ -691,14 +700,41 @@
       "textKey": "cards.art_tool_export",
       "title": "Export Work",
       "text": "Spawn your art as a card.",
-      "tags": ["art", "tool", "reusable"],
-      "programs": { "on_play": "art.export.work" },
+      "tags": [
+        "art",
+        "tool",
+        "reusable"
+      ],
+      "programs": {
+        "on_play": "art.export.work"
+      },
       "image": {
         "type": "pixel/v1",
         "w": 8,
         "h": 8,
-        "palette": ["#1a1a2e", "#2f9e44", "#f8f9fa"],
-        "pixels": [0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0]
+        "palette": [
+          "#1a1a2e",
+          "#2f9e44",
+          "#f8f9fa"
+        ],
+        "pixels": [
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
       }
     },
     {
@@ -708,13 +744,36 @@
       "textKey": "cards.art_work",
       "title": "Artwork",
       "text": "Created in the pixel board.",
-      "tags": ["art", "content"],
+      "tags": [
+        "art",
+        "content"
+      ],
       "image": {
         "type": "pixel/v1",
         "w": 8,
         "h": 8,
-        "palette": ["#1a1a2e", "#f8f9fa"],
-        "pixels": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        "palette": [
+          "#1a1a2e",
+          "#f8f9fa"
+        ],
+        "pixels": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
       }
     },
     {

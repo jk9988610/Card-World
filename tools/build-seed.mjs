@@ -30,8 +30,15 @@ if (existsSync(sceneDir)) {
   }
 }
 
+const bundleIndex = {
+  programs: Object.keys(programs),
+  packs: Object.keys(packs),
+  scenes: Object.keys(scenes),
+};
+writeFileSync(join(seedRoot, "bundle-index.json"), JSON.stringify(bundleIndex, null, 2));
+
 writeFileSync(
   join(outDir, "seed-bundle.json"),
   JSON.stringify({ version: "0.1.0", builtAt: new Date().toISOString(), definitions, starterWorld, programs, packs, scenes }, null, 2)
 );
-console.log("Built dist/seed-bundle.json");
+console.log("Built dist/seed-bundle.json and seed/bundle-index.json");

@@ -1,7 +1,7 @@
 /**
  * Offline-first shell: serve cached same-origin assets when the network is down.
  */
-const CACHE = "cardworld-shell-v8";
+const CACHE = "cardworld-shell-v9";
 
 const HF_BASE = "./embedded/harmonyforge/";
 

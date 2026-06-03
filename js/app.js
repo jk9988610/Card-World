@@ -24,13 +24,7 @@ import {
 } from "./art-storage.js";
 import { canUseNetwork, ensureCloudForUpload, shouldUseCloud } from "./net-policy.js";
 import { invalidateSupabaseClient } from "./supabase-client.js";
-import {
-  MUSIC_EMBED_SLUG_TO_MODE,
-  MUSIC_PROD_URL,
-  MUSIC_STUDIO_SLUG,
-  isHarmonyForgeEmbedUrl,
-  musicEmbedUrl,
-} from "./music-config.js";
+import { MUSIC_EMBED_SLUG_TO_MODE, MUSIC_PROD_URL, musicEmbedUrl } from "./music-config.js";
 import { AppLogger } from "./app-logger.js";
 import { initAppVersionUI } from "./app-version.js";
 import { clearAllCardWorldStorage, clearSave, loadSave, writeSave } from "./storage.js";
@@ -40,7 +34,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.13.7";
+const APP_VERSION = "0.13.4";
 
 const SETTINGS_MENU_SLUGS = new Set([
   "founders.language_settings",
@@ -65,12 +59,13 @@ const TAP_ZOOM_MAX_MS = 450;
 
 const TOOL_SLUGS_ON_FIELD = [
   "founders.settings",
-  "seed.starter_deck",
   "art.tool.pixel",
   "music.tool.studio",
 ];
 
 const REMOVED_CARD_SLUGS = new Set([
+  "seed.starter_deck",
+  "founders.tutorial",
   "founders.world_controller",
   "founders.art_console",
   "founders.music_console",
@@ -1064,10 +1059,9 @@ function migrateWorldLayoutIfNeeded() {
   if (!starterSnapshot) return;
 
   const toolOnField = state.field.some((i) => TOOL_SLUGS_ON_FIELD.includes(i.definitionSlug));
-  const tutorialInHand = state.hand.some((i) => i.definitionSlug === "founders.tutorial");
   const guideOnField = state.field.some((i) => i.definitionSlug === "founders.guide_weave_1");
 
-  if (toolOnField || tutorialInHand || guideOnField) {
+  if (toolOnField || guideOnField) {
     const doorInHand = state.hand.filter((i) => i.definitionSlug === "content.door");
     const doorOnField = state.field.filter((i) => i.definitionSlug === "content.door");
     state.hand = patchHandWithMissingStarters([
@@ -1968,70 +1962,13 @@ function musicTitleForMode(mode) {
   return t[`title_${mode}`] || t.title_default || "HarmonyForge";
 }
 
-let musicEmbedPrefetchScheduled = false;
-
-function collectCardInstances(list, out = []) {
-  if (!Array.isArray(list)) return out;
-  for (const inst of list) {
-    out.push(inst);
-    if (inst.inner) collectCardInstances(inst.inner, out);
-  }
-  return out;
-}
-
-function hasMusicStudioCard() {
-  const all = [
-    ...collectCardInstances(state.hand),
-    ...collectCardInstances(state.field),
-    ...collectCardInstances(state.fieldStash),
-  ];
-  return all.some((i) => i.definitionSlug === MUSIC_STUDIO_SLUG);
-}
-
-function ensureMusicEmbedSrc(mode = "studio") {
-  const frame = els.musicConsoleFrame;
-  if (!frame) return;
-  const url = musicEmbedUrl(mode, currentLocale);
-  if (!isHarmonyForgeEmbedUrl(frame.src)) {
-    frame.src = url;
-    return;
-  }
-  try {
-    const cur = new URL(frame.src, location.href);
-    const next = new URL(url);
-    if (cur.searchParams.get("lang") !== next.searchParams.get("lang")) {
-      frame.src = url;
-    }
-  } catch {
-    frame.src = url;
-  }
-}
-
-function prefetchMusicEmbed(mode = "studio") {
-  const frame = els.musicConsoleFrame;
-  if (!frame || isHarmonyForgeEmbedUrl(frame.src)) return;
-  const url = musicEmbedUrl(mode, currentLocale);
-  frame.src = url;
-  AppLogger.info("Music embed prefetched (idle)", url);
-}
-
-function scheduleMusicEmbedPrefetch() {
-  if (!hasMusicStudioCard() || musicEmbedPrefetchScheduled) return;
-  musicEmbedPrefetchScheduled = true;
-  const run = () => prefetchMusicEmbed("studio");
-  if (typeof requestIdleCallback === "function") {
-    requestIdleCallback(run, { timeout: 5000 });
-  } else {
-    setTimeout(run, 2000);
-  }
-}
-
 function openMusicEmbed(mode = "studio") {
   musicEmbedMode = mode;
+  const url = musicEmbedUrl(mode, currentLocale);
   if (els.musicConsoleTitle) els.musicConsoleTitle.textContent = musicTitleForMode(mode);
   if (els.musicConsoleHint) els.musicConsoleHint.textContent = musicEmbedHintForMode(mode);
-  ensureMusicEmbedSrc(mode);
-  AppLogger.info("Music embed opened (local bundle)", musicEmbedUrl(mode, currentLocale));
+  if (els.musicConsoleFrame) els.musicConsoleFrame.src = url;
+  AppLogger.info("Music embed opened (local bundle)", url);
   document.body.classList.add("music-console-open");
   els.musicConsole?.classList.remove("hidden");
   els.musicConsole?.setAttribute("aria-hidden", "false");
@@ -2041,6 +1978,7 @@ function closeMusicEmbed() {
   document.body.classList.remove("music-console-open");
   els.musicConsole?.classList.add("hidden");
   els.musicConsole?.setAttribute("aria-hidden", "true");
+  if (els.musicConsoleFrame) els.musicConsoleFrame.src = "about:blank";
 }
 
 function openExternalUrl(url) {
@@ -2526,7 +2464,6 @@ function renderAll() {
   document.body.classList.toggle("container-open", isContainerOpen());
   renderZone("field", els.field, state.field);
   renderZone("hand", els.hand, state.hand);
-  scheduleMusicEmbedPrefetch();
 }
 
 function renderZone(zoneName, container, instances) {
@@ -2876,18 +2813,55 @@ async function loadJson(url) {
   return res.json();
 }
 
+async function loadBundleFromSeedDir(baseHref) {
+  const root = baseHref.endsWith("/") ? baseHref : `${baseHref}/`;
+  const definitions = await loadJson(`${root}definitions.json`);
+  const starterWorld = await loadJson(`${root}starter-world.json`);
+  const index = await loadJson(`${root}bundle-index.json`);
+  const programs = {};
+  for (const id of index.programs || []) {
+    const p = await loadJson(`${root}programs/${id}.json`);
+    programs[p.id] = p;
+  }
+  const packs = {};
+  for (const slug of index.packs || []) {
+    const p = await loadJson(`${root}packs/${slug}.json`);
+    packs[p.slug] = p;
+  }
+  const scenes = {};
+  for (const id of index.scenes || []) {
+    const s = await loadJson(`${root}scenes/${id}.json`);
+    scenes[s.id] = s;
+  }
+  return { definitions, starterWorld, programs, packs, scenes };
+}
+
 async function loadBundle() {
   const base = new URL("../", import.meta.url).href;
+  const pathBase = `${location.pathname.replace(/\/[^/]*$/, "/")}`;
   const v = APP_VERSION;
-  const urls = [
+  const bundleUrls = [
     new URL(`dist/seed-bundle.json?v=${v}`, base).href,
-    `${location.pathname.replace(/\/[^/]*$/, "/")}dist/seed-bundle.json?v=${v}`,
+    `${pathBase}dist/seed-bundle.json?v=${v}`,
     `dist/seed-bundle.json?v=${v}`,
   ];
   let lastErr;
-  for (const url of urls) {
+  for (const url of bundleUrls) {
     try {
       return await loadJson(url);
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  const seedBases = [
+    new URL("seed/", base).href,
+    `${pathBase}seed/`,
+    "seed/",
+  ];
+  for (const seedBase of seedBases) {
+    try {
+      AppLogger.warn("seed-bundle.json missing — loading seed/ fragments", seedBase);
+      return await loadBundleFromSeedDir(seedBase);
     } catch (e) {
       lastErr = e;
     }
@@ -2970,18 +2944,10 @@ async function init() {
   } catch (err) {
     AppLogger.error("Init failed", err?.message || err);
     const msg = String(err?.message || err);
-    if (!state.hand.length) {
+    if (!state.hand.length && defBySlug.has("founders.settings")) {
       state.hand.push({
         instanceId: "inst_err_hand",
-        definitionSlug: "founders.tutorial",
-        localeKey: "load_error",
-        text: msg,
-      });
-    }
-    if (!state.field.length) {
-      state.field.push({
-        instanceId: "inst_err_field",
-        definitionSlug: "founders.tutorial",
+        definitionSlug: "founders.settings",
         localeKey: "load_error",
         text: msg,
       });
