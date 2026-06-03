@@ -9,3 +9,5 @@
 - **Networking:** list/install/publish/save only; single-player feel.
 
 See **DEMO.md** for playbook and tools.
+
+**HarmonyForge · Piano Studio (P0):** rhythm/step sequencer is frozen; the music embed defaults to piano-only mode. Authoritative spec: **PIANO-STUDIO-P0.md**.
