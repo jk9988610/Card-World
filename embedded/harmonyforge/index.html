@@ -47,7 +47,6 @@
         <button type="button" class="btn btn-ghost btn-compact" id="btnClear" data-i18n="header.clear">Clear</button>
         <span class="header-divider" aria-hidden="true"></span>
         <button type="button" class="btn btn-ghost btn-compact" id="btnLayout" data-i18n="header.layout" data-i18n-title="header.layout_title">Layout</button>
-        <button type="button" class="btn btn-ghost btn-compact" id="btnToneLab" data-i18n="header.tone_lab" data-i18n-title="header.tone_lab_title">Tone Lab</button>
         <button type="button" class="btn btn-ghost btn-compact" id="btnHelp" data-i18n="header.help" data-i18n-title="header.help_title">Help</button>
         <button type="button" class="btn btn-ghost btn-compact" id="btnLogs" data-i18n="header.logs" data-i18n-title="header.logs_title">Logs</button>
         <button type="button" class="btn btn-ghost btn-compact" id="btnUpdate" data-i18n="header.update" data-i18n-title="header.update_title">Update</button>
@@ -277,7 +276,7 @@
       </label>
       <label class="export-field">
         <span data-i18n="publish_dialog.nickname">Display name</span>
-        <input type="text" id="publishNickname" class="export-basename" data-i18n-placeholder="publish_dialog.nickname_ph" placeholder="Shown in the cloud library" autocomplete="nickname">
+        <input type="text" id="publishNickname" class="export-basename" data-i18n-placeholder="publish_dialog.nickname_ph" placeholder="Same as review site" autocomplete="nickname">
       </label>
       <p class="note-dialog-hint export-hint" data-i18n="publish_dialog.hint">
         Card World build: publishes to cloud library (shared Supabase). Uploads MP3 preview and full arrangement JSON (.hfproj).
@@ -370,8 +369,11 @@
   <script type="module" src="js/hf-boot.js"></script>
   <script defer src="js/app-logger.js"></script>
   <script defer src="js/version.js"></script>
-  <script defer src="js/instruments.js"></script>
   <script defer src="js/tone.min.js"></script>
+  <script defer src="js/instrument-registry.js"></script>
+  <script defer src="js/instrument-engine.js"></script>
+  <script defer src="js/instrument-store.js"></script>
+  <script defer src="js/instruments.js"></script>
   <script defer src="js/audio-engine.js"></script>
   <script defer src="js/track-timing.js"></script>
   <script defer src="js/sequencer.js"></script>
@@ -385,6 +387,8 @@
   <script defer src="js/lame.min.js"></script>
   <script defer src="js/audio-export.js"></script>
   <script defer src="js/draft-station.js"></script>
+  <script defer src="js/track-pool.js"></script>
+  <script defer src="js/tone-lab.js"></script>
   <script defer src="js/cloud-publish.js"></script>
   <script defer src="js/app.js"></script>
 </body>

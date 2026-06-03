@@ -498,6 +498,8 @@
       });
     }
     if (typeof HelpGuide !== "undefined") HelpGuide.init();
+    if (typeof InstrumentStore !== "undefined" && InstrumentStore.hydrate) InstrumentStore.hydrate();
+    if (typeof ToneLab !== "undefined" && ToneLab.init) ToneLab.init();
     LayoutManager.init({
       onChange: () => scheduleAutosave(),
     });
@@ -1327,6 +1329,8 @@
     const btnHelpClose = document.getElementById("btnHelpClose");
     if (btnHelp && helpDialog) {
       btnHelp.addEventListener("click", () => { if (typeof HelpGuide !== "undefined") HelpGuide.init(); helpDialog.showModal(); });
+    if (typeof InstrumentStore !== "undefined" && InstrumentStore.hydrate) InstrumentStore.hydrate();
+    if (typeof ToneLab !== "undefined" && ToneLab.init) ToneLab.init();
     }
     if (btnHelpClose && helpDialog) {
       btnHelpClose.addEventListener("click", () => helpDialog.close());
