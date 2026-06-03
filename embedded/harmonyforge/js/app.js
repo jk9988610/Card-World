@@ -729,8 +729,9 @@
       const nameBtn = document.createElement("button");
       nameBtn.type = "button";
       nameBtn.className = `track-name-btn ${track.class}`;
-      nameBtn.textContent = track.name;
-      nameBtn.title = `点击切换音色（当前：${track.name}）`;
+      const label = track.name || track.instrumentId || track.id;
+      nameBtn.textContent = label;
+      nameBtn.title = `${label} (${track.instrumentId}) · 点击切换音色`;
       nameBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         openInstrumentPicker(track.id);

@@ -4,6 +4,28 @@
 const Instruments = (() => {
   const EMPTY_ID = "INS-000";
 
+  /** Step / track label colors (legacy class names, still used in CSS). */
+  const VISUAL_CLASS_BY_ID = {
+    "INS-000": "inst-empty",
+    "INS-001": "drum-kick",
+    "INS-002": "drum-snare",
+    "INS-003": "drum-hat",
+    "INS-004": "drum-open",
+    "INS-005": "drum-tom",
+    "INS-006": "drum-cymbal",
+    "INS-007": "bass",
+    "INS-008": "melodic-piano",
+    "INS-008-FM": "melodic-piano",
+    "INS-009": "melodic-eguitar",
+    "INS-010": "chord",
+    "INS-011": "lead",
+    "INS-012": "melodic-sax",
+    "INS-013": "melodic-trumpet",
+    "INS-014": "melodic-trombone",
+    "INS-015": "melodic-violin",
+    "INS-016": "melodic-cello",
+  };
+
   const LEGACY_IDS = {
     kick: "INS-001",
     snare: "INS-002",
@@ -46,16 +68,34 @@ const Instruments = (() => {
   let CATALOG = [];
   let byId = {};
 
+  function visualClassFor(p) {
+    if (p.user) return "inst-user";
+    if (VISUAL_CLASS_BY_ID[p.id]) return VISUAL_CLASS_BY_ID[p.id];
+    if (p.kind === "empty") return "inst-empty";
+    if (p.type === "drum") return "inst-drum";
+    if (p.type === "melodic") return "inst-melodic";
+    return "inst-melodic";
+  }
+
+  function catalogName(p) {
+    if (p.user && p.name) return p.name;
+    if (typeof window.HF_T === "function") {
+      const key = `instruments.${p.id}`;
+      const translated = window.HF_T(key);
+      if (translated && translated !== key) return translated;
+    }
+    return p.id;
+  }
+
   function presetToCatalogEntry(p) {
-    const displayName = p.user && p.name ? p.name : p.id;
     return {
       id: p.id,
-      name: displayName,
+      name: catalogName(p),
       type: p.type,
       engineId: p.id,
       kind: p.kind,
       toneClass: InstrumentRegistry.toneLabel(p),
-      class: p.kind === "empty" ? "inst-empty" : `inst-${p.type}`,
+      class: visualClassFor(p),
       synthesis: p.synthesis,
       user: !!p.user,
     };
@@ -101,7 +141,6 @@ const Instruments = (() => {
     return items;
   }
 
-  /** Picker list: builtins + user + empty slot label */
   function listForPicker(typeFilter) {
     return list(typeFilter);
   }
@@ -116,17 +155,10 @@ const Instruments = (() => {
   }
 
   function applyI18nNames() {
-    if (!window.HF_T) return;
     for (const inst of CATALOG) {
-      if (inst.user) continue;
-      const key = `instruments.${inst.id}`;
-      const name = window.HF_T(key);
-      if (name && name !== key) inst.name = name;
-    }
-    const emptyLabel = window.HF_T("instruments.INS-000");
-    const empty = byId[EMPTY_ID];
-    if (empty && emptyLabel && emptyLabel !== "instruments.INS-000") {
-      empty.name = emptyLabel;
+      const p =
+        typeof InstrumentRegistry !== "undefined" ? InstrumentRegistry.get(inst.id) : null;
+      if (p) inst.name = catalogName(p);
     }
   }
 
@@ -137,6 +169,7 @@ const Instruments = (() => {
     CATALOG,
     DEFAULT_LAYOUT,
     LEGACY_IDS,
+    VISUAL_CLASS_BY_ID,
     resolveId,
     get,
     list,
@@ -145,5 +178,6 @@ const Instruments = (() => {
     isEmptyId,
     refreshCatalog,
     applyI18nNames,
+    visualClassFor,
   };
 })();

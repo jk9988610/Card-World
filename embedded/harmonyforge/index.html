@@ -154,6 +154,13 @@
       <h3 data-i18n="tone_lab.title">Tone Lab</h3>
       <p class="note-dialog-hint" data-i18n="tone_lab.hint">Design a synth patch, name it, and save to an empty track.</p>
       <label class="export-field">
+        <span data-i18n="tone_lab.load_builtin">Load builtin</span>
+        <select id="toneLabBuiltinSeed" class="pitch-select">
+          <option value="">—</option>
+        </select>
+      </label>
+      <p class="note-dialog-hint tone-lab-seed-hint" data-i18n="tone_lab.load_builtin_hint">Synth builtins only.</p>
+      <label class="export-field">
         <span data-i18n="tone_lab.name">Name</span>
         <input type="text" id="toneLabName" class="export-basename" data-i18n-placeholder="tone_lab.name_ph" placeholder="My patch" autocomplete="off" maxlength="48">
       </label>

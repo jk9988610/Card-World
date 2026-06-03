@@ -203,22 +203,22 @@
     "cancel": "Cancel"
   },
   "instruments": {
-    "INS-001": "INS-001",
-    "INS-002": "INS-002",
-    "INS-003": "INS-003",
-    "INS-004": "INS-004",
-    "INS-005": "INS-005",
-    "INS-006": "INS-006",
-    "INS-007": "INS-007",
-    "INS-008": "INS-008",
-    "INS-009": "INS-009",
-    "INS-010": "INS-010",
-    "INS-011": "INS-011",
-    "INS-012": "INS-012",
-    "INS-013": "INS-013",
-    "INS-014": "INS-014",
-    "INS-015": "INS-015",
-    "INS-016": "INS-016",
+    "INS-001": "Kick",
+    "INS-002": "Snare",
+    "INS-003": "Hi-hat",
+    "INS-004": "Open hat",
+    "INS-005": "Tom",
+    "INS-006": "Cymbal",
+    "INS-007": "Bass",
+    "INS-008": "Piano (sample)",
+    "INS-009": "Pluck",
+    "INS-010": "Chord pad",
+    "INS-011": "Lead",
+    "INS-012": "Reed lead",
+    "INS-013": "Trumpet",
+    "INS-014": "Trombone",
+    "INS-015": "Violin",
+    "INS-016": "Cello",
     "kick": "INS-001",
     "snare": "INS-002",
     "hihat": "INS-003",
@@ -235,7 +235,8 @@
     "trombone": "INS-014",
     "violin": "INS-015",
     "cello": "INS-016",
-    "INS-000": "Empty track"
+    "INS-000": "Empty",
+    "INS-008-FM": "Piano FM"
   },
   "scales": {
     "major": "Major",
@@ -410,6 +411,9 @@
     "release": "Release",
     "need_name": "Enter a patch name",
     "saved": "Saved “{name}” on track {track}",
-    "saved_no_slot": "Saved “{name}” — assign it on an empty track"
+    "saved_no_slot": "Saved “{name}” — assign it on an empty track",
+    "load_builtin": "Load builtin",
+    "load_builtin_hint": "Synth builtins only; for drums/samples create a new patch",
+    "builtin_unsupported": "This builtin cannot be loaded in Tone Lab; create a new patch instead"
   }
 }

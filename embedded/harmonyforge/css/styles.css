@@ -546,6 +546,21 @@ select.pitch-select:focus {
 .step-cell.on.melodic-trombone { background: linear-gradient(135deg, #b45309, #fdba74); }
 .step-cell.on.melodic-eguitar { background: linear-gradient(135deg, #4c1d95, #e879f9); }
 
+/* Numbered registry (inst-*) + user patches */
+.step-cell.on.inst-drum { background: linear-gradient(135deg, #9d174d, var(--drum)); }
+.step-cell.on.inst-melodic { background: linear-gradient(135deg, #1e40af, #7dd3fc); }
+.step-cell.on.inst-user { background: linear-gradient(135deg, #047857, var(--accent)); }
+.step-cell.on.inst-empty {
+  background: var(--bg-elevated);
+  border: 1px dashed var(--border);
+  opacity: 0.55;
+}
+
+.track-name-btn.inst-drum { color: var(--drum); }
+.track-name-btn.inst-melodic { color: #93c5fd; }
+.track-name-btn.inst-user { color: var(--accent); }
+.track-name-btn.inst-empty { color: var(--text-muted); font-weight: 500; }
+
 .track-name-btn.drum-kick,
 .track-name.drum-kick { color: var(--drum); }
 .track-name-btn.drum-snare,
@@ -785,6 +800,7 @@ kbd {
   min-height: 2.2rem;
 }
 
+
 .tone-lab-dialog {
   width: min(28rem, 96vw);
 }
@@ -821,6 +837,11 @@ kbd {
   font-size: 0.62rem;
   text-align: right;
   color: var(--text);
+}
+
+.tone-lab-seed-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.62rem;
 }
 
 .arrange-follow-toggle {

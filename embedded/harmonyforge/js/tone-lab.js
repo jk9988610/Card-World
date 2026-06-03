@@ -2,14 +2,7 @@
  * Tone Lab — build synth presets, name, save, assign to empty track immediately.
  */
 const ToneLab = (() => {
-  const BASES = [
-    { id: "MonoSynth", label: "MonoSynth" },
-    { id: "FMSynth", label: "FMSynth" },
-    { id: "AMSynth", label: "AMSynth" },
-    { id: "Synth", label: "Synth" },
-  ];
-
-  const OSC_TYPES = ["sine", "triangle", "sawtooth", "square", "fatsawtooth"];
+  const BASES = new Set(["MonoSynth", "FMSynth", "AMSynth", "Synth"]);
 
   const SLIDERS = [
     { input: "toneLabAttack", out: "toneLabAttackOut", decimals: 3 },
@@ -46,6 +39,62 @@ const ToneLab = (() => {
       $(input)?.addEventListener("input", syncSliderOutputs);
     }
     syncSliderOutputs();
+  }
+
+  function setSlider(id, value, fallback) {
+    const el = $(id);
+    if (!el || value == null || !Number.isFinite(Number(value))) return;
+    el.value = String(value);
+  }
+
+  function loadFromRegistryPreset(preset) {
+    if (!preset) return false;
+    if (preset.kind !== "synth" || !BASES.has(preset.toneClass)) {
+      alert(t("tone_lab.builtin_unsupported"));
+      return false;
+    }
+    const opts = preset.options || {};
+    const env = opts.envelope || {};
+    $("toneLabBase").value = preset.toneClass;
+    $("toneLabOsc").value = opts.oscillator?.type || "sawtooth";
+    setSlider("toneLabAttack", env.attack, 0.02);
+    setSlider("toneLabDecay", env.decay, 0.2);
+    setSlider("toneLabSustain", env.sustain, 0.5);
+    setSlider("toneLabRelease", env.release, 0.3);
+    const filterFreq = opts.filter?.frequency ?? opts.filterEnvelope?.baseFrequency;
+    setSlider("toneLabFilter", filterFreq != null ? filterFreq * (opts.filter ? 1 : 2.5) : 2000, 2000);
+    const inst = typeof Instruments !== "undefined" ? Instruments.get(preset.id) : null;
+    const suggested = inst?.name ? `${inst.name} 副本` : `${preset.id} copy`;
+    if ($("toneLabName") && !$("toneLabName").value.trim()) {
+      $("toneLabName").value = suggested;
+    }
+    syncSliderOutputs();
+    return true;
+  }
+
+  function loadFromRegistryId(presetId) {
+    if (!presetId || typeof InstrumentRegistry === "undefined") return false;
+    return loadFromRegistryPreset(InstrumentRegistry.get(presetId));
+  }
+
+  function populateBuiltinSeedSelect() {
+    const sel = $("toneLabBuiltinSeed");
+    if (!sel || typeof InstrumentRegistry === "undefined") return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">—</option>';
+    InstrumentRegistry.list("melodic", { includeHidden: true })
+      .filter((p) => p.kind === "synth" && BASES.has(p.toneClass) && !p.user)
+      .forEach((p) => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        const label =
+          typeof Instruments !== "undefined" && Instruments.get(p.id)
+            ? Instruments.get(p.id).name
+            : p.id;
+        opt.textContent = `${label} (${p.id})`;
+        sel.appendChild(opt);
+      });
+    if (current) sel.value = current;
   }
 
   function readForm() {
@@ -150,11 +199,17 @@ const ToneLab = (() => {
     return preset;
   }
 
-  function openDialog() {
+  function openDialog(seedPresetId) {
     const dialog = $("toneLabDialog");
     if (!dialog) return;
     if (typeof window.HFI18n !== "undefined" && window.HFI18n.applyDomI18n) {
       window.HFI18n.applyDomI18n(dialog);
+    }
+    populateBuiltinSeedSelect();
+    if (seedPresetId) {
+      loadFromRegistryId(seedPresetId);
+      const seedSel = $("toneLabBuiltinSeed");
+      if (seedSel) seedSel.value = seedPresetId;
     }
     syncSliderOutputs();
     dialog.showModal();
@@ -166,8 +221,14 @@ const ToneLab = (() => {
     if (!dialog || !btnOpen) return;
 
     wireSliders();
+    populateBuiltinSeedSelect();
 
-    btnOpen.addEventListener("click", openDialog);
+    btnOpen.addEventListener("click", () => openDialog());
+
+    $("toneLabBuiltinSeed")?.addEventListener("change", (e) => {
+      const id = e.target.value;
+      if (id) loadFromRegistryId(id);
+    });
 
     $("btnToneLabPreview")?.addEventListener("click", () => {
       preview().catch((err) => alert(err.message));
@@ -185,5 +246,12 @@ const ToneLab = (() => {
     dialog.addEventListener("close", disposePreview);
   }
 
-  return { init, buildPresetFromForm, saveAndUse, preview, BASES };
+  return {
+    init,
+    openDialog,
+    loadFromRegistryId,
+    buildPresetFromForm,
+    saveAndUse,
+    preview,
+  };
 })();
