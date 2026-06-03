@@ -402,6 +402,14 @@
     "filter": "Filter",
     "preview": "Preview",
     "save": "Save & use",
-    "close": "Close"
+    "close": "Close",
+    "name_ph": "My patch",
+    "attack": "Attack",
+    "decay": "Decay",
+    "sustain": "Sustain",
+    "release": "Release",
+    "need_name": "Enter a patch name",
+    "saved": "Saved “{name}” on track {track}",
+    "saved_no_slot": "Saved “{name}” — assign it on an empty track"
   }
 }

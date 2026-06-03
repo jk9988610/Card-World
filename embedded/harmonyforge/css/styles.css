@@ -529,19 +529,6 @@ select.pitch-select:focus {
   border-color: transparent;
 }
 
-.step-cell.on.inst-drum { background: linear-gradient(135deg, #be185d, var(--drum)); }
-.step-cell.on.inst-melodic { background: linear-gradient(135deg, #1e3a5f, #93c5fd); }
-.step-cell.on.inst-empty { background: var(--bg-cell); border: 1px dashed var(--border); opacity: 0.45; }
-
-.track-name-btn.inst-empty,
-.track-name.inst-empty { color: var(--text-muted); font-style: italic; }
-
-.tone-lab-dialog .tone-lab-sliders {
-  display: grid;
-  gap: 0.35rem;
-  margin: 0.5rem 0;
-}
-
 .step-cell.on.drum-kick { background: linear-gradient(135deg, #be185d, var(--drum)); }
 .step-cell.on.drum-snare { background: linear-gradient(135deg, #9d174d, #ec4899); }
 .step-cell.on.drum-hat { background: linear-gradient(135deg, #831843, #f9a8d4); }
@@ -796,6 +783,44 @@ kbd {
 
 .export-dialog .export-hint {
   min-height: 2.2rem;
+}
+
+.tone-lab-dialog {
+  width: min(28rem, 96vw);
+}
+
+.tone-lab-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.tone-lab-env {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0.5rem 0 0.75rem;
+}
+
+.tone-lab-slider {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr 3rem;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.tone-lab-slider input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.tone-lab-slider output {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  text-align: right;
+  color: var(--text);
 }
 
 .arrange-follow-toggle {

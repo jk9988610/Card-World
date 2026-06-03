@@ -402,6 +402,14 @@
     "filter": "滤波",
     "preview": "试听",
     "save": "保存并使用",
-    "close": "关闭"
+    "close": "关闭",
+    "name_ph": "我的音色",
+    "attack": "起音",
+    "decay": "衰减",
+    "sustain": "延音",
+    "release": "释音",
+    "need_name": "请输入音色名称",
+    "saved": "已保存「{name}」并载入轨道 {track}",
+    "saved_no_slot": "已保存「{name}」— 请在空轨上选择该音色"
   }
 }

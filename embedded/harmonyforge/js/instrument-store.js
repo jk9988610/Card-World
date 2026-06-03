@@ -78,6 +78,15 @@ const InstrumentStore = (() => {
     }
   }
 
+  function replaceAll(list) {
+    const prev = loadAll();
+    if (typeof InstrumentRegistry !== "undefined") {
+      prev.forEach((p) => InstrumentRegistry.unregisterUserPreset(p.id));
+    }
+    saveAll(Array.isArray(list) ? list : []);
+    hydrate();
+  }
+
   return {
     loadAll,
     registerPreset,
@@ -85,6 +94,7 @@ const InstrumentStore = (() => {
     importFromProject,
     exportForProject,
     hydrate,
+    replaceAll,
     nextUserId,
   };
 })();

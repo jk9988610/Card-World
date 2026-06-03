@@ -11,11 +11,41 @@ const ToneLab = (() => {
 
   const OSC_TYPES = ["sine", "triangle", "sawtooth", "square", "fatsawtooth"];
 
+  const SLIDERS = [
+    { input: "toneLabAttack", out: "toneLabAttackOut", decimals: 3 },
+    { input: "toneLabDecay", out: "toneLabDecayOut", decimals: 2 },
+    { input: "toneLabSustain", out: "toneLabSustainOut", decimals: 2 },
+    { input: "toneLabRelease", out: "toneLabReleaseOut", decimals: 2 },
+    { input: "toneLabFilter", out: "toneLabFilterOut", decimals: 0 },
+  ];
+
   let previewInst = null;
   let previewExtras = [];
 
+  function t(key, params) {
+    if (typeof window.HF_T !== "function") return key;
+    return window.HF_T(key, params);
+  }
+
   function $(id) {
     return document.getElementById(id);
+  }
+
+  function syncSliderOutputs() {
+    for (const { input, out, decimals } of SLIDERS) {
+      const el = $(input);
+      const o = $(out);
+      if (!el || !o) continue;
+      const n = Number(el.value);
+      o.textContent = Number.isFinite(n) ? n.toFixed(decimals) : el.value;
+    }
+  }
+
+  function wireSliders() {
+    for (const { input } of SLIDERS) {
+      $(input)?.addEventListener("input", syncSliderOutputs);
+    }
+    syncSliderOutputs();
   }
 
   function readForm() {
@@ -88,7 +118,6 @@ const ToneLab = (() => {
     disposePreview();
     await AudioEngine.unlockAudio();
     const preset = buildPresetFromForm();
-    
     previewInst = InstrumentEngine.createFromPreset(preset);
     const dest = Tone.getDestination();
     previewExtras = InstrumentEngine.connect(previewInst, dest);
@@ -98,7 +127,7 @@ const ToneLab = (() => {
   function saveAndUse() {
     const preset = buildPresetFromForm();
     if (!preset.name) {
-      alert("请输入音色名称");
+      alert(t("tone_lab.need_name"));
       return null;
     }
     InstrumentStore.registerPreset(preset);
@@ -113,12 +142,22 @@ const ToneLab = (() => {
     if (typeof window.setStatus === "function") {
       window.setStatus(
         trackId
-          ? `已保存「${preset.name}」并载入轨道 ${trackId}`
-          : `已保存「${preset.name}」— 请在空轨上选择该音色`
+          ? t("tone_lab.saved", { name: preset.name, track: trackId })
+          : t("tone_lab.saved_no_slot", { name: preset.name })
       );
     }
     $("toneLabDialog")?.close();
     return preset;
+  }
+
+  function openDialog() {
+    const dialog = $("toneLabDialog");
+    if (!dialog) return;
+    if (typeof window.HFI18n !== "undefined" && window.HFI18n.applyDomI18n) {
+      window.HFI18n.applyDomI18n(dialog);
+    }
+    syncSliderOutputs();
+    dialog.showModal();
   }
 
   function init() {
@@ -126,9 +165,9 @@ const ToneLab = (() => {
     const btnOpen = $("btnToneLab");
     if (!dialog || !btnOpen) return;
 
-    btnOpen.addEventListener("click", () => {
-      dialog.showModal();
-    });
+    wireSliders();
+
+    btnOpen.addEventListener("click", openDialog);
 
     $("btnToneLabPreview")?.addEventListener("click", () => {
       preview().catch((err) => alert(err.message));

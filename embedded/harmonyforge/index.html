@@ -37,6 +37,7 @@
         <button type="button" class="btn btn-ghost btn-compact" id="btnPublish" data-i18n="header.publish" data-i18n-title="header.publish_title">Publish</button>
         <button type="button" class="btn btn-ghost btn-compact" id="btnWorksRepo" data-i18n="header.works_repo" data-i18n-title="header.works_repo_title">My works</button>
         <button type="button" class="btn btn-ghost btn-compact" id="btnPublishStore" data-i18n="header.publish_store" data-i18n-title="header.publish_store_title">Store</button>
+        <button type="button" class="btn btn-ghost btn-compact" id="btnToneLab" data-i18n="header.tone_lab" data-i18n-title="header.tone_lab_title">Tone Lab</button>
         <button type="button" class="btn btn-ghost btn-compact" id="btnDraftStation" data-i18n="header.draft_station" data-i18n-title="header.draft_station_title">Drafts</button>
         <span class="header-divider" aria-hidden="true"></span>
         <button type="button" class="btn btn-ghost btn-compact" id="btnExport" data-i18n="header.export" data-i18n-title="header.export_title">Export</button>
@@ -147,6 +148,71 @@
   </div>
 
   
+
+  <dialog id="toneLabDialog" class="note-dialog export-dialog tone-lab-dialog">
+    <form method="dialog" id="toneLabForm">
+      <h3 data-i18n="tone_lab.title">Tone Lab</h3>
+      <p class="note-dialog-hint" data-i18n="tone_lab.hint">Design a synth patch, name it, and save to an empty track.</p>
+      <label class="export-field">
+        <span data-i18n="tone_lab.name">Name</span>
+        <input type="text" id="toneLabName" class="export-basename" data-i18n-placeholder="tone_lab.name_ph" placeholder="My patch" autocomplete="off" maxlength="48">
+      </label>
+      <div class="tone-lab-row">
+        <label class="export-field">
+          <span data-i18n="tone_lab.base">Engine</span>
+          <select id="toneLabBase" class="pitch-select">
+            <option value="MonoSynth">MonoSynth</option>
+            <option value="FMSynth">FMSynth</option>
+            <option value="AMSynth">AMSynth</option>
+            <option value="Synth">Synth</option>
+          </select>
+        </label>
+        <label class="export-field">
+          <span data-i18n="tone_lab.osc">Oscillator</span>
+          <select id="toneLabOsc" class="pitch-select">
+            <option value="sine">sine</option>
+            <option value="triangle">triangle</option>
+            <option value="sawtooth" selected>sawtooth</option>
+            <option value="square">square</option>
+            <option value="fatsawtooth">fatsawtooth</option>
+          </select>
+        </label>
+      </div>
+      <div class="tone-lab-env">
+        <label class="tone-lab-slider">
+          <span data-i18n="tone_lab.attack">Attack</span>
+          <input type="range" id="toneLabAttack" min="0.001" max="2" step="0.001" value="0.02">
+          <output id="toneLabAttackOut">0.02</output>
+        </label>
+        <label class="tone-lab-slider">
+          <span data-i18n="tone_lab.decay">Decay</span>
+          <input type="range" id="toneLabDecay" min="0.01" max="2" step="0.01" value="0.2">
+          <output id="toneLabDecayOut">0.2</output>
+        </label>
+        <label class="tone-lab-slider">
+          <span data-i18n="tone_lab.sustain">Sustain</span>
+          <input type="range" id="toneLabSustain" min="0" max="1" step="0.01" value="0.5">
+          <output id="toneLabSustainOut">0.5</output>
+        </label>
+        <label class="tone-lab-slider">
+          <span data-i18n="tone_lab.release">Release</span>
+          <input type="range" id="toneLabRelease" min="0.01" max="3" step="0.01" value="0.3">
+          <output id="toneLabReleaseOut">0.3</output>
+        </label>
+        <label class="tone-lab-slider">
+          <span data-i18n="tone_lab.filter">Filter</span>
+          <input type="range" id="toneLabFilter" min="200" max="12000" step="50" value="2000">
+          <output id="toneLabFilterOut">2000</output>
+        </label>
+      </div>
+      <menu>
+        <button type="button" class="btn btn-ghost" id="btnToneLabClose" data-i18n="tone_lab.close">Close</button>
+        <button type="button" class="btn btn-sm" id="btnToneLabPreview" data-i18n="tone_lab.preview">Preview</button>
+        <button type="button" class="btn btn-sm" id="btnToneLabSave" data-i18n="tone_lab.save">Save &amp; use</button>
+      </menu>
+    </form>
+  </dialog>
+
   <dialog id="layoutDialog" class="layout-dialog help-dialog">
     <div class="log-dialog-head">
       <h3 data-i18n="layout_dialog.title">Layout</h3>

@@ -1329,8 +1329,6 @@
     const btnHelpClose = document.getElementById("btnHelpClose");
     if (btnHelp && helpDialog) {
       btnHelp.addEventListener("click", () => { if (typeof HelpGuide !== "undefined") HelpGuide.init(); helpDialog.showModal(); });
-    if (typeof InstrumentStore !== "undefined" && InstrumentStore.hydrate) InstrumentStore.hydrate();
-    if (typeof ToneLab !== "undefined" && ToneLab.init) ToneLab.init();
     }
     if (btnHelpClose && helpDialog) {
       btnHelpClose.addEventListener("click", () => helpDialog.close());
@@ -1604,6 +1602,10 @@
       arranger: Arranger.exportState(),
       bpm: Number(els.bpm.value),
       layout: typeof LayoutManager !== "undefined" ? LayoutManager.exportState() : undefined,
+      userInstruments:
+        typeof InstrumentStore !== "undefined"
+          ? InstrumentStore.exportForProject()
+          : undefined,
     };
   }
 
@@ -1636,6 +1638,9 @@
 
   function applyProjectData(data, silent) {
     if (!data) return false;
+    if (data.userInstruments && typeof InstrumentStore !== "undefined") {
+      InstrumentStore.replaceAll(data.userInstruments);
+    }
     if (data.sequencer) Sequencer.importState(data.sequencer);
     if (data.layout && typeof LayoutManager !== "undefined") {
       LayoutManager.importState(data.layout);
