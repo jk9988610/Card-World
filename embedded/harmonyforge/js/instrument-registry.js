@@ -159,7 +159,7 @@ const InstrumentRegistry = (() => {
       toneClass: "Sampler",
       trigger: "sampler_melodic",
       sampler: {
-        baseUrl: "https://tonejs.github.io/audio/salamander/",
+        baseUrl: "samples/INS-008/",
         urls: {
           A0: "A0.mp3",
           C1: "C1.mp3",
@@ -196,7 +196,7 @@ const InstrumentRegistry = (() => {
       fallbackPresetId: "INS-008-FM",
       duration: { melodicMin: 0.2, preview: 0.5 },
       synthesis:
-        "Tone.Sampler: Salamander grand piano multisamples (tonejs.github.io/audio/salamander/). Fallback: INS-008-FM if load fails.",
+        "Tone.Sampler: local Salamander multisamples in samples/INS-008/ (offline). Fallback: INS-008-FM if files missing.",
     },
 
     {
