@@ -23,7 +23,9 @@ const AppVersion = (() => {
   let remoteBuild = null;
 
   function versionUrl() {
-    return `version.json?t=${Date.now()}`;
+    const url = new URL("version.json", document.baseURI || location.href);
+    url.searchParams.set("t", String(Date.now()));
+    return url.href;
   }
 
   async function fetchRemote() {
