@@ -1,17 +1,38 @@
 /**
- * 版本管理与在线更新检测
- * 以页面内嵌的 BUNDLED_* 为「当前运行版本」；与远端 version.json 比较决定是否可更新
+ * 版本管理 — 与 Card World 共用 version.json 与 cw-app-version（无独立 Harmony 版本号）
  */
 const AppVersion = (() => {
-  let BUNDLED_VERSION = "2.4.0";
-  let BUNDLED_BUILD = "2.4.0";
+  const IS_CARD_WORLD_EMBED =
+    document.querySelector('meta[name="card-world-embed"]')?.content === "1";
 
-  (function applyMetaBundled() {
-    const mv = document.querySelector('meta[name="hf-app-version"]')?.content;
-    const mb = document.querySelector('meta[name="hf-app-build"]')?.content;
-    if (mv && mv !== "dev") BUNDLED_VERSION = mv;
-    if (mb && mb !== "dev") BUNDLED_BUILD = mb;
-  })();
+  function readMeta(name) {
+    return document.querySelector(`meta[name="${name}"]`)?.content?.trim() || "";
+  }
+
+  function readParentMeta(name) {
+    try {
+      if (window.parent === window) return "";
+      return window.parent.document.querySelector(`meta[name="${name}"]`)?.content?.trim() || "";
+    } catch {
+      return "";
+    }
+  }
+
+  function resolveBundled() {
+    const pv = readParentMeta("cw-app-version");
+    const pb = readParentMeta("cw-app-build");
+    if (pv && pv !== "dev") {
+      return { version: pv, build: pb || pv };
+    }
+    const cv = readMeta("cw-app-version");
+    const cb = readMeta("cw-app-build");
+    if (cv && cv !== "dev") {
+      return { version: cv, build: cb || cv };
+    }
+    return { version: "0.0.0", build: "0.0.0" };
+  }
+
+  let { version: BUNDLED_VERSION, build: BUNDLED_BUILD } = resolveBundled();
 
   const scriptEl = document.currentScript;
   if (scriptEl?.src) {
@@ -23,7 +44,9 @@ const AppVersion = (() => {
   let remoteBuild = null;
 
   function versionUrl() {
-    return `version.json?t=${Date.now()}`;
+    const url = new URL("../../version.json", window.location.href);
+    url.searchParams.set("t", String(Date.now()));
+    return url.href;
   }
 
   async function fetchRemote() {
@@ -122,6 +145,20 @@ const AppVersion = (() => {
 
     AppLogger.info("正在更新到最新版本…", `v${remote.version}`);
 
+    if (IS_CARD_WORLD_EMBED) {
+      try {
+        if (window.parent !== window && window.parent.location) {
+          const url = new URL(window.parent.location.href);
+          url.searchParams.set("v", remote.build || remote.version);
+          url.searchParams.set("_", String(Date.now()));
+          window.parent.location.replace(url.toString());
+          return { status: "reloading" };
+        }
+      } catch {
+        /* fall through to local reload */
+      }
+    }
+
     if (typeof caches !== "undefined") {
       try {
         const keys = await caches.keys();
@@ -142,12 +179,14 @@ const AppVersion = (() => {
     syncVersionLabels();
 
     const btnUpdate = document.getElementById("btnUpdate");
+    if (btnUpdate && IS_CARD_WORLD_EMBED) {
+      btnUpdate.hidden = true;
+    }
+
     const btnLogs = document.getElementById("btnLogs");
     const btnCopyLogs = document.getElementById("btnCopyLogs");
     const logDialog = document.getElementById("logDialog");
     const logContent = document.getElementById("logContent");
-
-    /* Offline-first: version.json only when user taps Update */
 
     if (btnLogs && logDialog) {
       btnLogs.addEventListener("click", () => {
@@ -183,7 +222,7 @@ const AppVersion = (() => {
       });
     }
 
-    if (btnUpdate) {
+    if (btnUpdate && !btnUpdate.hidden) {
       btnUpdate.addEventListener("click", async () => {
         btnUpdate.disabled = true;
         const prev = btnUpdate.textContent;

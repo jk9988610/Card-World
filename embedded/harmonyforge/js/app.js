@@ -468,7 +468,7 @@
       requestAnimationFrame(() => logModuleShellMetrics());
     }
 
-    AppLogger.info("HarmonyForge 启动", `v${AppVersion.CURRENT}`);
+    AppLogger.info("HarmonyForge 启动", `Card World v${AppVersion.CURRENT}`);
     AppVersion.initUI();
     wireAudioUnlock();
     if (typeof DraftStation !== "undefined") {
@@ -486,8 +486,8 @@
         },
       });
     }
-    if (typeof CloudPublish !== "undefined") {
-      CloudPublish.initUI({
+    if (typeof BeatBattleCloud !== "undefined") {
+      BeatBattleCloud.initUI({
         getProjectData,
         setStatus,
         onLoadPublishedProject: loadExternalProject,
@@ -498,8 +498,6 @@
       });
     }
     if (typeof HelpGuide !== "undefined") HelpGuide.init();
-    if (typeof InstrumentStore !== "undefined" && InstrumentStore.hydrate) InstrumentStore.hydrate();
-    if (typeof ToneLab !== "undefined" && ToneLab.init) ToneLab.init();
     LayoutManager.init({
       onChange: () => scheduleAutosave(),
     });
@@ -729,9 +727,8 @@
       const nameBtn = document.createElement("button");
       nameBtn.type = "button";
       nameBtn.className = `track-name-btn ${track.class}`;
-      const label = track.name || track.instrumentId || track.id;
-      nameBtn.textContent = label;
-      nameBtn.title = `${label} (${track.instrumentId}) · 点击切换音色`;
+      nameBtn.textContent = track.name;
+      nameBtn.title = `点击切换音色（当前：${track.name}）`;
       nameBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         openInstrumentPicker(track.id);
@@ -1603,10 +1600,6 @@
       arranger: Arranger.exportState(),
       bpm: Number(els.bpm.value),
       layout: typeof LayoutManager !== "undefined" ? LayoutManager.exportState() : undefined,
-      userInstruments:
-        typeof InstrumentStore !== "undefined"
-          ? InstrumentStore.exportForProject()
-          : undefined,
     };
   }
 
@@ -1639,9 +1632,6 @@
 
   function applyProjectData(data, silent) {
     if (!data) return false;
-    if (data.userInstruments && typeof InstrumentStore !== "undefined") {
-      InstrumentStore.replaceAll(data.userInstruments);
-    }
     if (data.sequencer) Sequencer.importState(data.sequencer);
     if (data.layout && typeof LayoutManager !== "undefined") {
       LayoutManager.importState(data.layout);
@@ -1759,9 +1749,6 @@
       if (window.__hfI18nPromise) await window.__hfI18nPromise;
     } catch (_) {}
     init();
-    window.renderSequencer = renderSequencer;
-    window.renderMixer = renderMixer;
-    window.setStatus = setStatus;
   }
 
   if (document.readyState === "loading") {

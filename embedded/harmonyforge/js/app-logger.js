@@ -43,14 +43,18 @@ const AppLogger = (() => {
   function versionLine() {
     if (typeof AppVersion !== "undefined" && AppVersion.getInfo) {
       const v = AppVersion.getInfo();
-      return `HarmonyForge v${v.version}`;
+      const label =
+        document.querySelector('meta[name="card-world-embed"]')?.content === "1"
+          ? "Card World"
+          : "HarmonyForge";
+      return `${label} v${v.version}`;
     }
     return "HarmonyForge (version unknown)";
   }
 
   function formatAll() {
     const header = `=== ${versionLine()} ===`;
-    if (!entries.length) return header + "\n" + (typeof window.HF_T === "function" ? window.HF_T("logger.no_entries") : "(no log entries)");
+    if (!entries.length) return header + "\n（暂无日志）";
     return header + "\n" + entries.map(formatEntry).join("\n");
   }
 
@@ -74,16 +78,16 @@ const AppLogger = (() => {
           document.execCommand("copy");
           document.body.removeChild(ta);
         }
-        push("info", typeof window.HF_T === "function" ? window.HF_T("logger.copied") : "Log copied", header);
+        push("info", "日志已复制到剪贴板", header);
         return true;
       } catch (err) {
-        push("error", typeof window.HF_T === "function" ? window.HF_T("logger.copy_failed") : "Copy failed", err.message);
+        push("error", "复制日志失败", err.message);
         return false;
       }
     },
     clear() {
       entries.length = 0;
-      push("info", typeof window.HF_T === "function" ? window.HF_T("logger.cleared") : "Log cleared");
+      push("info", "日志已清空");
     },
   };
 })();
