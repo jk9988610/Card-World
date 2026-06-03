@@ -198,7 +198,7 @@ const AudioEngine = (() => {
       duration != null ? duration : InstrumentEngine.previewDuration(instrumentId)
     );
     unlockAudio()
-      .then(() => triggerInstrument(trackId, instrumentId, Tone.now() + 0.03, midi, stepDur, playVelocityFor(instrumentId)));
+      .then(() => triggerInstrument(trackId, instrumentId, Tone.now() + 0.03, midi, stepDur, playVelocityFor(instrumentId)))
       .catch(() => {});
   }
 

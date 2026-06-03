@@ -475,8 +475,8 @@
         },
       });
     }
-    if (typeof BeatBattleCloud !== "undefined") {
-      BeatBattleCloud.initUI({
+    if (typeof CloudPublish !== "undefined") {
+      CloudPublish.initUI({
         getProjectData,
         setStatus,
         onLoadPublishedProject: loadExternalProject,
@@ -1194,7 +1194,7 @@
         } catch (err) {
           AppLogger.error("导出失败", err.message);
           setStatus(t("status.export_failed_prefix", { msg: err.message }));
-          if (err.message !== t("status.export_cancelled") {
+          if (err.message !== t("status.export_cancelled")) {
             alert(t("status.export_failed_prefix", { msg: err.message }));
           }
         } finally {

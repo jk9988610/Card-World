@@ -887,3 +887,8 @@ const CloudPublish = (() => {
     initUI,
   };
 })();
+
+if (typeof globalThis !== "undefined") {
+  globalThis.CloudPublish = CloudPublish;
+  globalThis.BeatBattleCloud = CloudPublish;
+}
