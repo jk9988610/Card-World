@@ -23,7 +23,19 @@ const AudioEngine = (() => {
     if (ready) return;
     Tone.getDestination().volume.value = Tone.gainToDb(MASTER_GAIN);
     ready = true;
-    InstrumentEngine.createAsync("INS-008").catch(() => {});
+    [
+      "INS-001",
+      "INS-002",
+      "INS-003",
+      "INS-004",
+      "INS-005",
+      "INS-006",
+      "INS-007",
+      "INS-008",
+      "INS-009",
+    ].forEach((id) => {
+      InstrumentEngine.createAsync(id).catch(() => {});
+    });
     if (typeof AppLogger !== "undefined") {
       AppLogger.info("Tone.js ready", `v${Tone.version}`);
     }

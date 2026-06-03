@@ -200,51 +200,32 @@ const InstrumentEngine = (() => {
     switch (preset.trigger) {
       case "empty":
         return;
-      case "sampler_melodic":
-        if (noteMidi == null || !synth?.triggerAttackRelease) return;
-        synth.triggerAttackRelease(midiToNote(noteMidi), dur, t, velocity * 0.88);
-        break;
-      case "drum_membrane":
-        synth.triggerAttackRelease(opts.note || "C2", dur, t, velocity * (opts.velocityScale ?? 1));
-        break;
-      case "drum_noise":
-        synth.triggerAttackRelease(dur, t, velocity);
-        break;
-      case "drum_metal":
+      case "sampler_drum":
+        if (!synth?.triggerAttackRelease) return;
         synth.triggerAttackRelease(
-          opts.note || "C6",
+          opts.note || "C2",
           opts.length || "8n",
           t,
           velocity * (opts.velocityScale ?? 1)
         );
         break;
+      case "sampler_melodic":
+        if (noteMidi == null || !synth?.triggerAttackRelease) return;
+        {
+          const vel = preset.id === "INS-007" ? velocity * 0.75 : velocity * 0.88;
+          synth.triggerAttackRelease(midiToNote(noteMidi), dur, t, vel);
+        }
+        break;
       case "chord_triad": {
-        if (noteMidi == null) return;
+        if (noteMidi == null || !synth?.triggerAttackRelease) return;
         const n = Tone.Frequency(midiToNote(noteMidi)).toMidi();
         const notes = [n, n + 4, n + 7].map((m) => midiToNote(m));
         synth.triggerAttackRelease(notes, dur, t, velocity * 0.42);
         break;
       }
-      case "piano_fm": {
-        if (noteMidi == null) return;
-        if (synth.set) synth.set(getPianoStrikeParams(noteMidi));
-        const gate = pianoGateDuration(duration);
-        synth.triggerAttackRelease(midiToNote(noteMidi), gate, t, velocity * 0.92);
-        break;
-      }
-      case "melodic":
       default:
-        if (noteMidi == null) return;
-        const vel =
-          preset.id === "INS-015" || preset.id === "INS-016"
-            ? velocity * 0.52
-            : preset.id === "INS-007"
-              ? velocity * 0.75
-              : preset.id === "INS-009"
-                ? velocity * 0.7
-                : velocity;
-        const noteDur = preset.id === "INS-009" ? dur * 0.85 : dur;
-        synth.triggerAttackRelease(midiToNote(noteMidi), noteDur, t, vel);
+        if (noteMidi == null || !synth?.triggerAttackRelease) return;
+        synth.triggerAttackRelease(midiToNote(noteMidi), dur, t, velocity);
         break;
     }
   }

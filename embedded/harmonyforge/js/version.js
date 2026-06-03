@@ -3,8 +3,8 @@
  * 以页面内嵌的 BUNDLED_* 为「当前运行版本」；与远端 version.json 比较决定是否可更新
  */
 const AppVersion = (() => {
-  let BUNDLED_VERSION = "2.3.1";
-  let BUNDLED_BUILD = "2.3.1";
+  let BUNDLED_VERSION = "2.4.0";
+  let BUNDLED_BUILD = "2.4.0";
 
   (function applyMetaBundled() {
     const mv = document.querySelector('meta[name="hf-app-version"]')?.content;
