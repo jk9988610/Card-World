@@ -293,9 +293,9 @@ const Sequencer = (() => {
     return true;
   }
 
-  /** Chromatic pitch ranges per instrument (no scale/key filtering). */
-  const PIANO_MIDI_MIN = 36;
-  const PIANO_MIDI_MAX = 96;
+  /** 88-key piano: A0 (21) through C8 (108), chromatic. */
+  const PIANO_MIDI_MIN = 21;
+  const PIANO_MIDI_MAX = 108;
 
   function resolveInstrumentId(track) {
     if (!track) return "";

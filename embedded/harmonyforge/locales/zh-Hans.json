@@ -153,7 +153,7 @@
     "scale": "Scale",
     "scale_pick_title": "Scale (default major)",
     "preview": "Preview",
-    "hint": "按真实音高（半音）选择；可试听后点「应用」写入该步。",
+    "hint": "完整 88 键钢琴（A0–C8）半音排列；可试听后点「应用」。",
     "cancel": "Cancel",
     "clear": "Clear",
     "apply": "Apply"
