@@ -24,7 +24,13 @@ import {
 } from "./art-storage.js";
 import { canUseNetwork, ensureCloudForUpload, shouldUseCloud } from "./net-policy.js";
 import { invalidateSupabaseClient } from "./supabase-client.js";
-import { MUSIC_EMBED_SLUG_TO_MODE, MUSIC_PROD_URL, musicEmbedUrl } from "./music-config.js";
+import {
+  MUSIC_EMBED_SLUG_TO_MODE,
+  MUSIC_PROD_URL,
+  MUSIC_STUDIO_SLUG,
+  isHarmonyForgeEmbedUrl,
+  musicEmbedUrl,
+} from "./music-config.js";
 import { AppLogger } from "./app-logger.js";
 import { initAppVersionUI } from "./app-version.js";
 import { clearAllCardWorldStorage, clearSave, loadSave, writeSave } from "./storage.js";
@@ -34,7 +40,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.13.5";
+const APP_VERSION = "0.13.4";
 
 const SETTINGS_MENU_SLUGS = new Set([
   "founders.language_settings",
@@ -431,9 +437,9 @@ function drawCardSwatch(canvas, tags, large = false, pixelImage = null) {
     canvas.style.height = "100%";
     const ctx = canvas.getContext("2d");
     if (pixelImage?.type === "pixel/v1") {
-      drawPixelImage(ctx, pixelImage, w, h, { fit: true, background: "#000000" });
+      drawPixelImage(ctx, pixelImage, w, h, { fit: true, background: "#e9ecef" });
     } else {
-      ctx.fillStyle = "#000000";
+      ctx.fillStyle = swatchColor(tags);
       ctx.fillRect(0, 0, w, h);
     }
   };
@@ -530,13 +536,6 @@ function isContainerOpen() {
   return !!getOpenContainerOnField();
 }
 
-/** Backpack open: field is logically active but must not render any field cards. */
-function isBackpackOpen() {
-  const open = getOpenContainerOnField();
-  if (!open) return false;
-  return isBackpack(getDef(open.definitionSlug));
-}
-
 function findContainerInHand() {
   for (const inst of state.hand) {
     if (isContainerCard(getDef(inst.definitionSlug))) return inst;
@@ -603,11 +602,13 @@ function openContainerFromHand(instanceId) {
     if (!state.guideQueue.length) setHintTarget("founders.language_settings");
   } else {
     if (!inner.length) {
-      toPour = [];
-    } else {
-      toPour = [...inner];
-      inst.inner = [];
+      state.hand.push(inst);
+      for (const c of state.fieldStash) state.field.push(c);
+      state.fieldStash = [];
+      return false;
     }
+    toPour = [...inner];
+    inst.inner = [];
   }
   for (const item of toPour) state.field.push(item);
 
@@ -1967,13 +1968,70 @@ function musicTitleForMode(mode) {
   return t[`title_${mode}`] || t.title_default || "HarmonyForge";
 }
 
+let musicEmbedPrefetchScheduled = false;
+
+function collectCardInstances(list, out = []) {
+  if (!Array.isArray(list)) return out;
+  for (const inst of list) {
+    out.push(inst);
+    if (inst.inner) collectCardInstances(inst.inner, out);
+  }
+  return out;
+}
+
+function hasMusicStudioCard() {
+  const all = [
+    ...collectCardInstances(state.hand),
+    ...collectCardInstances(state.field),
+    ...collectCardInstances(state.fieldStash),
+  ];
+  return all.some((i) => i.definitionSlug === MUSIC_STUDIO_SLUG);
+}
+
+function ensureMusicEmbedSrc(mode = "studio") {
+  const frame = els.musicConsoleFrame;
+  if (!frame) return;
+  const url = musicEmbedUrl(mode, currentLocale);
+  if (!isHarmonyForgeEmbedUrl(frame.src)) {
+    frame.src = url;
+    return;
+  }
+  try {
+    const cur = new URL(frame.src, location.href);
+    const next = new URL(url);
+    if (cur.searchParams.get("lang") !== next.searchParams.get("lang")) {
+      frame.src = url;
+    }
+  } catch {
+    frame.src = url;
+  }
+}
+
+function prefetchMusicEmbed(mode = "studio") {
+  const frame = els.musicConsoleFrame;
+  if (!frame || isHarmonyForgeEmbedUrl(frame.src)) return;
+  const url = musicEmbedUrl(mode, currentLocale);
+  frame.src = url;
+  AppLogger.info("Music embed prefetched (idle)", url);
+}
+
+function scheduleMusicEmbedPrefetch() {
+  if (!hasMusicStudioCard() || musicEmbedPrefetchScheduled) return;
+  musicEmbedPrefetchScheduled = true;
+  const run = () => prefetchMusicEmbed("studio");
+  if (typeof requestIdleCallback === "function") {
+    requestIdleCallback(run, { timeout: 5000 });
+  } else {
+    setTimeout(run, 2000);
+  }
+}
+
 function openMusicEmbed(mode = "studio") {
   musicEmbedMode = mode;
-  const url = musicEmbedUrl(mode, currentLocale);
   if (els.musicConsoleTitle) els.musicConsoleTitle.textContent = musicTitleForMode(mode);
   if (els.musicConsoleHint) els.musicConsoleHint.textContent = musicEmbedHintForMode(mode);
-  if (els.musicConsoleFrame) els.musicConsoleFrame.src = url;
-  AppLogger.info("Music embed opened (local bundle)", url);
+  ensureMusicEmbedSrc(mode);
+  AppLogger.info("Music embed opened (local bundle)", musicEmbedUrl(mode, currentLocale));
   document.body.classList.add("music-console-open");
   els.musicConsole?.classList.remove("hidden");
   els.musicConsole?.setAttribute("aria-hidden", "false");
@@ -1983,7 +2041,6 @@ function closeMusicEmbed() {
   document.body.classList.remove("music-console-open");
   els.musicConsole?.classList.add("hidden");
   els.musicConsole?.setAttribute("aria-hidden", "true");
-  if (els.musicConsoleFrame) els.musicConsoleFrame.src = "about:blank";
 }
 
 function openExternalUrl(url) {
@@ -2466,26 +2523,16 @@ function buildCardEl(inst, zone, opts = {}) {
 
 function renderAll() {
   if (pointerDrag?.active || dragGhost) abortPointerDrag();
-  const backpackOpen = isBackpackOpen();
   document.body.classList.toggle("container-open", isContainerOpen());
-  document.body.classList.toggle("backpack-open", backpackOpen);
-
-  const fieldInstances = backpackOpen ? [] : state.field;
-  const handInstances = backpackOpen && state.field[0] ? [...state.hand, state.field[0]] : state.hand;
-  const handZoneOverrides = {};
-  if (backpackOpen && state.field[0]) {
-    handZoneOverrides[state.field[0].instanceId] = "field";
-  }
-
-  renderZone("field", els.field, fieldInstances);
-  renderZone("hand", els.hand, handInstances, handZoneOverrides);
+  renderZone("field", els.field, state.field);
+  renderZone("hand", els.hand, state.hand);
+  scheduleMusicEmbedPrefetch();
 }
 
-function renderZone(zoneName, container, instances, zoneOverrides = {}) {
+function renderZone(zoneName, container, instances) {
   container.innerHTML = "";
   for (const inst of instances) {
-    const dragZone = zoneOverrides[inst.instanceId] ?? zoneName;
-    container.appendChild(buildCardEl(inst, dragZone));
+    container.appendChild(buildCardEl(inst, zoneName));
   }
 }
 
