@@ -705,6 +705,12 @@ kbd {
   max-width: 360px;
 }
 
+
+.note-dialog.note-dialog--piano {
+  max-width: min(96vw, 920px);
+  width: min(96vw, 920px);
+}
+
 .note-dialog::backdrop {
   background: rgba(0, 0, 0, 0.6);
 }
@@ -843,6 +849,106 @@ kbd {
 .choice-dialog .note-grid {
   margin-bottom: 0.5rem;
 }
+
+.seq-track-group-header {
+  width: 100%;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0.45rem 0.15rem 0.2rem;
+  margin-top: 0.15rem;
+  border-top: 1px solid var(--border);
+}
+
+.seq-track-group-header:first-child {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0.1rem;
+}
+
+.piano-keyboard-host {
+  margin-bottom: 0.75rem;
+}
+
+.piano-keyboard-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  padding-bottom: 0.35rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.piano-keyboard {
+  position: relative;
+  --pk-white-w: 14px;
+  --pk-white-h: 88px;
+  --pk-black-w: 9px;
+  --pk-black-h: 54px;
+  width: calc(var(--piano-white-count, 52) * var(--pk-white-w));
+  min-width: min-content;
+  height: var(--pk-white-h);
+}
+
+.piano-whites {
+  display: flex;
+  align-items: stretch;
+}
+
+.piano-key {
+  font-family: var(--mono);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.piano-key-white {
+  width: var(--pk-white-w);
+  height: var(--pk-white-h);
+  background: linear-gradient(180deg, #f4f4f5 0%, #d4d4d8 100%);
+  color: var(--bg-deep);
+  border-radius: 0 0 3px 3px;
+  position: relative;
+}
+
+.piano-key-white:hover,
+.piano-key-white.selected {
+  background: linear-gradient(180deg, var(--accent) 0%, #34d399 100%);
+  border-color: var(--accent);
+  color: var(--bg-deep);
+}
+
+.piano-key-black {
+  position: absolute;
+  top: 0;
+  left: calc(var(--piano-black-at, 0) * var(--pk-white-w) - var(--pk-black-w) / 2);
+  width: var(--pk-black-w);
+  height: var(--pk-black-h);
+  z-index: 2;
+  background: linear-gradient(180deg, #3f3f46 0%, #18181b 100%);
+  color: #e4e4e7;
+  border-color: #09090b;
+  border-radius: 0 0 2px 2px;
+}
+
+.piano-key-black:hover,
+.piano-key-black.selected {
+  background: linear-gradient(180deg, #6ee7b7 0%, #059669 100%);
+  border-color: var(--accent);
+}
+
+.piano-key-oct {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.55rem;
+  opacity: 0.65;
+  pointer-events: none;
+}
+
 
 .note-grid {
   display: grid;

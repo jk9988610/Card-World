@@ -158,7 +158,9 @@
     "hint": "Full 88-key piano (A0–C8), chromatic. Preview, then Apply.",
     "cancel": "Cancel",
     "clear": "Clear",
-    "apply": "Apply"
+    "apply": "Apply",
+    "piano_keyboard": "Piano keyboard (88 keys)",
+    "piano_hint": "Click a key to preview; Apply writes the step."
   },
   "publish_dialog": {
     "title": "Publish to library",
@@ -440,5 +442,10 @@
     "step_loop_label": "Step loop",
     "track_fallback": "Track",
     "step_density_title": "Step density (relative to master BPM)"
+  },
+  "seq_group": {
+    "drums": "Drums",
+    "piano": "Piano",
+    "melodic": "Melody"
   }
 }

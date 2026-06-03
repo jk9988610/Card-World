@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Online music workstation — step sequencer and arrangement timeline">
   <title>HarmonyForge · Studio</title>
-  <meta name="cw-app-version" content="0.13.15">
-  <meta name="cw-app-build" content="0.13.15">
+  <meta name="cw-app-version" content="0.13.16">
+  <meta name="cw-app-build" content="0.13.16">
   <meta name="card-world-embed" content="1">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/card-world-embed.css">
@@ -323,6 +323,7 @@
         <span data-i18n="note_dialog.preview">Preview</span>
       </label>
       <p class="note-dialog-hint" id="noteDialogHint" data-i18n="note_dialog.hint">Click a pitch to preview; Apply writes the cell.</p>
+      <div class="piano-keyboard-host" id="pianoKeyboard" hidden></div>
       <div class="note-grid" id="noteGrid"></div>
       <menu>
         <button type="submit" value="cancel" class="btn btn-ghost" data-i18n="note_dialog.cancel">Cancel</button>
@@ -442,6 +443,7 @@
   <script defer src="js/audio-engine.js"></script>
   <script defer src="js/track-timing.js"></script>
   <script defer src="js/sequencer.js"></script>
+  <script defer src="js/piano-keyboard.js"></script>
   <script defer src="js/arranger.js"></script>
   <script defer src="js/track-playback.js"></script>
   <script defer src="js/layout.js"></script>

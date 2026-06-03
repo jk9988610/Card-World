@@ -330,6 +330,13 @@ const Sequencer = (() => {
     return id === "INS-008" || track.voice === "piano" || track.instrumentId === "piano";
   }
 
+  function trackSequencerGroup(track) {
+    if (!track) return "melodic";
+    if (track.type === "drum") return "drums";
+    if (isPianoTrack(track)) return "piano";
+    return "melodic";
+  }
+
   function getPitchRangeForTrack(track) {
     const id = resolveInstrumentId(track);
     if (isPianoTrack(track)) return { min: PIANO_MIDI_MIN, max: PIANO_MIDI_MAX };
@@ -539,6 +546,7 @@ const Sequencer = (() => {
     clearPattern,
     loadDemoPatterns,
     getPattern,
+    ensurePatternCell,
     exportState,
     importState,
     createEmptyPatterns,
@@ -555,6 +563,7 @@ const Sequencer = (() => {
     listInstruments: Instruments.list,
     refreshScaleLabels,
     isPianoTrack,
+    trackSequencerGroup,
     getPitchChoicesForCell,
     getPitchRangeForTrack,
     resolveInstrumentId,

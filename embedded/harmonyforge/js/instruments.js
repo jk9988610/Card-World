@@ -78,8 +78,8 @@ const Instruments = (() => {
     { trackId: "snare", instrumentId: "snare" },
     { trackId: "hihat", instrumentId: "hihat" },
     { trackId: "openhat", instrumentId: "openhat" },
-    { trackId: "bass", instrumentId: "bass" },
     { trackId: "piano", instrumentId: "piano" },
+    { trackId: "bass", instrumentId: "bass" },
     { trackId: "lead", instrumentId: "lead" },
   ];
 

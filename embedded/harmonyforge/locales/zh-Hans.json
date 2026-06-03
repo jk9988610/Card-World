@@ -158,7 +158,9 @@
     "hint": "完整 88 键钢琴（A0–C8）半音排列；可试听后点「应用」。",
     "cancel": "Cancel",
     "clear": "Clear",
-    "apply": "Apply"
+    "apply": "Apply",
+    "piano_keyboard": "钢琴键盘（88 键）",
+    "piano_hint": "点击琴键试听；「应用」写入当前步。"
   },
   "publish_dialog": {
     "title": "Publish to library",
@@ -440,5 +442,10 @@
     "step_loop_label": "单步循环",
     "track_fallback": "轨",
     "step_density_title": "步进密度（相对主 BPM）"
+  },
+  "seq_group": {
+    "drums": "鼓组",
+    "piano": "钢琴",
+    "melodic": "旋律"
   }
 }

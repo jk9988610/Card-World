@@ -26,7 +26,7 @@ import { canUseNetwork, ensureCloudForUpload, shouldUseCloud } from "./net-polic
 import { invalidateSupabaseClient } from "./supabase-client.js";
 import { MUSIC_EMBED_SLUG_TO_MODE, MUSIC_PROD_URL, musicEmbedUrl } from "./music-config.js";
 import { AppLogger } from "./app-logger.js";
-import { APP_VERSION_BUNDLED, initAppVersionUI } from "./app-version.js";
+import { initAppVersionUI } from "./app-version.js";
 import { clearAllCardWorldStorage, clearSave, loadSave, writeSave } from "./storage.js";
 import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
 
@@ -34,7 +34,7 @@ import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
  * Card World — tap zoom | hybrid drag (touch pointer + mouse native) | backpack flow
  */
 
-const APP_VERSION = "0.13.4";
+const APP_VERSION = "0.13.16";
 
 const SETTINGS_MENU_SLUGS = new Set([
   "founders.language_settings",

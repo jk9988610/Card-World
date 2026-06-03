@@ -78,6 +78,8 @@
     noteDialogTitle: $("#noteDialogTitle"),
     notePreview: $("#notePreview"),
     noteDialogHint: $("#noteDialogHint"),
+    noteDialogTonality: document.querySelector(".note-dialog-tonality"),
+    pianoKeyboard: $("#pianoKeyboard"),
     noteGrid: $("#noteGrid"),
     noteClear: $("#noteClear"),
     noteApply: $("#noteApply"),
@@ -713,11 +715,31 @@
     syncSequencerLayout();
   }
 
+  function seqGroupLabel(groupId) {
+    const key = `seq_group.${groupId}`;
+    if (typeof window.HF_T === "function") {
+      const t = window.HF_T(key);
+      if (t && t !== key) return t;
+    }
+    const fallback = { drums: "鼓组", piano: "钢琴", melodic: "旋律" };
+    return fallback[groupId] || groupId;
+  }
+
   function renderSequencer() {
     const pattern = Sequencer.getPattern(Sequencer.currentPattern());
     els.tracks.innerHTML = "";
 
+    let lastGroup = null;
     Sequencer.TRACKS.forEach((track) => {
+      const group = Sequencer.trackSequencerGroup(track);
+      if (group !== lastGroup) {
+        const header = document.createElement("div");
+        header.className = "seq-track-group-header";
+        header.textContent = seqGroupLabel(group);
+        els.tracks.appendChild(header);
+        lastGroup = group;
+      }
+
       const row = document.createElement("div");
       row.className = "track-row";
 
@@ -798,14 +820,56 @@
   }
 
   function highlightNoteGridSelection() {
-    if (!els.noteGrid) return;
-    els.noteGrid.querySelectorAll(".note-btn").forEach((btn) => {
-      const midi = Number(btn.dataset.midi);
-      btn.classList.toggle(
-        "selected",
-        notePendingMidi != null && midi === notePendingMidi
-      );
-    });
+    if (els.noteGrid && !els.noteGrid.hidden) {
+      els.noteGrid.querySelectorAll(".note-btn").forEach((btn) => {
+        const midi = Number(btn.dataset.midi);
+        btn.classList.toggle(
+          "selected",
+          notePendingMidi != null && midi === notePendingMidi
+        );
+      });
+    }
+    if (els.pianoKeyboard && !els.pianoKeyboard.hidden && typeof PianoKeyboard !== "undefined") {
+      PianoKeyboard.updateSelection(els.pianoKeyboard, notePendingMidi);
+    }
+  }
+
+  function setNoteDialogMode(isPiano) {
+    if (els.noteDialog) {
+      els.noteDialog.classList.toggle("note-dialog--piano", !!isPiano);
+    }
+    if (els.noteDialogTonality) {
+      els.noteDialogTonality.hidden = !!isPiano;
+    }
+    if (els.pianoKeyboard) els.pianoKeyboard.hidden = !isPiano;
+    if (els.noteGrid) els.noteGrid.hidden = !!isPiano;
+    if (els.noteDialogHint) {
+      if (isPiano && typeof window.HF_T === "function") {
+        const key = "note_dialog.piano_hint";
+        const t = window.HF_T(key);
+        els.noteDialogHint.textContent = t !== key ? t : "点击琴键试听；「应用」写入当前步。";
+      } else if (typeof window.HF_T === "function") {
+        const key = "note_dialog.hint";
+        const t = window.HF_T(key);
+        els.noteDialogHint.textContent =
+          t !== key ? t : "点击音高试听；「应用」写入当前步。";
+      }
+    }
+  }
+
+  function handleNotePitchPick(midi, trackId) {
+    const track = Sequencer.TRACKS.find((t) => t.id === trackId);
+    if (els.notePreview && els.notePreview.checked) {
+      interruptPlaybackForPreview();
+      AudioEngine.unlockAudio().then(() => {
+        AudioEngine.previewTrackNote(trackId, midi);
+      });
+      notePendingMidi = midi;
+      highlightNoteGridSelection();
+      setStatus(`试听 ${Sequencer.noteLabel(midi)}（${track?.name ?? ""}）`);
+      return;
+    }
+    commitNoteSelection(midi);
   }
 
   function commitNoteSelection(midi) {
@@ -832,10 +896,25 @@
   }
 
   function rebuildNoteGrid() {
-    if (!noteEditContext || !els.noteGrid) return;
+    if (!noteEditContext) return;
     const { trackId, step, patternIndex } = noteEditContext;
     const track = Sequencer.TRACKS.find((t) => t.id === trackId);
-    const notes = Sequencer.getScaleNotesForCell(patternIndex, trackId, step);
+    const isPiano = Sequencer.isPianoTrack(track);
+    setNoteDialogMode(isPiano);
+
+    if (isPiano && els.pianoKeyboard && typeof PianoKeyboard !== "undefined") {
+      PianoKeyboard.render(els.pianoKeyboard, {
+        minMidi: Sequencer.PIANO_MIDI_MIN,
+        maxMidi: Sequencer.PIANO_MIDI_MAX,
+        selectedMidi: notePendingMidi,
+        labelFor: Sequencer.noteLabel,
+        onPick: (midi) => handleNotePitchPick(midi, trackId),
+      });
+      return;
+    }
+
+    if (!els.noteGrid) return;
+    const notes = Sequencer.getPitchChoicesForCell(patternIndex, trackId, step);
     els.noteGrid.innerHTML = "";
     notes.forEach((midi) => {
       const btn = document.createElement("button");
@@ -844,19 +923,7 @@
         "note-btn" + (notePendingMidi === midi ? " selected" : "");
       btn.dataset.midi = String(midi);
       btn.textContent = Sequencer.noteLabel(midi);
-      btn.addEventListener("click", () => {
-        if (els.notePreview && els.notePreview.checked) {
-          interruptPlaybackForPreview();
-          AudioEngine.unlockAudio().then(() => {
-            AudioEngine.previewTrackNote(trackId, midi);
-          });
-          notePendingMidi = midi;
-          highlightNoteGridSelection();
-          setStatus(`试听 ${Sequencer.noteLabel(midi)}（${track?.name ?? ""}）`);
-          return;
-        }
-        commitNoteSelection(midi);
-      });
+      btn.addEventListener("click", () => handleNotePitchPick(midi, trackId));
       els.noteGrid.appendChild(btn);
     });
   }
@@ -905,7 +972,8 @@
 
   function openNoteDialog(trackId, step, patternIndex) {
     noteEditContext = { trackId, step, patternIndex };
-    const cell = Sequencer.getPattern(patternIndex)[trackId][step];
+    const pattern = Sequencer.getPattern(patternIndex);
+    const cell = Sequencer.ensurePatternCell(pattern, trackId, step);
     notePendingMidi = cell.on && cell.note != null ? cell.note : null;
     const track = Sequencer.TRACKS.find((t) => t.id === trackId);
     if (els.noteDialogTitle && track) {
