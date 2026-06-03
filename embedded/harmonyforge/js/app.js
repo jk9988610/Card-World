@@ -747,8 +747,13 @@
       labelCol.appendChild(rateBtn);
       row.appendChild(labelCol);
 
+      if (!pattern[track.id]) {
+        pattern[track.id] = Array(Sequencer.steps)
+          .fill(null)
+          .map(() => ({ on: false, note: null, rootKey: null, scaleName: null }));
+      }
       for (let step = 0; step < Sequencer.steps; step++) {
-        const cell = pattern[track.id][step];
+        const cell = pattern[track.id][step] || { on: false, note: null };
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = `step-cell ${cell.on ? "on " + track.class : ""}`;
@@ -984,15 +989,7 @@
     });
   }
 
-  let eventsBound = false;
-
   function bindEvents() {
-    if (eventsBound) return;
-    if (!els.btnPlay || !els.btnStop || !els.bpm) {
-      console.warn("HarmonyForge: transport controls missing, skipping bindEvents");
-      return;
-    }
-    eventsBound = true;
     els.btnPlay.addEventListener("click", () => {
       togglePlay();
     });
@@ -1756,41 +1753,7 @@
     try {
       if (window.__hfI18nPromise) await window.__hfI18nPromise;
     } catch (_) {}
-    try {
-      init();
-    } catch (err) {
-      const msg = err?.message || String(err);
-      console.error("HarmonyForge init failed", err);
-      if (els.statusText) {
-        els.statusText.textContent =
-          typeof window.HF_T === "function"
-            ? `${window.HF_T("status.init_failed")}: ${msg}`
-            : `Init failed: ${msg}`;
-      }
-      try {
-        localStorage.removeItem(DRAFT_KEY);
-        localStorage.removeItem(STORAGE_KEY);
-      } catch (_) {}
-      try {
-        if (typeof LayoutManager !== "undefined") LayoutManager.importState(null);
-        Sequencer.loadDemoPatterns();
-        renderPatternTabs();
-        renderStepLabels();
-        renderSequencer();
-        renderArrangement();
-        renderMixer();
-        bindEvents();
-        applyVolumesToEngine();
-        if (els.statusText) {
-          els.statusText.textContent =
-            typeof window.HF_T === "function"
-              ? window.HF_T("status.init_recovered")
-              : "Recovered — try again";
-        }
-      } catch (recoverErr) {
-        console.error("HarmonyForge recovery failed", recoverErr);
-      }
-    }
+    init();
   }
 
   if (document.readyState === "loading") {

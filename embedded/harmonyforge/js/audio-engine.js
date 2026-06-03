@@ -13,8 +13,20 @@ const AudioEngine = (() => {
   function resolveInstrumentId(trackId) {
     if (typeof Sequencer !== "undefined" && Sequencer.getTrack) {
       const t = Sequencer.getTrack(trackId);
-      if (t?.engineId) return t.engineId;
-      if (t?.instrumentId) return t.instrumentId;
+      if (!t) return trackId;
+      const candidates = [
+        t.engineId,
+        typeof Instruments !== "undefined" && Instruments.engineIdFor
+          ? Instruments.engineIdFor(t.instrumentId)
+          : null,
+        t.instrumentId,
+      ].filter(Boolean);
+      for (const id of candidates) {
+        if (typeof InstrumentRegistry !== "undefined" && InstrumentRegistry.get(id)) {
+          return id;
+        }
+      }
+      return candidates[0] || trackId;
     }
     return trackId;
   }

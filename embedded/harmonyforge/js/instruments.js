@@ -3,6 +3,20 @@
  */
 const Instruments = (() => {
   /** 旧工程 ID → 现音色 ID（仅解析轨，合成以现 ID 为准） */
+  /** Saved projects that store INS-xxx in trackLayout.instrumentId */
+  const REGISTRY_TO_CATALOG = {
+    "INS-000": null,
+    "INS-001": "kick",
+    "INS-002": "snare",
+    "INS-003": "hihat",
+    "INS-004": "openhat",
+    "INS-005": "tom",
+    "INS-006": "cymbal",
+    "INS-007": "bass",
+    "INS-008": "piano",
+    "INS-009": "piano",
+  };
+
   const LEGACY_IDS = {
     ride: "cymbal",
     splash: "cymbal",
@@ -91,7 +105,24 @@ const Instruments = (() => {
 
   function engineIdFor(id) {
     const inst = get(id);
-    return inst?.engineId || ENGINE_ID[resolveId(id)] || resolveId(id);
+    if (inst?.engineId) return inst.engineId;
+    const resolved = resolveId(id);
+    if (ENGINE_ID[resolved]) return ENGINE_ID[resolved];
+    if (inst?.type === "melodic") return "INS-008";
+    if (inst?.type === "drum") return "INS-001";
+    return resolved;
+  }
+
+  function layoutInstrumentId(rawId, rawTrackId) {
+    const id = String(rawId || rawTrackId || "").trim();
+    if (Object.prototype.hasOwnProperty.call(REGISTRY_TO_CATALOG, id)) {
+      return REGISTRY_TO_CATALOG[id];
+    }
+    return resolveId(id);
+  }
+
+  function isPianoId(id) {
+    return resolveId(id) === "piano" || engineIdFor(id) === "INS-008";
   }
 
   function list(typeFilter) {
@@ -119,6 +150,9 @@ const Instruments = (() => {
     ENGINE_ID,
     resolveId,
     engineIdFor,
+    layoutInstrumentId,
+    isPianoId,
+    REGISTRY_TO_CATALOG,
     get,
     list,
     defaultVolume,
