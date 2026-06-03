@@ -8,7 +8,7 @@ const AudioExport = (() => {
     if (typeof Sequencer !== "undefined" && Sequencer.getTracks) {
       return Sequencer.getTracks().map((t) => t.id);
     }
-    return ["kick", "snare", "hihat", "openhat", "bass", "chord", "lead"];
+    return ["kick", "snare", "hihat", "openhat", "bass", "lead"];
   }
 
   function buildTrackVoiceMap(project) {
@@ -53,10 +53,10 @@ const AudioExport = (() => {
     await AudioEngine.unlockAudio();
 
     const duration = info.total + 0.15;
-    const trackInstrumentMap = buildTrackInstrumentMap(project);
+    const trackVoiceMap = buildTrackVoiceMap(project);
     const scheduler = AudioEngine.createOfflineScheduler(
       info.volumes || {},
-      trackInstrumentMap
+      trackVoiceMap
     );
 
     const buffer = await Tone.Offline(() => {

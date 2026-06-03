@@ -175,7 +175,7 @@ const en = {
     work_title: "Title",
     work_title_ph: "e.g. Verse motif A",
     nickname: "Display name",
-    nickname_ph: "Shown in the cloud library",
+    nickname_ph: "Same as review site",
     hint: "Card World build: publishes to cloud library (shared Supabase). Uploads MP3 preview and full arrangement JSON (.hfproj).",
     cancel: "Cancel",
     confirm: "Publish",
@@ -221,7 +221,6 @@ const en = {
     bass: "Electric bass",
     piano: "Piano",
     eguitar: "Electric guitar",
-    chord: "Chord pad",
     lead: "Synth lead",
     sax: "Saxophone",
     trumpet: "Trumpet",
@@ -308,7 +307,7 @@ const en = {
   },
   cloud: {
     cloud_off: "Cloud sync off. Enable in Card World when online.",
-    need_nickname: "Enter a display name to publish.",
+    need_nickname: "Join a season on the review site or enter a display name.",
     invalid_project: "Invalid arrangement project.",
     not_hf_project: "Not a valid HarmonyForge project.",
     work_missing: "Work not found or access denied.",
@@ -316,21 +315,15 @@ const en = {
     title_required: "Title cannot be empty.",
     audio_module_missing: "Audio export module not loaded.",
     json_too_large: "Project JSON too large (max {mb}MB).",
-    json_too_large_mb: "Project JSON too large (max {mb}MB).",
     need_title: "Enter a work title.",
     invalid_audio: "Invalid audio.",
     json_size: "Project JSON too large ({kb}KB, max {mb}MB).",
     invalid_format: "Invalid project format.",
-    invalid_project_format: "Invalid project format.",
     configure_cloud: "Configure cloud sync in Card World Settings first.",
-    configure_cloud_long: "Turn on cloud sync in Card World Settings (same Supabase project as publish).",
-    publish_first_for_repo: "Publish a work first, or enter a display name in the publish dialog.",
+    need_season: "Join a season with a nickname on the review site first.",
     loading: "Loading…",
-    loading_works: "Loading works…",
     no_works: "You have no published works yet. Tap Publish.",
-    no_works_repo: "No published works yet. Use Publish first.",
     works_count: "{n} works",
-    works_repo_count: "{n} works",
     unnamed: "Untitled",
     has_json: "Includes arrangement JSON",
     audio_only: "Audio only",
@@ -343,38 +336,27 @@ const en = {
     republishing: "Republishing…",
     republished: "Updated “{title}”",
     republish_failed: "Republish failed:\n{msg}",
-    republish_failed_alert: "Republish failed:\n{msg}",
     rename: "Rename",
-    rename_prompt: "Work title",
     renamed: "Renamed",
     delete: "Delete",
     delete_confirm: "Delete “{title}”? Cannot undo.",
     deleted: "Work deleted",
     download_json: "Download JSON",
-    downloaded_name: "Downloaded {name}",
     preview: "Preview",
     load_failed: "Load failed",
-    load_failed_repo: "Load failed",
-    load_failed_retry: "Load failed. Try again later.",
     no_store_works: "No public works with arrangement JSON yet.",
-    no_public_json: "No public works with arrangement JSON yet.",
     author: "Author: {name}",
     download_and_load: "Download & load",
     load_interface_missing: "Load handler not ready",
     loaded_store: "Loaded “{title}” from store",
     load_store_failed: "Load failed:\n{msg}",
-    load_store_failed_alert: "Could not load publish store:\n{msg}",
     preview_mp3: "Preview MP3",
     store_disconnected: "Cloud not connected",
     store_count: "{n} works",
-    cannot_load_store: "Could not load publish store:\n{msg}",
-    cannot_read_project: "Cannot read current project",
-    no_project_json: "This work has no arrangement JSON",
-    no_project_json_edit: "This work has no arrangement JSON to edit",
     publish_rendering: "Rendering audio and JSON for library…",
     published: "Published “{title}”{note}",
     publish_failed: "Publish failed:\n{msg}",
-    publish_failed_status: "Publish failed: {msg}",
+    nickname_badge: "Review nickname: {name}",
   },
   units: {
     sections: "{n} sec",
@@ -409,14 +391,13 @@ if (workflowPanel) {
 <li><strong>Key</strong>: open a melodic cell, set key and scale (default C major).</li>
 <li><strong>Rhythm</strong>: pattern A — kick, snare, hi-hats.</li>
 <li><strong>Bass</strong>: root notes on strong beats.</li>
-<li><strong>Chords</strong>: chord pad roots every few steps.</li>
 <li><strong>Lead</strong>: scale tones for a motif.</li>
 <li><strong>Variants</strong>: duplicate patterns B/C/D for fills and chorus.</li>
 <li><strong>Sections</strong>: map §1§2… to patterns; “+Sec” picks a pattern.</li>
 <li><strong>Mix</strong>: balance levels; per-track density ½×–4×.</li>
 <li><strong>Play</strong>: run the timeline; edit patterns as needed.</li>
 <li><strong>Save</strong>: auto-draft + Export .hfproj.</li>
-<li><strong>Publish</strong>: enable cloud sync in Card World → Publish here (MP3 + .hfproj JSON).</li>
+<li><strong>Publish</strong>: join season on review site → Publish here → submit on review site.</li>
 <li><strong>My works</strong>: edit, republish, rename, delete.</li>
 <li><strong>Store</strong>: browse others’ JSON; download or load (archives current work).</li>
 <li><strong>Drafts</strong>: local backups before loading other projects.</li>
@@ -519,7 +500,6 @@ zh.instruments = {
   bass: "电贝斯",
   piano: "钢琴",
   eguitar: "电吉他",
-  chord: "和弦铺底",
   lead: "合成主音",
   sax: "萨克斯",
   trumpet: "小号",

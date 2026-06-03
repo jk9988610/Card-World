@@ -278,14 +278,17 @@ const Sequencer = (() => {
     const prev = getTrack(trackId);
     entry.instrumentId = instrumentId;
     if (prev && prev.type !== inst.type) {
+      const def = defaultTonality();
+      const defaults = getScaleNotesFor(def.rootKey, def.scaleName);
+      const mid = defaults[Math.floor(defaults.length / 2)] || 60;
       patterns.forEach((pattern) => {
         const row = pattern[trackId];
         if (!row) return;
-        row.forEach((cell, stepIndex) => {
+        row.forEach((cell) => {
           if (inst.type === "drum") {
             cell.note = null;
           } else if (cell.on && cell.note == null) {
-            cell.note = defaultMidiForTrack(trackId, patterns.indexOf(pattern), stepIndex);
+            cell.note = mid;
           }
         });
       });
@@ -293,61 +296,33 @@ const Sequencer = (() => {
     return true;
   }
 
-  /** 88-key piano: A0 (21) through C8 (108), chromatic. */
-  const PIANO_MIDI_MIN = 21;
-  const PIANO_MIDI_MAX = 108;
+  const PIANO_MIDI_MIN = 48;
+  const PIANO_MIDI_MAX = 80;
 
-  function resolveInstrumentId(track) {
-    if (!track) return "";
-    const raw = track.instrumentId || "";
-    return typeof Instruments !== "undefined" && Instruments.resolveId
-      ? Instruments.resolveId(raw)
-      : raw;
-  }
-
-  function isPianoTrack(track) {
-    if (!track) return false;
-    if (typeof Instruments !== "undefined" && Instruments.isPianoId) {
-      return Instruments.isPianoId(track.instrumentId);
+  function getScaleNotesForCell(patternIndex, trackId, step, octaves = 3) {
+    const t = getCellTonality(patternIndex, trackId, step);
+    let notes = getScaleNotesFor(t.rootKey, t.scaleName, octaves);
+    const track = getTrack(trackId);
+    if (track && (track.voice === "piano" || track.instrumentId === "piano")) {
+      notes = notes.filter((m) => m >= PIANO_MIDI_MIN && m <= PIANO_MIDI_MAX);
+      if (!notes.length) {
+        notes = getScaleNotesFor(t.rootKey, t.scaleName, 2).filter(
+          (m) => m >= PIANO_MIDI_MIN && m <= PIANO_MIDI_MAX
+        );
+      }
     }
-    const id = resolveInstrumentId(track);
-    return id === "INS-008" || track.voice === "piano" || track.instrumentId === "piano";
-  }
-
-  function getPitchRangeForTrack(track) {
-    const id = resolveInstrumentId(track);
-    if (isPianoTrack(track)) return { min: PIANO_MIDI_MIN, max: PIANO_MIDI_MAX };
-    if (id === "INS-007" || track?.voice === "bass") return { min: 28, max: 55 };
-    if (id === "INS-009" || track?.voice === "chord") return { min: 36, max: 72 };
-    return { min: 48, max: 72 };
-  }
-
-  function getChromaticNotes(minMidi, maxMidi) {
-    const lo = Math.min(minMidi, maxMidi);
-    const hi = Math.max(minMidi, maxMidi);
-    const notes = [];
-    for (let m = lo; m <= hi; m++) notes.push(m);
     return notes;
   }
 
-  function getPitchChoicesForCell(patternIndex, trackId, step) {
-    const track = getTrack(trackId);
-    const { min, max } = getPitchRangeForTrack(track);
-    return getChromaticNotes(min, max);
-  }
-
-  /** @deprecated Scale/key grids removed; returns chromatic choices. */
-  function getScaleNotesForCell(patternIndex, trackId, step) {
-    return getPitchChoicesForCell(patternIndex, trackId, step);
-  }
-
   function defaultMidiForTrack(trackId, patternIndex, step) {
+    const notes = getScaleNotesForCell(patternIndex, trackId, step);
+    if (!notes.length) return 60;
     const track = getTrack(trackId);
-    const { min, max } = getPitchRangeForTrack(track);
-    if (isPianoTrack(track)) return 60;
-    if (resolveInstrumentId(track) === "INS-007") return 36;
-    if (resolveInstrumentId(track) === "INS-009") return 60;
-    return Math.min(max, Math.max(min, Math.floor((min + max) / 2)));
+    if (track && (track.voice === "piano" || track.instrumentId === "piano")) {
+      const mid = notes.filter((m) => m >= 55 && m <= 67);
+      if (mid.length) return mid[Math.floor(mid.length / 2)];
+    }
+    return notes[Math.floor(notes.length / 2)];
   }
 
   function stepColumnHasContent(patternIndex, step) {
@@ -392,7 +367,7 @@ const Sequencer = (() => {
     const demo = [
       { kick: [0, 4, 8, 12], snare: [4, 12], hihat: [0, 2, 4, 6, 8, 10, 12, 14] },
       { kick: [0, 3, 6, 10, 12], snare: [4, 8, 12], bass: [{ s: 0, n: 36 }, { s: 8, n: 43 }] },
-      { kick: [0, 8], snare: [4, 12], chord: [{ s: 0, n: 48 }, { s: 8, n: 55 }], lead: [{ s: 4, n: 60 }, { s: 12, n: 64 }] },
+      { kick: [0, 8], snare: [4, 12], lead: [{ s: 0, n: 60 }, { s: 4, n: 64 }, { s: 8, n: 67 }, { s: 12, n: 72 }] },
       { kick: [0, 4, 8, 12], snare: [4, 12], hihat: [2, 6, 10, 14], openhat: [15], bass: [{ s: 0, n: 36 }, { s: 4, n: 38 }, { s: 8, n: 41 }, { s: 12, n: 43 }] },
     ];
     demo.forEach((d, pi) => {
@@ -511,13 +486,9 @@ const Sequencer = (() => {
     setTrackRate,
     getScaleNotesFor,
     getScaleNotesForCell,
-    getPitchChoicesForCell,
-    getChromaticNotes,
-    getPitchRangeForTrack,
     defaultMidiForTrack,
     PIANO_MIDI_MIN,
     PIANO_MIDI_MAX,
-    isPianoTrack,
     getCellTonality,
     setCellTonality,
     stepColumnHasContent,
@@ -539,7 +510,7 @@ const Sequencer = (() => {
     MIN_STEPS,
     MIN_PATTERNS,
     normalizeAllPatterns,
-    listInstruments: () => Instruments.listForPicker(),
+    listInstruments: Instruments.list,
     refreshScaleLabels,
   };
 })();
