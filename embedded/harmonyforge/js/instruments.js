@@ -1,8 +1,9 @@
 /**
- * Instrument catalog — numbered IDs (INS-001…); engine from InstrumentRegistry.
+ * Instrument catalog — builtins (INS-xxx), user (USR-xxx), empty carriers (INS-000).
  */
 const Instruments = (() => {
-  /** Legacy project instrumentId / old voice names → INS-xxx */
+  const EMPTY_ID = "INS-000";
+
   const LEGACY_IDS = {
     kick: "INS-001",
     snare: "INS-002",
@@ -30,7 +31,6 @@ const Instruments = (() => {
     brass: "INS-013",
     strings: "INS-015",
     synth: "INS-011",
-    lead: "INS-011",
     pad: "INS-010",
     organ: "INS-008",
     pipeorgan: "INS-008",
@@ -43,18 +43,29 @@ const Instruments = (() => {
     woodblock: "INS-005",
   };
 
-  const CATALOG = InstrumentRegistry.PRESETS.map((p) => ({
-    id: p.id,
-    name: p.id,
-    type: p.type,
-    engineId: p.id,
-    kind: p.kind,
-    toneClass: InstrumentRegistry.toneLabel(p),
-    class: `inst-${p.type}`,
-    synthesis: p.synthesis,
-  }));
+  let CATALOG = [];
+  let byId = {};
 
-  const byId = Object.fromEntries(CATALOG.map((i) => [i.id, i]));
+  function presetToCatalogEntry(p) {
+    const displayName = p.user && p.name ? p.name : p.id;
+    return {
+      id: p.id,
+      name: displayName,
+      type: p.type,
+      engineId: p.id,
+      kind: p.kind,
+      toneClass: InstrumentRegistry.toneLabel(p),
+      class: p.kind === "empty" ? "inst-empty" : `inst-${p.type}`,
+      synthesis: p.synthesis,
+      user: !!p.user,
+    };
+  }
+
+  function refreshCatalog() {
+    const presets = InstrumentRegistry.list(null, { includeHidden: false, includeEmpty: true });
+    CATALOG = presets.map(presetToCatalogEntry);
+    byId = Object.fromEntries(CATALOG.map((i) => [i.id, i]));
+  }
 
   const DEFAULT_LAYOUT = [
     { trackId: "kick", instrumentId: "INS-001" },
@@ -64,6 +75,9 @@ const Instruments = (() => {
     { trackId: "bass", instrumentId: "INS-007" },
     { trackId: "chord", instrumentId: "INS-010" },
     { trackId: "lead", instrumentId: "INS-011" },
+    { trackId: "slot1", instrumentId: EMPTY_ID },
+    { trackId: "slot2", instrumentId: EMPTY_ID },
+    { trackId: "slot3", instrumentId: EMPTY_ID },
   ];
 
   function resolveId(id) {
@@ -74,7 +88,6 @@ const Instruments = (() => {
       seen.add(cur);
       cur = LEGACY_IDS[cur];
     }
-    if (byId[cur]) return cur;
     return cur;
   }
 
@@ -84,30 +97,53 @@ const Instruments = (() => {
   }
 
   function list(typeFilter) {
-    return typeFilter ? CATALOG.filter((i) => i.type === typeFilter) : [...CATALOG];
+    const items = typeFilter ? CATALOG.filter((i) => i.type === typeFilter) : [...CATALOG];
+    return items;
+  }
+
+  /** Picker list: builtins + user + empty slot label */
+  function listForPicker(typeFilter) {
+    return list(typeFilter);
   }
 
   function defaultVolume(type) {
+    if (type === "empty") return 0.75;
     return type === "drum" ? 0.85 : 0.75;
+  }
+
+  function isEmptyId(id) {
+    return resolveId(id) === EMPTY_ID;
   }
 
   function applyI18nNames() {
     if (!window.HF_T) return;
     for (const inst of CATALOG) {
+      if (inst.user) continue;
       const key = `instruments.${inst.id}`;
       const name = window.HF_T(key);
       if (name && name !== key) inst.name = name;
     }
+    const emptyLabel = window.HF_T("instruments.INS-000");
+    const empty = byId[EMPTY_ID];
+    if (empty && emptyLabel && emptyLabel !== "instruments.INS-000") {
+      empty.name = emptyLabel;
+    }
   }
 
+  refreshCatalog();
+
   return {
+    EMPTY_ID,
     CATALOG,
     DEFAULT_LAYOUT,
     LEGACY_IDS,
     resolveId,
     get,
     list,
+    listForPicker,
     defaultVolume,
+    isEmptyId,
+    refreshCatalog,
     applyI18nNames,
   };
 })();

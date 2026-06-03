@@ -68,26 +68,73 @@ const InstrumentEngine = (() => {
     return new C(preset.options || {});
   }
 
-  function createSampler(preset) {
+  const samplerLoadCache = new Map();
+
+  function createSamplerAsync(preset) {
     const { urls, baseUrl = "" } = preset.sampler || {};
     if (!urls || !Object.keys(urls).length) {
-      throw new Error(`Sampler ${preset.id} has no urls`);
+      return Promise.reject(new Error(`Sampler ${preset.id} has no urls`));
     }
-    return new Tone.Sampler({ urls, baseUrl });
+    const cacheKey = preset.id;
+    if (samplerLoadCache.has(cacheKey)) return samplerLoadCache.get(cacheKey);
+
+    const promise = new Promise((resolve, reject) => {
+      const sampler = new Tone.Sampler({
+        urls,
+        baseUrl,
+        onload: () => resolve(sampler),
+        onerror: (err) => reject(err || new Error("Sampler load failed")),
+      });
+    });
+    samplerLoadCache.set(cacheKey, promise);
+    return promise;
+  }
+
+  function useFallback(preset) {
+    const fbId = preset.fallbackPresetId || preset.fallbackSynth;
+    const fb = fbId ? InstrumentRegistry.get(fbId) : null;
+    if (fb?.kind === "synth") {
+      return { preset: fb, synth: createSynth(fb), kind: "synth", fallbackFrom: preset.id };
+    }
+    return null;
+  }
+
+  function createFromPreset(preset) {
+    if (!preset) throw new Error("Missing preset");
+    if (preset.kind === "empty") return { preset, synth: null, kind: "empty" };
+    if (preset.kind === "sampler") throw new Error("Use createAsync for sampler");
+    return { preset, synth: createSynth(preset), kind: "synth" };
   }
 
   function create(presetId) {
     const preset = InstrumentRegistry.get(presetId);
     if (!preset) throw new Error(`Unknown instrument: ${presetId}`);
+    if (preset.kind === "empty") {
+      return { preset, synth: null, kind: "empty" };
+    }
+    if (preset.kind === "sampler") {
+      throw new Error(`Sampler ${presetId} requires createAsync()`);
+    }
+    return { preset, synth: createSynth(preset), kind: "synth" };
+  }
+
+  async function createAsync(presetId) {
+    const preset = InstrumentRegistry.get(presetId);
+    if (!preset) throw new Error(`Unknown instrument: ${presetId}`);
+    if (preset.kind === "empty") {
+      return { preset, synth: null, kind: "empty" };
+    }
     if (preset.kind === "sampler") {
       try {
-        return { preset, synth: createSampler(preset), kind: "sampler" };
+        const synth = await createSamplerAsync(preset);
+        return { preset, synth, kind: "sampler" };
       } catch (err) {
-        if (preset.fallbackSynth) {
-          const fb = InstrumentRegistry.get(preset.fallbackSynth);
-          if (fb?.kind === "synth") {
-            return { preset: fb, synth: createSynth(fb), kind: "synth", fallbackFrom: presetId };
+        const fb = useFallback(preset);
+        if (fb) {
+          if (typeof AppLogger !== "undefined") {
+            AppLogger.warn(`Sampler ${presetId} failed, using fallback`, err?.message || err);
           }
+          return fb;
         }
         throw err;
       }
@@ -96,6 +143,7 @@ const InstrumentEngine = (() => {
   }
 
   function connect(inst, destination) {
+    if (!inst?.synth) return [];
     const { preset, synth } = inst;
     if (preset.postChain === "piano_eq") {
       const mudCut = new Tone.Filter(140, "highpass", -12);
@@ -150,6 +198,12 @@ const InstrumentEngine = (() => {
     const opts = preset.triggerOpts || {};
 
     switch (preset.trigger) {
+      case "empty":
+        return;
+      case "sampler_melodic":
+        if (noteMidi == null || !synth?.triggerAttackRelease) return;
+        synth.triggerAttackRelease(midiToNote(noteMidi), dur, t, velocity * 0.88);
+        break;
       case "drum_membrane":
         synth.triggerAttackRelease(opts.note || "C2", dur, t, velocity * (opts.velocityScale ?? 1));
         break;
@@ -202,6 +256,8 @@ const InstrumentEngine = (() => {
 
   return {
     create,
+    createFromPreset,
+    createAsync,
     connect,
     dispose,
     trigger,

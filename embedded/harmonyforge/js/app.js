@@ -213,7 +213,7 @@
     openChoiceDialog({
       title: "添加轨道 · 选择音色",
       columns: 4,
-      currentValue: "INS-001",
+      currentValue: "kick",
       items,
       onPick: (value) => {
         runEdit(() => {
@@ -1749,6 +1749,9 @@
       if (window.__hfI18nPromise) await window.__hfI18nPromise;
     } catch (_) {}
     init();
+    window.renderSequencer = renderSequencer;
+    window.renderMixer = renderMixer;
+    window.setStatus = setStatus;
   }
 
   if (document.readyState === "loading") {

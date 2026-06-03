@@ -31,7 +31,9 @@
     "logs": "日志",
     "logs_title": "查看运行日志",
     "update": "更新",
-    "update_title": "检查更新"
+    "update_title": "检查更新",
+    "tone_lab": "音色合成",
+    "tone_lab_title": "合成并保存自定义音色"
   },
   "modules": {
     "arrange_legend": "编曲",
@@ -232,7 +234,8 @@
     "trumpet": "INS-013",
     "trombone": "INS-014",
     "violin": "INS-015",
-    "cello": "INS-016"
+    "cello": "INS-016",
+    "INS-000": "空轨"
   },
   "scales": {
     "major": "大调",
@@ -372,5 +375,16 @@
   },
   "help": {
     "panels": []
+  },
+  "tone_lab": {
+    "title": "音色合成器",
+    "hint": "调节参数、命名并保存 — 保存后立刻出现在音色列表，可载入空轨。",
+    "name": "名称",
+    "base": "引擎",
+    "osc": "振荡器",
+    "filter": "滤波",
+    "preview": "试听",
+    "save": "保存并使用",
+    "close": "关闭"
   }
 }
