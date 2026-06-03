@@ -15,7 +15,6 @@ const Instruments = (() => {
     "INS-006": "drum-cymbal",
     "INS-007": "bass",
     "INS-008": "melodic-piano",
-    "INS-009": "chord",
   };
 
   const VOICE_BY_ID = {
@@ -27,7 +26,6 @@ const Instruments = (() => {
     "INS-006": "cymbal",
     "INS-007": "bass",
     "INS-008": "piano",
-    "INS-009": "chord",
   };
 
   const LEGACY_IDS = {
@@ -42,8 +40,8 @@ const Instruments = (() => {
     bass: "INS-007",
     piano: "INS-008",
     eguitar: "INS-008",
-    chord: "INS-009",
-    pad: "INS-009",
+    chord: "INS-008",
+    pad: "INS-008",
     lead: "INS-008",
     sax: "INS-008",
     clarinet: "INS-008",
@@ -68,7 +66,7 @@ const Instruments = (() => {
     perc: "INS-005",
     woodblock: "INS-005",
     "INS-008-FM": "INS-008",
-    "INS-010": "INS-009",
+    "INS-010": "INS-008",
     "INS-011": "INS-008",
     "INS-012": "INS-008",
     "INS-013": "INS-008",
@@ -128,7 +126,6 @@ const Instruments = (() => {
     { trackId: "tom", instrumentId: "INS-005" },
     { trackId: "cymbal", instrumentId: "INS-006" },
     { trackId: "bass", instrumentId: "INS-007" },
-    { trackId: "chord", instrumentId: "INS-009" },
     { trackId: "piano", instrumentId: "INS-008" },
     { trackId: "slot1", instrumentId: EMPTY_ID },
     { trackId: "slot2", instrumentId: EMPTY_ID },

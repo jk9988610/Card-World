@@ -66,6 +66,7 @@ const Sequencer = (() => {
     return {
       id: entry.trackId,
       instrumentId: entry.instrumentId,
+      engineId: inst.engineId || Instruments.resolveId(entry.instrumentId),
       name: inst.name,
       type: inst.type,
       class: inst.class,
