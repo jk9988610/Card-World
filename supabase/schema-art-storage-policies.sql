@@ -1,6 +1,6 @@
 -- Supabase Storage：art 桶策略（SQL Editor 执行）
 -- 前提：已创建 Public bucket，名称 art
--- 对照 Beat-Battle：supabase/schema-storage-policies.sql（audio 桶）
+-- 对照编曲发布：audio 桶策略（同一 Supabase 项目）
 
 -- 公开读取（美术素材库预览）
 drop policy if exists "art_public_read" on storage.objects;

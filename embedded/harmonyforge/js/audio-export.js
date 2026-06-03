@@ -53,10 +53,10 @@ const AudioExport = (() => {
     await AudioEngine.unlockAudio();
 
     const duration = info.total + 0.15;
-    const trackVoiceMap = buildTrackVoiceMap(project);
+    const trackInstrumentMap = buildTrackInstrumentMap(project);
     const scheduler = AudioEngine.createOfflineScheduler(
       info.volumes || {},
-      trackVoiceMap
+      trackInstrumentMap
     );
 
     const buffer = await Tone.Offline(() => {

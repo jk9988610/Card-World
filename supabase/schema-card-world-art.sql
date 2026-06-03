@@ -1,7 +1,7 @@
 -- =============================================================================
 -- Card World — Art Shop (Supabase SQL Editor)
 -- =============================================================================
--- Run in order in the SAME project as Beat-Battle (shared Supabase).
+-- Run in order in the SAME Supabase project as HarmonyForge publish (shared URL/anon key).
 -- UI strings: English in app + locales/en.json; Chinese in locales/zh-Hans.json only.
 --
 -- BEFORE SQL:
@@ -12,7 +12,7 @@
 --   2) Then run: supabase/schema-art-storage-policies.sql
 -- =============================================================================
 
--- Art shop catalog (like Beat-Battle `published_works`, but for pixel art)
+-- Art shop catalog (like `published_works` for arrangements, but for pixel art)
 create table if not exists public.art_shop_works (
   id text primary key,
   title text not null,

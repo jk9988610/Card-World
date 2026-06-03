@@ -1,14 +1,18 @@
 /**
- * HarmonyForge ↔ Beat Battle 云发布与会话（与评阅站同域 localStorage）
+ * HarmonyForge cloud publish — Supabase (Card World settings only).
  */
-const BeatBattleCloud = (() => {
+const CloudPublish = (() => {
   const t = (key, params) =>
     typeof window.HF_T === "function" ? window.HF_T(key, params) : key;
 
-  /** Card World embed: no external Beat Battle site */
-  const BEAT_BATTLE_URL = "";
-  const LS_SESSION = "beat-battle-cloud-session";
-  const LS_CLOUD_CONFIG = "beat-battle-cloud-config";
+  const LS_SESSION = "harmonyforge-cloud-session";
+  /** Legacy session key from older embedded builds */
+  const LS_SESSION_LEGACY = "beat-battle-cloud-session";
+  const LS_CLOUD_KEYS = [
+    "cardworld-cloud-config",
+    /** @deprecated legacy config key */
+    "beat-battle-cloud-config",
+  ];
 
   const DEFAULT_CLOUD_CONFIG = {
     url: "https://yjqkotqmglxjhlrhynsu.supabase.co",
@@ -20,14 +24,15 @@ const BeatBattleCloud = (() => {
   let cachedUser = null;
 
   function getCloudConfig() {
-    try {
-      const raw = localStorage.getItem(LS_CLOUD_CONFIG);
-      if (raw) {
+    for (const key of LS_CLOUD_KEYS) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
         const parsed = JSON.parse(raw);
         if (parsed?.url && parsed?.anonKey) return parsed;
+      } catch {
+        /* ignore */
       }
-    } catch {
-      /* ignore */
     }
     if (DEFAULT_CLOUD_CONFIG.url && DEFAULT_CLOUD_CONFIG.anonKey) {
       return { ...DEFAULT_CLOUD_CONFIG };
@@ -51,14 +56,15 @@ const BeatBattleCloud = (() => {
   }
 
   function loadSession() {
-    try {
-      const raw = localStorage.getItem(LS_SESSION);
-      if (raw) {
+    for (const key of [LS_SESSION, LS_SESSION_LEGACY]) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
         const parsed = JSON.parse(raw);
         if (parsed?.userId && parsed?.userName) return parsed;
+      } catch {
+        /* ignore */
       }
-    } catch {
-      /* ignore */
     }
     return null;
   }
@@ -69,7 +75,11 @@ const BeatBattleCloud = (() => {
       LS_SESSION,
       JSON.stringify({ userId, userName, savedAt: Date.now() })
     );
-    localStorage.setItem("beat-battle-current-user-id", userId);
+    try {
+      localStorage.removeItem(LS_SESSION_LEGACY);
+    } catch {
+      /* ignore */
+    }
   }
 
   async function loadSupabase() {
@@ -129,7 +139,7 @@ const BeatBattleCloud = (() => {
     return path;
   }
 
-  /** 与 Beat Battle project-json-utils 一致：bundle 或裸 project */
+  /** bundle or bare project (publish JSON) */
   function normalizeProjectJsonPayload(data) {
     if (!data || typeof data !== "object") {
       throw new Error(t("cloud.invalid_project"));
@@ -180,7 +190,7 @@ const BeatBattleCloud = (() => {
       .eq("user_id", user.id)
       .maybeSingle();
     if (error) throw error;
-    if (!data) throw new Error("作品不存在或无权访问");
+    if (!data) throw new Error(t("cloud.work_missing"));
     return mapPublishedRow(data);
   }
 
@@ -194,7 +204,7 @@ const BeatBattleCloud = (() => {
       .eq("user_id", user.id)
       .maybeSingle();
     if (fetchErr) throw fetchErr;
-    if (!row) throw new Error("作品不存在或无权删除");
+    if (!row) throw new Error(t("cloud.delete_missing"));
     if (row.audio_path) {
       await sb.storage.from("audio").remove([row.audio_path]).catch(() => {});
     }
@@ -239,7 +249,7 @@ const BeatBattleCloud = (() => {
     });
     const bytes = new TextEncoder().encode(JSON.stringify(projectJson)).length;
     if (bytes > MAX_PROJECT_JSON_BYTES) {
-      throw new Error(`编曲 JSON 过大（上限 ${MAX_PROJECT_JSON_BYTES / 1024 / 1024}MB）`);
+      throw new Error(t("cloud.json_too_large_mb", { mb: MAX_PROJECT_JSON_BYTES / 1024 / 1024 }));
     }
 
     const blob = await AudioExport.renderExportBlob(project, "mp3");
@@ -277,9 +287,7 @@ const BeatBattleCloud = (() => {
       jsonPayload = normalizeProjectJsonPayload(projectJson);
       const bytes = new TextEncoder().encode(JSON.stringify(jsonPayload)).length;
       if (bytes > MAX_PROJECT_JSON_BYTES) {
-        throw new Error(
-          `编曲 JSON 过大（${Math.round(bytes / 1024)}KB，上限 ${MAX_PROJECT_JSON_BYTES / 1024 / 1024}MB）`
-        );
+        throw new Error(t("cloud.json_size", { kb: Math.round(bytes / 1024), mb: MAX_PROJECT_JSON_BYTES / 1024 / 1024 }));
       }
     }
 
@@ -337,7 +345,7 @@ const BeatBattleCloud = (() => {
     }
     if (bundle?.harmonyforge != null && bundle.project) return bundle.project;
     if (bundle?.sequencer || bundle?.arranger) return bundle;
-    throw new Error("编曲工程格式无效");
+    throw new Error(t("cloud.invalid_project_format"));
   }
 
   function safeStoreFilename(work) {
@@ -362,7 +370,7 @@ const BeatBattleCloud = (() => {
     }
   }
 
-  /** 发布商店：列出含 project_json 的公开作品 */
+  /** Public works with project_json */
   async function listPublishStoreWorks(limit = 60) {
     const sb = await ensureClient();
     const { data, error } = await sb
@@ -376,7 +384,7 @@ const BeatBattleCloud = (() => {
   }
 
   function downloadPublishedJson(work) {
-    if (!work?.projectJson) throw new Error("该作品没有编曲 JSON");
+    if (!work?.projectJson) throw new Error(t("cloud.no_project_json"));
     const bundle = normalizeProjectJsonPayload(work.projectJson);
     const json = JSON.stringify(bundle, null, 2);
     const blob = new Blob([json], { type: "application/json;charset=utf-8" });
@@ -428,7 +436,7 @@ const BeatBattleCloud = (() => {
       if (work.projectJson) return work;
       const session = loadSession();
       const full = await fetchMyPublishedWork(work.id, session?.userName);
-      if (!full.projectJson) throw new Error("该作品没有编曲 JSON，无法编辑");
+      if (!full.projectJson) throw new Error(t("cloud.no_project_json_edit"));
       return full;
     }
 
@@ -436,20 +444,20 @@ const BeatBattleCloud = (() => {
       if (loading) return;
       const session = loadSession();
       if (!session?.userId) {
-        renderEmpty("请先在评阅站加入赛季并登录昵称");
+        renderEmpty(t("cloud.publish_first_for_repo"));
         setRepoStatus("");
         return;
       }
       loading = true;
       btnRefresh.disabled = true;
-      setRepoStatus("加载中…");
-      renderEmpty("正在加载…");
+      setRepoStatus(t("cloud.loading_works"));
+      renderEmpty(t("cloud.loading"));
       try {
         const works = await listMyPublishedWorks(session.userName);
         listEl.innerHTML = "";
         if (!works.length) {
-          renderEmpty("你还没有发布作品，请先点「发布」");
-          setRepoStatus("0 个作品");
+          renderEmpty(t("cloud.no_works_repo"));
+          setRepoStatus(t("cloud.works_repo_count", { n: 0 }));
           return;
         }
         const editingId = getEditingWorkId?.();
@@ -462,7 +470,7 @@ const BeatBattleCloud = (() => {
           head.className = "publish-store-item-head";
           const titleEl = document.createElement("div");
           titleEl.className = "publish-store-item-title";
-          titleEl.textContent = work.title || "未命名";
+          titleEl.textContent = work.title || t("cloud.unnamed");
           const time = document.createElement("div");
           time.className = "publish-store-item-meta";
           time.textContent = formatStoreTime(work.publishedAt);
@@ -470,7 +478,7 @@ const BeatBattleCloud = (() => {
 
           const sub = document.createElement("div");
           sub.className = "publish-store-item-author";
-          sub.textContent = work.hasProjectJson ? "含编曲 JSON" : "仅音频";
+          sub.textContent = work.hasProjectJson ? t("cloud.has_json") : t("cloud.audio_only");
 
           const actions = document.createElement("div");
           actions.className = "publish-store-item-actions";
@@ -478,22 +486,22 @@ const BeatBattleCloud = (() => {
           const btnEdit = document.createElement("button");
           btnEdit.type = "button";
           btnEdit.className = "btn btn-xs";
-          btnEdit.textContent = "编辑编曲";
+          btnEdit.textContent = t("cloud.edit");
           btnEdit.disabled = !work.hasProjectJson;
           btnEdit.addEventListener("click", async () => {
             try {
-              setStatus?.("正在获取工程…");
+              setStatus?.(t("cloud.fetching"));
               const full = await ensureWorkJson(work);
               const project = projectJsonToProject(full.projectJson);
               const ok = onLoadPublishedProject?.(project, {
                 title: full.title,
                 workId: full.id,
-                archiveReason: `编辑「${full.title}」前备份`,
+                archiveReason: `Before edit: ${full.title}`,
               });
               if (ok !== false) {
                 setEditingWorkId?.(full.id);
                 dialog.close();
-                setStatus?.(`正在编辑「${full.title}」— 修改后可点「重新发布」`);
+                setStatus?.(t("cloud.editing", { title: full.title }));
               }
             } catch (err) {
               alert(err.message);
@@ -503,37 +511,37 @@ const BeatBattleCloud = (() => {
           const btnRepublish = document.createElement("button");
           btnRepublish.type = "button";
           btnRepublish.className = "btn btn-xs btn-ghost";
-          btnRepublish.textContent = "重新发布";
+          btnRepublish.textContent = t("cloud.republish");
           btnRepublish.addEventListener("click", async () => {
             try {
-              if (typeof getProjectData !== "function") throw new Error("无法读取当前工程");
+              if (typeof getProjectData !== "function") throw new Error(t("cloud.cannot_read_project"));
               const session = loadSession();
               let project = getProjectData();
               if (getEditingWorkId?.() !== work.id) {
-                if (!confirm(`当前编辑器不是「${work.title}」。是否先从云端加载该作品再发布？`)) return;
+                if (!confirm(t("cloud.wrong_project", { title: work.title }))) return;
                 const full = await ensureWorkJson(work);
                 project = projectJsonToProject(full.projectJson);
                 onLoadPublishedProject?.(project, {
                   title: full.title,
                   workId: full.id,
                   skipConfirm: true,
-                  archiveReason: `重新发布「${full.title}」前备份`,
+                  archiveReason: `Before republish: ${full.title}`,
                 });
                 setEditingWorkId?.(full.id);
               }
-              if (!confirm(`用当前编曲覆盖云端作品「${work.title}」？`)) return;
-              setStatus?.("正在重新发布…");
+              if (!confirm(t("cloud.overwrite_confirm", { title: work.title }))) return;
+              setStatus?.(t("cloud.republishing"));
               btnRepublish.disabled = true;
               await republishWork(work.id, {
                 title: work.title,
                 project: getProjectData(),
                 userName: session.userName,
               });
-              setStatus?.(`已更新「${work.title}」`);
-              AppLogger?.info("重新发布", work.title);
+              setStatus?.(t("cloud.republished", { title: work.title }));
+              AppLogger?.info("Republish", work.title);
               refreshRepo();
             } catch (err) {
-              alert("重新发布失败：\n" + err.message);
+              alert(t("cloud.republish_failed_alert", { msg: err.message }));
             } finally {
               btnRepublish.disabled = false;
             }
@@ -542,15 +550,15 @@ const BeatBattleCloud = (() => {
           const btnRename = document.createElement("button");
           btnRename.type = "button";
           btnRename.className = "btn btn-xs btn-ghost";
-          btnRename.textContent = "改名";
+          btnRename.textContent = t("cloud.rename");
           btnRename.addEventListener("click", async () => {
-            const next = prompt("作品名称", work.title || "");
+            const next = prompt(t("cloud.rename_prompt"), work.title || "");
             if (next == null) return;
             try {
               const session = loadSession();
               await renamePublishedWork(work.id, next, session.userName);
               refreshRepo();
-              setStatus?.("已改名");
+              setStatus?.(t("cloud.renamed"));
             } catch (err) {
               alert(err.message);
             }
@@ -559,15 +567,15 @@ const BeatBattleCloud = (() => {
           const btnDel = document.createElement("button");
           btnDel.type = "button";
           btnDel.className = "btn btn-xs btn-ghost";
-          btnDel.textContent = "删除";
+          btnDel.textContent = t("cloud.delete");
           btnDel.addEventListener("click", async () => {
-            if (!confirm(`确定删除「${work.title}」？不可恢复。`)) return;
+            if (!confirm(t("cloud.delete_confirm", { title: work.title }))) return;
             try {
               const session = loadSession();
               await deletePublishedWork(work.id, session.userName);
               if (getEditingWorkId?.() === work.id) setEditingWorkId?.(null);
               refreshRepo();
-              setStatus?.("已删除作品");
+              setStatus?.(t("cloud.deleted"));
             } catch (err) {
               alert(err.message);
             }
@@ -577,7 +585,7 @@ const BeatBattleCloud = (() => {
             const btnDown = document.createElement("button");
             btnDown.type = "button";
             btnDown.className = "btn btn-xs btn-ghost";
-            btnDown.textContent = "下载 JSON";
+            btnDown.textContent = t("cloud.download_json");
             btnDown.addEventListener("click", async () => {
               try {
                 const full = await ensureWorkJson(work);
@@ -595,7 +603,7 @@ const BeatBattleCloud = (() => {
             link.href = work.audioUrl;
             link.target = "_blank";
             link.rel = "noopener";
-            link.textContent = "试听";
+            link.textContent = t("cloud.preview");
             actions.append(link);
           }
 
@@ -603,10 +611,10 @@ const BeatBattleCloud = (() => {
           li.append(head, sub, actions);
           listEl.appendChild(li);
         });
-        setRepoStatus(`共 ${works.length} 个作品`);
+        setRepoStatus(t("cloud.works_repo_count", { n: works.length }));
       } catch (err) {
-        renderEmpty("加载失败");
-        AppLogger?.error("作品仓库", err.message);
+        renderEmpty(t("cloud.load_failed_repo"));
+        AppLogger?.error("Works repo", err.message);
         alert(err.message);
       } finally {
         loading = false;
@@ -616,11 +624,7 @@ const BeatBattleCloud = (() => {
 
     btn.addEventListener("click", () => {
       if (!isCloudEnabled()) {
-        alert("请先在评阅站配置云同步");
-        return;
-      }
-      if (!loadSession()?.userId) {
-        alert("请先在评阅站用昵称加入赛季");
+        alert(t("cloud.configure_cloud"));
         return;
       }
       dialog.showModal();
@@ -659,7 +663,7 @@ const BeatBattleCloud = (() => {
     function renderWorks(works) {
       listEl.innerHTML = "";
       if (!works.length) {
-        renderEmpty("暂无含编曲 JSON 的公开作品");
+        renderEmpty(t("cloud.no_public_json"));
         return;
       }
       works.forEach((work) => {
@@ -671,7 +675,7 @@ const BeatBattleCloud = (() => {
         head.className = "publish-store-item-head";
         const title = document.createElement("div");
         title.className = "publish-store-item-title";
-        title.textContent = work.title || "未命名";
+        title.textContent = work.title || t("cloud.unnamed");
         const time = document.createElement("div");
         time.className = "publish-store-item-meta";
         time.textContent = formatStoreTime(work.publishedAt);
@@ -679,7 +683,7 @@ const BeatBattleCloud = (() => {
 
         const author = document.createElement("div");
         author.className = "publish-store-item-author";
-        author.textContent = `作者：${work.userName || "—"}`;
+        author.textContent = t("cloud.author", { name: work.userName || "—" });
 
         const actions = document.createElement("div");
         actions.className = "publish-store-item-actions";
@@ -687,12 +691,12 @@ const BeatBattleCloud = (() => {
         const btnDown = document.createElement("button");
         btnDown.type = "button";
         btnDown.className = "btn btn-xs btn-ghost";
-        btnDown.textContent = "下载 JSON";
+        btnDown.textContent = t("cloud.download_json");
         btnDown.addEventListener("click", () => {
           try {
             const name = downloadPublishedJson(work);
-            AppLogger?.info("已下载商店工程", name);
-            setStatus?.(`已下载 ${name}`);
+            AppLogger?.info("Store download", name);
+            setStatus?.(t("cloud.downloaded_name", { name }));
           } catch (err) {
             alert(err.message);
           }
@@ -701,11 +705,11 @@ const BeatBattleCloud = (() => {
         const btnLoad = document.createElement("button");
         btnLoad.type = "button";
         btnLoad.className = "btn btn-xs";
-        btnLoad.textContent = "下载并加载";
+        btnLoad.textContent = t("cloud.download_and_load");
         btnLoad.addEventListener("click", () => {
           try {
             if (typeof onLoadPublishedProject !== "function") {
-              throw new Error("加载接口未就绪");
+              throw new Error(t("cloud.load_interface_missing"));
             }
             const name = downloadPublishedJson(work);
             const project = projectJsonToProject(work.projectJson);
@@ -713,16 +717,16 @@ const BeatBattleCloud = (() => {
               title: work.title,
               userName: work.userName,
               filename: name,
-              archiveReason: `加载「${work.title}」前备份`,
+              archiveReason: `Before load: ${work.title}`,
             });
             if (ok !== false) {
               dialog.close();
-              AppLogger?.info("已从商店加载工程", work.title);
-              setStatus?.(`已加载「${work.title}」`);
+              AppLogger?.info("Loaded from store", work.title);
+              setStatus?.(t("cloud.loaded_store", { title: work.title }));
             }
           } catch (err) {
-            AppLogger?.error("加载商店工程失败", err.message);
-            alert("加载失败：\n" + err.message);
+            AppLogger?.error("Store load failed", err.message);
+            alert(t("cloud.load_store_failed_alert", { msg: err.message }));
           }
         });
 
@@ -734,7 +738,7 @@ const BeatBattleCloud = (() => {
           link.href = work.audioUrl;
           link.target = "_blank";
           link.rel = "noopener";
-          link.textContent = "试听 MP3";
+          link.textContent = t("cloud.preview_mp3");
           actions.append(link);
         }
 
@@ -746,23 +750,23 @@ const BeatBattleCloud = (() => {
     async function refreshStore() {
       if (loading) return;
       if (!isCloudEnabled()) {
-        renderEmpty("请先在评阅站配置云同步");
-        setStoreStatus("未连接云端");
+        renderEmpty(t("cloud.configure_cloud"));
+        setStoreStatus(t("cloud.store_disconnected"));
         return;
       }
       loading = true;
       btnRefresh.disabled = true;
-      setStoreStatus("加载中…");
-      renderEmpty("正在加载…");
+      setStoreStatus(t("cloud.loading_works"));
+      renderEmpty(t("cloud.loading"));
       try {
         cachedWorks = await listPublishStoreWorks();
         renderWorks(cachedWorks);
-        setStoreStatus(`共 ${cachedWorks.length} 个作品`);
+        setStoreStatus(t("cloud.store_count", { n: cachedWorks.length }));
       } catch (err) {
-        renderEmpty("加载失败，请稍后重试");
+        renderEmpty(t("cloud.load_failed_retry"));
         setStoreStatus("");
-        AppLogger?.error("发布商店", err.message);
-        alert("无法加载发布商店：\n" + err.message);
+        AppLogger?.error("Publish store", err.message);
+        alert(t("cloud.cannot_load_store", { msg: err.message }));
       } finally {
         loading = false;
         btnRefresh.disabled = false;
@@ -771,7 +775,7 @@ const BeatBattleCloud = (() => {
 
     btnStore.addEventListener("click", () => {
       if (!isCloudEnabled()) {
-        alert("请先在评阅站打开「设置」完成云同步，与发布功能使用同一 Supabase 项目。");
+        alert(t("cloud.configure_cloud_long"));
         return;
       }
       dialog.showModal();
@@ -782,20 +786,6 @@ const BeatBattleCloud = (() => {
     btnClose?.addEventListener("click", () => dialog.close());
   }
 
-  function syncHeaderBadge() {
-    const badge = document.getElementById("reviewSessionBadge");
-    const nameEl = document.getElementById("reviewSessionName");
-    const session = loadSession();
-    if (!badge || !nameEl) return;
-    if (session?.userName) {
-      badge.hidden = false;
-      nameEl.textContent = session.userName;
-      badge.title = `评阅站昵称：${session.userName}`;
-    } else {
-      badge.hidden = true;
-      nameEl.textContent = "—";
-    }
-  }
 
   function initUI({
     getProjectData,
@@ -804,15 +794,7 @@ const BeatBattleCloud = (() => {
     getEditingWorkId,
     setEditingWorkId,
   }) {
-    syncHeaderBadge();
-    window.addEventListener("storage", (e) => {
-      if (e.key === LS_SESSION) syncHeaderBadge();
-    });
-
-    const link = document.getElementById("linkBeatBattle");
-    if (link) link.href = BEAT_BATTLE_URL;
-
-    const btnPublish = document.getElementById("btnPublish");
+        const btnPublish = document.getElementById("btnPublish");
     const publishDialog = document.getElementById("publishDialog");
     const publishForm = document.getElementById("publishForm");
     const publishTitle = document.getElementById("publishTitle");
@@ -820,19 +802,10 @@ const BeatBattleCloud = (() => {
 
     if (!btnPublish || !publishDialog) return;
 
-    const session = loadSession();
-    if (publishNickname && session?.userName) {
-      publishNickname.value = session.userName;
-      publishNickname.disabled = true;
-    }
-
     btnPublish.addEventListener("click", () => {
       const s = loadSession();
       if (publishTitle) publishTitle.value = "";
-      if (publishNickname) {
-        publishNickname.value = s?.userName || "";
-        publishNickname.disabled = Boolean(s?.userName);
-      }
+      if (publishNickname) publishNickname.value = s?.userName || "";
       publishDialog.showModal();
     });
 
@@ -849,15 +822,18 @@ const BeatBattleCloud = (() => {
         publishDialog.close();
         try {
           if (!isCloudEnabled()) {
-            throw new Error("云同步未配置，请先在评阅站打开「设置」完成云同步");
+            throw new Error(t("cloud.configure_cloud"));
+          }
+          if (!nick) {
+            throw new Error(t("cloud.need_nickname"));
           }
           if (typeof getProjectData !== "function") {
-            throw new Error("无法读取当前工程");
+            throw new Error(t("cloud.cannot_read_project"));
           }
           if (typeof AudioExport === "undefined" || !AudioExport.renderExportBlob) {
             throw new Error(t("cloud.audio_module_missing"));
           }
-          setStatus?.("正在渲染音频与工程 JSON，并发布到制作库…");
+          setStatus?.(t("cloud.publish_rendering"));
           btnPublish.disabled = true;
           const project = getProjectData();
           const projectJson = buildPublishProjectJson(project, {
@@ -871,14 +847,13 @@ const BeatBattleCloud = (() => {
             userName: nick,
             projectJson,
           });
-          const jsonNote = work.hasProjectJson ? "（含编曲 JSON）" : "";
-          AppLogger.info("已发布到制作库", `${work.title} · ${work.id.slice(0, 8)}${jsonNote}`);
-          setStatus?.(`已发布「${work.title}」${jsonNote} — 请到评阅站制作库提交参赛`);
-          syncHeaderBadge();
+          const jsonNote = work.hasProjectJson ? ` (${t("cloud.has_json")})` : "";
+          AppLogger.info("Published", `${work.title} · ${work.id.slice(0, 8)}${jsonNote}`);
+          setStatus?.(t("cloud.published", { title: work.title, note: jsonNote }));
         } catch (err) {
-          AppLogger.error("发布失败", err.message);
-          setStatus?.("发布失败：" + err.message);
-          alert("发布失败：\n" + err.message);
+          AppLogger.error("Publish failed", err.message);
+          setStatus?.(t("cloud.publish_failed_status", { msg: err.message }));
+          alert(t("cloud.publish_failed", { msg: err.message }));
         } finally {
           btnPublish.disabled = false;
         }
@@ -896,7 +871,6 @@ const BeatBattleCloud = (() => {
   }
 
   return {
-    BEAT_BATTLE_URL,
     loadSession,
     saveSession,
     isCloudEnabled,
@@ -910,7 +884,6 @@ const BeatBattleCloud = (() => {
     renamePublishedWork,
     republishWork,
     downloadPublishedJson,
-    syncHeaderBadge,
     initUI,
   };
 })();

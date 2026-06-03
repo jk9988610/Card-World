@@ -1,4 +1,4 @@
-/** 将 Supabase / Storage 错误转为可读提示（与 Beat-Battle 一致风格） */
+/** 将 Supabase / Storage 错误转为可读提示 */
 export function formatSupabaseError(err, bucket = "art") {
   if (!err) return "未知错误";
   const msg = err.message || String(err);

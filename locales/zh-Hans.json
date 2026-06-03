@@ -179,7 +179,7 @@
   "art_works": {
     "open": "美术商店",
     "title": "美术商店",
-    "hint": "与 Beat-Battle 制作库类似：浏览云端作品，下载或载入画板编辑。",
+    "hint": "浏览云端美术作品，下载或载入画板编辑。",
     "tab_mine": "我的作品",
     "tab_shop": "商店",
     "tab_drafts": "草稿",

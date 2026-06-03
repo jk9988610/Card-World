@@ -33,10 +33,10 @@ App UI is **English by default** (`locales/en.json`). Chinese is only in `locale
 
 Storage paths stay under prefix `art-store/` in bucket `art`.
 
-## Same project as Beat-Battle
+## Shared Supabase project (arrangement + art)
 
-- Beat-Battle: bucket `audio`, table `published_works`  
-- Card World: bucket `art`, table `art_shop_works`  
+- HarmonyForge publish: bucket `audio`, table `published_works`  
+- Card World art shop: bucket `art`, table `art_shop_works`  
 - Shared: `js/cloud-config.js` URL + anon key (built-in)
 
 ## Production
