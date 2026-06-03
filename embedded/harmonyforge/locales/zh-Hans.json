@@ -324,7 +324,9 @@
     "switch_archive": "加载作品前备份",
     "draft_fallback": "草稿",
     "work_fallback": "作品",
-    "load_work_confirm": "加载 {label} 将替换当前编曲，是否继续？"
+    "load_work_confirm": "加载 {label} 将替换当前编曲，是否继续？",
+    "init_failed": "启动失败",
+    "init_recovered": "已重置布局并恢复模块显示"
   },
   "cloud": {
     "cloud_off": "云同步未开启。请在卡牌世界联网并开启云同步。",

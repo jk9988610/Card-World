@@ -1,7 +1,7 @@
 /**
  * Offline-first shell: serve cached same-origin assets when the network is down.
  */
-const CACHE = "cardworld-shell-v7";
+const CACHE = "cardworld-shell-v8";
 
 const HF_BASE = "./embedded/harmonyforge/";
 
@@ -67,7 +67,9 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.addAll(PRECACHE))
+      .then((cache) =>
+        Promise.allSettled(PRECACHE.map((url) => cache.add(url))).then(() => cache)
+      )
       .then(() => self.skipWaiting())
       .catch(() => self.skipWaiting())
   );
@@ -96,6 +98,17 @@ self.addEventListener("fetch", (event) => {
         }
         return res;
       })
-      .catch(() => caches.match(event.request).then((r) => r || caches.match("./index.html")))
+      .catch(() => {
+        const path = url.pathname;
+        const isDoc =
+          event.request.mode === "navigate" ||
+          path.endsWith("/") ||
+          path.endsWith(".html");
+        return caches.match(event.request).then((r) => {
+          if (r) return r;
+          if (isDoc) return caches.match("./index.html");
+          return Response.error();
+        });
+      })
   );
 });

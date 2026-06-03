@@ -324,7 +324,9 @@
     "switch_archive": "Backup before loading work",
     "draft_fallback": "Draft",
     "work_fallback": "Work",
-    "load_work_confirm": "Load {label} and replace the current project?"
+    "load_work_confirm": "Load {label} and replace the current project?",
+    "init_failed": "Startup failed",
+    "init_recovered": "Layout reset — modules restored"
   },
   "cloud": {
     "cloud_off": "Cloud sync off. Enable in Card World when online.",

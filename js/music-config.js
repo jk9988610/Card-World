@@ -15,21 +15,14 @@ export const MUSIC_EMBED_MODES = {
   studio: "",
 };
 
-export const MUSIC_STUDIO_SLUG = "music.tool.studio";
-
 export const MUSIC_EMBED_SLUG_TO_MODE = {
-  [MUSIC_STUDIO_SLUG]: "studio",
+  "music.tool.studio": "studio",
 };
 
-export function isHarmonyForgeEmbedUrl(src) {
-  if (!src || src === "about:blank") return false;
-  try {
-    return new URL(src, typeof location !== "undefined" ? location.href : undefined).pathname.includes(
-      "/embedded/harmonyforge/"
-    );
-  } catch {
-    return false;
-  }
+function readCardWorldVersion() {
+  if (typeof document === "undefined") return "";
+  const v = document.querySelector('meta[name="cw-app-version"]')?.content?.trim();
+  return v && v !== "dev" ? v : "";
 }
 
 export function musicEmbedUrl(mode = "studio", locale = "en") {
@@ -37,5 +30,7 @@ export function musicEmbedUrl(mode = "studio", locale = "en") {
   const u = new URL(MUSIC_PROD_URL, typeof location !== "undefined" ? location.href : "http://localhost/");
   const lang = locale === "zh-Hans" || locale === "zh" || locale === "zh-CN" ? "zh-Hans" : "en";
   u.searchParams.set("lang", lang);
+  const ver = readCardWorldVersion();
+  if (ver) u.searchParams.set("v", ver);
   return `${u.href}${hash}`;
 }

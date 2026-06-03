@@ -83,6 +83,9 @@ const LayoutManager = (() => {
     MODULE_IDS.forEach((id) => {
       if (s.visible[id] == null) s.visible[id] = true;
     });
+    if (!MODULE_IDS.some((id) => s.visible[id] !== false)) {
+      s.visible = { ...DEFAULTS.visible };
+    }
     s.columns = s.columns === 2 ? 2 : 1;
     if (typeof s.contentMixerTrackW === "number") {
       s.contentMixerTrackW = `${s.contentMixerTrackW}rem`;
@@ -388,7 +391,7 @@ const LayoutManager = (() => {
     const lines = [];
     const ver =
       typeof AppVersion !== "undefined" && AppVersion.getInfo
-        ? `v${AppVersion.getInfo().version}`
+        ? `v${AppVersion.getInfo().version} · build ${AppVersion.getInfo().build}`
         : "unknown";
     lines.push("=== HarmonyForge 模块布局报告 ===");
     lines.push(ver);
