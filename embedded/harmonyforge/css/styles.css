@@ -1,5 +1,5 @@
 :root {
-  --seq-label-col: 4.75rem;
+  --seq-label-col: 3.75rem;
   --seq-step-size: 1.2rem;
   --bg-deep: #0a0c10;
   --bg-panel: #12151c;
@@ -465,11 +465,8 @@ select.pitch-select:focus {
   margin: 0;
   border: none;
   background: transparent;
-  color: var(--text);
   cursor: pointer;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   text-align: left;
   border-radius: 4px;
   line-height: 1.2;
@@ -506,6 +503,10 @@ select.pitch-select:focus {
   text-overflow: ellipsis;
 }
 
+.track-name.drum { color: var(--drum); }
+.track-name.bass { color: var(--bass); }
+.track-name.chord { color: var(--chord); }
+.track-name.lead { color: var(--lead); }
 
 .step-cell {
   width: var(--seq-step-size);
@@ -545,54 +546,30 @@ select.pitch-select:focus {
 .step-cell.on.melodic-trombone { background: linear-gradient(135deg, #b45309, #fdba74); }
 .step-cell.on.melodic-eguitar { background: linear-gradient(135deg, #4c1d95, #e879f9); }
 
-/* Numbered registry (inst-*) + user patches */
-.step-cell.on.inst-drum { background: linear-gradient(135deg, #9d174d, var(--drum)); }
-.step-cell.on.inst-melodic { background: linear-gradient(135deg, #1e40af, #7dd3fc); }
-.step-cell.on.inst-user { background: linear-gradient(135deg, #047857, var(--accent)); }
-.step-cell.on.inst-empty {
-  background: var(--bg-elevated);
-  border: 1px dashed var(--border);
-  opacity: 0.55;
-}
-
-
-/* Builtin / track labels — white on colored step cells */
-.track-name-btn,
-.track-name,
-.track-name-btn.inst-drum,
-.track-name-btn.inst-melodic,
-.track-name-btn.inst-user,
 .track-name-btn.drum-kick,
-.track-name.drum-kick,
+.track-name.drum-kick { color: var(--drum); }
 .track-name-btn.drum-snare,
-.track-name.drum-snare,
+.track-name.drum-snare { color: #ec4899; }
 .track-name-btn.drum-hat,
-.track-name.drum-hat,
+.track-name.drum-hat { color: #f9a8d4; }
 .track-name-btn.drum-open,
-.track-name.drum-open,
+.track-name.drum-open { color: #fbcfe8; }
 .track-name-btn.drum-tom,
-.track-name.drum-tom,
-.track-name-btn.drum-cymbal,
+.track-name.drum-tom { color: #ea580c; }
+.track-name-btn.drum-cymbal { color: #94a3b8; }
 .track-name-btn.bass,
-.track-name.bass,
+.track-name.bass { color: var(--bass); }
 .track-name-btn.chord,
-.track-name.chord,
+.track-name.chord { color: var(--chord); }
 .track-name-btn.lead,
-.track-name.lead,
-.track-name-btn.melodic-piano,
-.track-name-btn.melodic-violin,
-.track-name-btn.melodic-cello,
-.track-name-btn.melodic-sax,
-.track-name-btn.melodic-trumpet,
-.track-name-btn.melodic-trombone,
-.track-name-btn.melodic-eguitar {
-  color: #fff;
-}
-
-.track-name-btn.inst-empty,
-.track-name.inst-empty {
-  color: var(--text-muted);
-}
+.track-name.lead { color: var(--lead); }
+.track-name-btn.melodic-piano { color: #93c5fd; }
+.track-name-btn.melodic-violin { color: #fca5a5; }
+.track-name-btn.melodic-cello { color: #fed7aa; }
+.track-name-btn.melodic-sax { color: #fde047; }
+.track-name-btn.melodic-trumpet { color: #fef08a; }
+.track-name-btn.melodic-trombone { color: #fdba74; }
+.track-name-btn.melodic-eguitar { color: #e879f9; }
 
 .step-cell.current {
   outline: 2px solid var(--warn);
@@ -607,7 +584,7 @@ select.pitch-select:focus {
   text-align: center;
   line-height: 1.2;
   padding-top: 20%;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.9);
   pointer-events: none;
 }
 
@@ -808,50 +785,6 @@ kbd {
   min-height: 2.2rem;
 }
 
-
-.tone-lab-dialog {
-  width: min(28rem, 96vw);
-}
-
-.tone-lab-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-}
-
-.tone-lab-env {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  margin: 0.5rem 0 0.75rem;
-}
-
-.tone-lab-slider {
-  display: grid;
-  grid-template-columns: 4.5rem 1fr 3rem;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.68rem;
-  color: var(--text-muted);
-}
-
-.tone-lab-slider input[type="range"] {
-  width: 100%;
-  accent-color: var(--accent);
-}
-
-.tone-lab-slider output {
-  font-family: var(--mono);
-  font-size: 0.62rem;
-  text-align: right;
-  color: var(--text);
-}
-
-.tone-lab-seed-hint {
-  margin: 0 0 0.5rem;
-  font-size: 0.62rem;
-}
-
 .arrange-follow-toggle {
   display: inline-flex;
   align-items: center;
@@ -916,6 +849,13 @@ kbd {
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
   margin-bottom: 1rem;
+  max-height: min(52vh, 420px);
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.note-grid.note-grid--piano {
+  grid-template-columns: repeat(6, 1fr);
 }
 
 .note-btn {

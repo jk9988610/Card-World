@@ -153,7 +153,7 @@
     "scale": "Scale",
     "scale_pick_title": "Scale (default major)",
     "preview": "Preview",
-    "hint": "Click a pitch to preview; “Apply” writes the cell. Without preview, click writes directly.",
+    "hint": "Chromatic pitches (semitone steps). Preview, then Apply.",
     "cancel": "Cancel",
     "clear": "Clear",
     "apply": "Apply"
