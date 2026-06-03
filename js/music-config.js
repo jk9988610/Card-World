@@ -27,7 +27,11 @@ function readCardWorldVersion() {
 
 export function musicEmbedUrl(mode = "studio", locale = "en") {
   const hash = MUSIC_EMBED_MODES[mode] ?? "";
-  const u = new URL(MUSIC_PROD_URL, typeof location !== "undefined" ? location.href : "http://localhost/");
+  const u = new URL(
+    "index.html",
+    MUSIC_PROD_URL,
+    typeof location !== "undefined" ? location.href : "http://localhost/"
+  );
   const lang = locale === "zh-Hans" || locale === "zh" || locale === "zh-CN" ? "zh-Hans" : "en";
   u.searchParams.set("lang", lang);
   const ver = readCardWorldVersion();

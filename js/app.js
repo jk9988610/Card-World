@@ -26,7 +26,7 @@ import { canUseNetwork, ensureCloudForUpload, shouldUseCloud } from "./net-polic
 import { invalidateSupabaseClient } from "./supabase-client.js";
 import { MUSIC_EMBED_SLUG_TO_MODE, MUSIC_PROD_URL, musicEmbedUrl } from "./music-config.js";
 import { AppLogger } from "./app-logger.js";
-import { initAppVersionUI } from "./app-version.js";
+import { APP_VERSION_BUNDLED, initAppVersionUI } from "./app-version.js";
 import { clearAllCardWorldStorage, clearSave, loadSave, writeSave } from "./storage.js";
 import { addWork, loadWorks, removeWork, updateWork } from "./works.js";
 
@@ -59,13 +59,12 @@ const TAP_ZOOM_MAX_MS = 450;
 
 const TOOL_SLUGS_ON_FIELD = [
   "founders.settings",
+  "seed.starter_deck",
   "art.tool.pixel",
   "music.tool.studio",
 ];
 
 const REMOVED_CARD_SLUGS = new Set([
-  "seed.starter_deck",
-  "founders.tutorial",
   "founders.world_controller",
   "founders.art_console",
   "founders.music_console",
@@ -1059,9 +1058,10 @@ function migrateWorldLayoutIfNeeded() {
   if (!starterSnapshot) return;
 
   const toolOnField = state.field.some((i) => TOOL_SLUGS_ON_FIELD.includes(i.definitionSlug));
+  const tutorialInHand = state.hand.some((i) => i.definitionSlug === "founders.tutorial");
   const guideOnField = state.field.some((i) => i.definitionSlug === "founders.guide_weave_1");
 
-  if (toolOnField || guideOnField) {
+  if (toolOnField || tutorialInHand || guideOnField) {
     const doorInHand = state.hand.filter((i) => i.definitionSlug === "content.door");
     const doorOnField = state.field.filter((i) => i.definitionSlug === "content.door");
     state.hand = patchHandWithMissingStarters([
@@ -2813,55 +2813,18 @@ async function loadJson(url) {
   return res.json();
 }
 
-async function loadBundleFromSeedDir(baseHref) {
-  const root = baseHref.endsWith("/") ? baseHref : `${baseHref}/`;
-  const definitions = await loadJson(`${root}definitions.json`);
-  const starterWorld = await loadJson(`${root}starter-world.json`);
-  const index = await loadJson(`${root}bundle-index.json`);
-  const programs = {};
-  for (const id of index.programs || []) {
-    const p = await loadJson(`${root}programs/${id}.json`);
-    programs[p.id] = p;
-  }
-  const packs = {};
-  for (const slug of index.packs || []) {
-    const p = await loadJson(`${root}packs/${slug}.json`);
-    packs[p.slug] = p;
-  }
-  const scenes = {};
-  for (const id of index.scenes || []) {
-    const s = await loadJson(`${root}scenes/${id}.json`);
-    scenes[s.id] = s;
-  }
-  return { definitions, starterWorld, programs, packs, scenes };
-}
-
 async function loadBundle() {
   const base = new URL("../", import.meta.url).href;
-  const pathBase = `${location.pathname.replace(/\/[^/]*$/, "/")}`;
   const v = APP_VERSION;
-  const bundleUrls = [
+  const urls = [
     new URL(`dist/seed-bundle.json?v=${v}`, base).href,
-    `${pathBase}dist/seed-bundle.json?v=${v}`,
+    `${location.pathname.replace(/\/[^/]*$/, "/")}dist/seed-bundle.json?v=${v}`,
     `dist/seed-bundle.json?v=${v}`,
   ];
   let lastErr;
-  for (const url of bundleUrls) {
+  for (const url of urls) {
     try {
       return await loadJson(url);
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-  const seedBases = [
-    new URL("seed/", base).href,
-    `${pathBase}seed/`,
-    "seed/",
-  ];
-  for (const seedBase of seedBases) {
-    try {
-      AppLogger.warn("seed-bundle.json missing — loading seed/ fragments", seedBase);
-      return await loadBundleFromSeedDir(seedBase);
     } catch (e) {
       lastErr = e;
     }
@@ -2944,10 +2907,18 @@ async function init() {
   } catch (err) {
     AppLogger.error("Init failed", err?.message || err);
     const msg = String(err?.message || err);
-    if (!state.hand.length && defBySlug.has("founders.settings")) {
+    if (!state.hand.length) {
       state.hand.push({
         instanceId: "inst_err_hand",
-        definitionSlug: "founders.settings",
+        definitionSlug: "founders.tutorial",
+        localeKey: "load_error",
+        text: msg,
+      });
+    }
+    if (!state.field.length) {
+      state.field.push({
+        instanceId: "inst_err_field",
+        definitionSlug: "founders.tutorial",
         localeKey: "load_error",
         text: msg,
       });

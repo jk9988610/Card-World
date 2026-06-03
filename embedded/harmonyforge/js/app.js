@@ -984,7 +984,15 @@
     });
   }
 
+  let eventsBound = false;
+
   function bindEvents() {
+    if (eventsBound) return;
+    if (!els.btnPlay || !els.btnStop || !els.bpm) {
+      console.warn("HarmonyForge: transport controls missing, skipping bindEvents");
+      return;
+    }
+    eventsBound = true;
     els.btnPlay.addEventListener("click", () => {
       togglePlay();
     });
@@ -1771,6 +1779,8 @@
         renderSequencer();
         renderArrangement();
         renderMixer();
+        bindEvents();
+        applyVolumesToEngine();
         if (els.statusText) {
           els.statusText.textContent =
             typeof window.HF_T === "function"
