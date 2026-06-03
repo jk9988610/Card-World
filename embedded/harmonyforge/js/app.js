@@ -213,7 +213,7 @@
     openChoiceDialog({
       title: "添加轨道 · 选择音色",
       columns: 4,
-      currentValue: "kick",
+      currentValue: "INS-001",
       items,
       onPick: (value) => {
         runEdit(() => {
