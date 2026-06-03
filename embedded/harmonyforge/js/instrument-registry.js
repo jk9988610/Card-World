@@ -23,6 +23,16 @@ const InstrumentRegistry = (() => {
    */
 
   const PRESETS = [
+
+    {
+      id: "INS-000",
+      kind: "empty",
+      type: "melodic",
+      toneClass: "Empty",
+      trigger: "empty",
+      synthesis: "Empty track carrier — assign any instrument from the picker.",
+    },
+
     {
       id: "INS-001",
       kind: "synth",
@@ -141,8 +151,56 @@ const InstrumentRegistry = (() => {
       synthesis:
         "Tone.MonoSynth: sawtooth osc; lowpass filter 380 Hz + filter envelope (base 90 Hz, 3.8 oct); amp env short pluck.",
     },
+
     {
       id: "INS-008",
+      kind: "sampler",
+      type: "melodic",
+      toneClass: "Sampler",
+      trigger: "sampler_melodic",
+      sampler: {
+        baseUrl: "samples/INS-008/",
+        urls: {
+          A0: "A0.mp3",
+          C1: "C1.mp3",
+          "D#1": "Ds1.mp3",
+          "F#1": "Fs1.mp3",
+          A1: "A1.mp3",
+          C2: "C2.mp3",
+          "D#2": "Ds2.mp3",
+          "F#2": "Fs2.mp3",
+          A2: "A2.mp3",
+          C3: "C3.mp3",
+          "D#3": "Ds3.mp3",
+          "F#3": "Fs3.mp3",
+          A3: "A3.mp3",
+          C4: "C4.mp3",
+          "D#4": "Ds4.mp3",
+          "F#4": "Fs4.mp3",
+          A4: "A4.mp3",
+          C5: "C5.mp3",
+          "D#5": "Ds5.mp3",
+          "F#5": "Fs5.mp3",
+          A5: "A5.mp3",
+          C6: "C6.mp3",
+          "D#6": "Ds6.mp3",
+          "F#6": "Fs6.mp3",
+          A6: "A6.mp3",
+          C7: "C7.mp3",
+          "D#7": "Ds7.mp3",
+          "F#7": "Fs7.mp3",
+          A7: "A7.mp3",
+          C8: "C8.mp3",
+        },
+      },
+      fallbackPresetId: "INS-008-FM",
+      duration: { melodicMin: 0.2, preview: 0.5 },
+      synthesis:
+        "Tone.Sampler: local Salamander multisamples in samples/INS-008/ (offline). Fallback: INS-008-FM if files missing.",
+    },
+
+    {
+      id: "INS-008-FM",
       kind: "synth",
       type: "melodic",
       toneClass: "PolySynth",
@@ -159,10 +217,11 @@ const InstrumentRegistry = (() => {
       },
       trigger: "piano_fm",
       postChain: "piano_eq",
+      hidden: true,
       duration: { melodicGate: true, preview: 0.38 },
-      synthesis:
-        "Tone.PolySynth(Tone.FMSynth) maxPolyphony 8; FM piano-ish: triangle carrier + sine modulator; harmonicity/modIndex vary by MIDI (see InstrumentEngine.getPianoStrikeParams); HPF 140 Hz + EQ3 post-chain.",
+      synthesis: "Fallback FM piano when INS-008 sampler unavailable.",
     },
+
     {
       id: "INS-009",
       kind: "synth",
@@ -338,19 +397,55 @@ const InstrumentRegistry = (() => {
     },
   ];
 
-  const byId = Object.fromEntries(PRESETS.map((p) => [p.id, p]));
+  const userPresets = new Map();
+
+  function rebuildIndex() {
+    const map = {};
+    PRESETS.forEach((p) => {
+      map[p.id] = p;
+    });
+    userPresets.forEach((p, id) => {
+      map[id] = p;
+    });
+    return map;
+  }
+
+  let byId = rebuildIndex();
 
   function get(id) {
     return byId[id] || null;
   }
 
-  function list(typeFilter) {
-    if (!typeFilter) return [...PRESETS];
-    return PRESETS.filter((p) => p.type === typeFilter);
+  function list(typeFilter, opts = {}) {
+    const includeHidden = opts.includeHidden === true;
+    const items = [...PRESETS, ...userPresets.values()].filter((p) => {
+      if (!includeHidden && p.hidden) return false;
+      if (p.kind === "empty" && !opts.includeEmpty) return false;
+      return true;
+    });
+    if (typeFilter) return items.filter((p) => p.type === typeFilter);
+    return items;
+  }
+
+  function registerUserPreset(preset) {
+    if (!preset?.id) return null;
+    userPresets.set(preset.id, { ...preset, user: true });
+    byId = rebuildIndex();
+    return preset;
+  }
+
+  function unregisterUserPreset(id) {
+    userPresets.delete(id);
+    byId = rebuildIndex();
+  }
+
+  function isEmptyId(id) {
+    return id === "INS-000";
   }
 
   function toneLabel(preset) {
     if (!preset) return "Synth";
+    if (preset.kind === "empty") return "Empty";
     if (preset.kind === "sampler") return "Sampler";
     if (preset.toneClass === "PolySynth" && preset.polyClass) {
       return `PolySynth(${preset.polyClass})`;
@@ -360,8 +455,12 @@ const InstrumentRegistry = (() => {
 
   return {
     PRESETS,
+    EMPTY_ID: "INS-000",
     get,
     list,
+    registerUserPreset,
+    unregisterUserPreset,
+    isEmptyId,
     toneLabel,
   };
 })();

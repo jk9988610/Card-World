@@ -23,6 +23,7 @@ const AudioEngine = (() => {
     if (ready) return;
     Tone.getDestination().volume.value = Tone.gainToDb(MASTER_GAIN);
     ready = true;
+    InstrumentEngine.createAsync("INS-008").catch(() => {});
     if (typeof AppLogger !== "undefined") {
       AppLogger.info("Tone.js ready", `v${Tone.version}`);
     }
@@ -87,21 +88,51 @@ const AudioEngine = (() => {
     disposeTrackInstrument(trackId);
   }
 
-  function ensureTrackInstrument(trackId, instrumentId) {
+  async function ensureTrackInstrumentAsync(trackId, instrumentId) {
     const channel = getTrackChannel(trackId);
     const entry = trackInstruments[trackId];
-    if (entry && entry.instrumentId === instrumentId) return entry.inst;
+    if (entry && entry.instrumentId === instrumentId && entry.inst) return entry.inst;
+    if (entry) disposeTrackInstrument(trackId);
+    const inst = await InstrumentEngine.createAsync(instrumentId);
+    const extras = InstrumentEngine.connect(inst, channel);
+    trackInstruments[trackId] = { instrumentId, inst, extras, ready: true };
+    return inst;
+  }
+
+  function ensureTrackInstrument(trackId, instrumentId) {
+    const preset = InstrumentRegistry.get(instrumentId);
+    if (preset?.kind === "sampler") {
+      const entry = trackInstruments[trackId];
+      if (entry?.instrumentId === instrumentId && entry.inst) return entry.inst;
+      ensureTrackInstrumentAsync(trackId, instrumentId).catch((err) => {
+        if (typeof AppLogger !== "undefined") AppLogger.error("Sampler load", err.message);
+      });
+      return entry?.inst || null;
+    }
+    const channel = getTrackChannel(trackId);
+    const entry = trackInstruments[trackId];
+    if (entry && entry.instrumentId === instrumentId && entry.inst) return entry.inst;
     if (entry) disposeTrackInstrument(trackId);
     const inst = InstrumentEngine.create(instrumentId);
     const extras = InstrumentEngine.connect(inst, channel);
-    trackInstruments[trackId] = { instrumentId, inst, extras };
+    trackInstruments[trackId] = { instrumentId, inst, extras, ready: true };
     return inst;
   }
 
   function triggerInstrument(trackId, instrumentId, time, noteMidi, duration, velocity = 0.85) {
-    const inst = ensureTrackInstrument(trackId, instrumentId);
+    const preset = InstrumentRegistry.get(instrumentId);
+    if (preset?.kind === "empty") return;
     const t = Math.max(time, Tone.now() + 0.001);
-    InstrumentEngine.trigger(inst, t, noteMidi, duration, velocity);
+    if (preset?.kind === "sampler") {
+      ensureTrackInstrumentAsync(trackId, instrumentId)
+        .then((inst) => {
+          if (inst) InstrumentEngine.trigger(inst, t, noteMidi, duration, velocity);
+        })
+        .catch(() => {});
+      return;
+    }
+    const inst = ensureTrackInstrument(trackId, instrumentId);
+    if (inst) InstrumentEngine.trigger(inst, t, noteMidi, duration, velocity);
   }
 
   function playInstrumentOn(trackId, instrumentId, time, noteMidi, stepDuration) {

@@ -31,7 +31,9 @@
     "logs": "Logs",
     "logs_title": "View run log",
     "update": "Update",
-    "update_title": "Check for updates"
+    "update_title": "Check for updates",
+    "tone_lab": "Tone Lab",
+    "tone_lab_title": "Design and save custom synth"
   },
   "modules": {
     "arrange_legend": "Arrange",
@@ -232,7 +234,8 @@
     "trumpet": "INS-013",
     "trombone": "INS-014",
     "violin": "INS-015",
-    "cello": "INS-016"
+    "cello": "INS-016",
+    "INS-000": "Empty track"
   },
   "scales": {
     "major": "Major",
@@ -389,5 +392,16 @@
   },
   "help": {
     "panels": []
+  },
+  "tone_lab": {
+    "title": "Tone Lab",
+    "hint": "Adjust parameters, name your patch, save — it is available immediately on empty tracks.",
+    "name": "Name",
+    "base": "Engine",
+    "osc": "Oscillator",
+    "filter": "Filter",
+    "preview": "Preview",
+    "save": "Save & use",
+    "close": "Close"
   }
 }

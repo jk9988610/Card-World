@@ -529,6 +529,19 @@ select.pitch-select:focus {
   border-color: transparent;
 }
 
+.step-cell.on.inst-drum { background: linear-gradient(135deg, #be185d, var(--drum)); }
+.step-cell.on.inst-melodic { background: linear-gradient(135deg, #1e3a5f, #93c5fd); }
+.step-cell.on.inst-empty { background: var(--bg-cell); border: 1px dashed var(--border); opacity: 0.45; }
+
+.track-name-btn.inst-empty,
+.track-name.inst-empty { color: var(--text-muted); font-style: italic; }
+
+.tone-lab-dialog .tone-lab-sliders {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.5rem 0;
+}
+
 .step-cell.on.drum-kick { background: linear-gradient(135deg, #be185d, var(--drum)); }
 .step-cell.on.drum-snare { background: linear-gradient(135deg, #9d174d, #ec4899); }
 .step-cell.on.drum-hat { background: linear-gradient(135deg, #831843, #f9a8d4); }
@@ -546,8 +559,6 @@ select.pitch-select:focus {
 .step-cell.on.melodic-trombone { background: linear-gradient(135deg, #b45309, #fdba74); }
 .step-cell.on.melodic-eguitar { background: linear-gradient(135deg, #4c1d95, #e879f9); }
 
-.track-name-btn.inst-drum,
-.track-name.inst-drum,
 .track-name-btn.drum-kick,
 .track-name.drum-kick { color: var(--drum); }
 .track-name-btn.drum-snare,
