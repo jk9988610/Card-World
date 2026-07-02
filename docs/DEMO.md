@@ -1,75 +1,98 @@
-# Card World — Phase 0 Demo Design
+# Card World — Demo (current build)
 
-Phase 0: first player enters with **card programming tools** and an **empty world** (Hand + Field). English only for UI, cards, code, and comments.
-
-See **ARCHITECTURE.md** for the full platform.
+What the shipped demo **actually does** today. For vision and next steps see **ARCHITECTURE.md** and **CREATOR-DECK.md**.
 
 ---
 
 ## 1. Demo goal
 
-**Success when:** Hand/Field render; Recipe programs run; save/load works; nothing blocks play.
+**Success when:** Hand and Field render; drag and double-tap play work; `on_play` programs run; save/load restores state; art and music tools open; nothing blocks play.
 
-**Out of scope Phase 0:** tips, economy, approval, solar/power, full Store UI.
-
----
-
-## 2. First player playbook
-
-You start with an **empty Field** and **programming cards in Hand**.
-
-### Loop
-
-```text
-Edit program (Program Desk) → Test → Attach → Save World
-```
-
-### Steps
-
-| Step | Action |
-|------|--------|
-| A | Recipe: `on_play` → `spawn` → `to_field` → Test |
-| B | `define_card` door; `on_play` → `set_slot` text `"Open"` |
-| C | `world_controller` + `on_tick` program attached |
-| D | `sequence` of spawns for a scene |
-| E | `define_card` Computer + `scene_push` desktop |
-| F | Store + flagship (Phase 1); Publish with slug + version |
-
-### Founders assets in this repo
-
-| Path | Role |
-|------|------|
-| `seed/programs/world.bootstrap.json` | Deal programming cards; spawn door |
-| `seed/programs/door.on_play.json` | Example content |
-| `seed/packs/official.*.json` | Installable packs (Phase 1) |
+**Not in this build:** in-game card authoring, Program Desk, pack install UI, `on_tick` games, player-defined meta-rules.
 
 ---
 
-## 3. Tooling: scripts vs meta card
+## 2. First session (starter world)
 
-| Tool | When |
-|------|------|
-| `npm run export-program` | Dev: IR JSON → programming card defs |
-| `npm run validate-seed` | CI / before commit |
-| `npm run build-seed` | `dist/seed-bundle.json` for static host |
-| Card `prog.export` | Phase 1: in-game download via bridge |
+Fresh load (`seed/starter-world.json`):
 
-Phase 0: use **scripts**; `prog.export` is a stub in definitions.
+| Zone | Cards |
+|------|-------|
+| **Hand** | Settings (with language / fullscreen / highlight / reset inner), Pixel Board, HarmonyForge |
+| **Field** | Empty |
+
+### Core gestures
+
+| Gesture | Effect |
+|---------|--------|
+| Hand → Field | **Play** (or open container / tool) |
+| Field → Hand | **Take** (or pick from open container) |
+| Tap | Zoom card |
+| Hand double-tap | Same as play |
+| Field double-tap | Same as take |
+
+### Settings container
+
+1. Drag **Settings** to Field — other field cards stash; menu items pour after Settings.
+2. Drag a menu row to Hand — runs `on_play`, applies choice; Settings closes and field restores.
+3. Drag Settings back to Hand — close without choosing (if still open on field).
+
+### Creation tools
+
+- **Pixel Board** — `enter` style: opens editor, card stays in Hand. Paint, undo, save draft, gallery, optional cloud upload.
+- **HarmonyForge** — `enter` style: iframe to `embedded/harmonyforge/`.
+
+### Guide
+
+- **Shop Script** (not in default hand; available in definitions): plays `guide.start` → highlights Settings → Language menu → 中文.
 
 ---
 
-## 4. Card layout
+## 3. VM programs (working ops)
 
-250×350 px, ratio **5:7**; Title ~14%, Image ~48% (242×168), Text ~31%.
+Programs live in `seed/programs/*.json`. Attached via `definitions[].programs.on_play`.
 
----
+Implemented ops: `sequence`, `deal`, `spawn`, `set_slot`, `set_locale`, `set_locale_text`, `fullscreen_enter`, `fullscreen_exit`, `guide_start`, `highlight`, `reset_world`, `scene_push`, `scene_pop`, `art_editor_open`, `art_gallery_open`, `music_embed_open`, `open_url`.
 
-## 5. Milestones D1–D7
-
-Render → drag → VM spawn → editor → define_card → save/load → guide.
+**Not implemented:** `if`, `on_tick`, `define_card`, `unload_inner`, `store_into`, and other ops listed in **RULES.md** §D.
 
 ---
 
-## 6. Acceptance test
+## 4. Example content (in repo, not in default hand)
 
-Fresh load → bootstrap or spawn → save → reload → state restored.
+| Asset | Role |
+|-------|------|
+| `content.door` + `door.on_play` | Text changes to “open” via `set_locale_text` |
+| `founders.world_controller` + `world.bootstrap` | Legacy bootstrap; removed from starter |
+| `scene.computer.desktop` + `computer.enter` | Desktop scene; no entry card in starter yet |
+| `flagship.main` | Tick spawn demo — **needs `on_tick` VM** |
+| `seed/packs/official.*` | Pack metadata only — no install UI |
+
+---
+
+## 5. Dev tooling
+
+| Command | Purpose |
+|---------|---------|
+| `npm run build-seed` | `dist/seed-bundle.json` |
+| `npm run validate-seed` | CI / pre-commit checks |
+| `npm run export-program` | IR JSON → programming card definition snippets |
+
+In-game `prog.export` is planned with Creator Deck (Phase 1).
+
+---
+
+## 6. Card layout
+
+250×350 px, ratio **5:7**; Title ~14%, Image ~48%, Text ~31%.  
+Pixel images: `image.type = "pixel/v1"` (see art editor output).
+
+---
+
+## 7. Acceptance test
+
+1. Fresh load → hand has Settings + two tools; field empty.
+2. Play Settings → menu on field; pick language → locale switches.
+3. Open Pixel Board → draw → apply to a blank work card or save.
+4. Reload page → hand/field/locale restored.
+5. `npm run validate-seed` passes.

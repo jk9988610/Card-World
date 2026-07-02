@@ -5,16 +5,18 @@
 | Rule | Behavior |
 |------|----------|
 | **Tap** | Enlarge card only (no game effect) |
-| **Drag Hand → Field** | **Play** — run `on_play` program |
-| **Drag Field → Hand** | **Take** — move only |
-| **Highlight** | Optional yellow pulse on “next step” cards |
-| **Locale** | Card text from `locales/*.json` after Language cards are played |
+| **Drag Hand → Field** | **Play** — run `on_play` program (or open container / enter tool) |
+| **Drag Field → Hand** | **Take** — move only (or pick from open container) |
+| **Double-tap** | Hand = play; Field = take |
+| **Highlight** | Optional yellow pulse on `hintTarget` slug |
+| **Locale** | UI + card text from `locales/*.json` after language menu |
 
-Zones: **Hand**, **Field** only (no separate log UI).
+Zones: **Hand**, **Field** only (no separate log UI).  
+**Inner** lives on container instances (`instance.inner[]`) in save state.
 
 ---
 
-## B. Program IR ops (today)
+## B. Program IR ops (implemented)
 
 | Op | Meaning |
 |----|---------|
@@ -25,15 +27,23 @@ Zones: **Hand**, **Field** only (no separate log UI).
 | `set_locale` | Switch `en` / `zh-Hans` |
 | `set_locale_text` | Apply localized text key to instance |
 | `fullscreen_enter` / `fullscreen_exit` | Browser fullscreen |
+| `guide_start` | Start highlight queue |
 | `highlight` | Turn hint overlay on/off |
+| `reset_world` | Restore starter snapshot |
+| `scene_push` / `scene_pop` | Scene stack |
+| `art_editor_open` / `art_gallery_open` | Pixel tools |
+| `music_embed_open` | HarmonyForge iframe |
+| `open_url` | Same-origin URL only |
 
-Attached on cards as `programs.on_play` and run only when card is **played** (dragged Hand → Field).
+Attached on cards as `programs.on_play` (and run when card is **played** from hand → field, or **reusable** play from hand).
 
 ---
 
-## C. Meta-rules (platform — should be card-defined)
+## C. Meta-rules — intent vs reality
 
-Meta-rules are **not** hard-coded gameplay. They are defaults the VM provides; **Founders** (and players) override them with programming cards and card templates.
+**Intent:** Meta-rules are not hard-coded gameplay. Founders override them with programming cards and templates (**CREATOR-DECK.md**).
+
+**Reality today:** The engine implements the table below in `js/app.js`. Players cannot change these rules in-game.
 
 ### C.1 Zones
 
@@ -41,92 +51,92 @@ Meta-rules are **not** hard-coded gameplay. They are defaults the VM provides; *
 |------|------|
 | `hand` | Private, playable strip |
 | `field` | Shared table |
-| `inner` | Inside a **container** instance (not on table until unloaded) |
+| `inner` | Inside a container instance |
 
 ### C.2 Play vs move
 
 | Action | Trigger | Effect |
 |--------|---------|--------|
-| **Play** | Hand → Field | Run `on_play` |
+| **Play** | Hand → Field | Run `on_play` (unless container/tool path) |
 | **Take** | Field → Hand | Move only |
 | **Inspect** | Tap | Zoom only |
 
-### C.3 Backpack / container (v0.5 — built-in)
+### C.3 Container / backpack (engine-built)
 
-**Backpack** cards (`container` + `deck` tags) carry `inner: [instances]` in save state.
+Applies to cards with `container` and/or `deck` tags, and **Settings** (`founders.settings`).
 
 | Action | Trigger | Effect |
 |--------|---------|--------|
-| **Open** | Drag backpack Hand → Field | Other field cards → `fieldStash` (hidden); container at index 0; `inner` poured after it |
-| **Pour** | Same as Open | Spilled items appear on field after the container card |
-| **Take** | Drag spilled item Field → Hand | Pick up item (menu/function cards: select, not stash) |
-| **Close** | Drag backpack Hand → Field (container on field) | Unpicked field cards → `inner`; backpack → hand; `fieldStash` restored to field |
+| **Open** | Container hand → field | Field stash; container first; pour `inner` after |
+| **Take** | Field item → hand | Pick up (menu rows: activate, not stash) |
+| **Close** | Container hand → field while open | Unpicked field → `inner`; restore stash |
+| **Store** | Hand → hand on container / insert while open | Stash into `inner` (items only) |
 
-While a container is open, only the container row is visible on the field; stashed cards are not rendered until close.
+Menu/meta cards (settings, language, guide, tools with `reusable` / `enter`) run from hand without leaving hand.
 
-Meta cards (settings, language, tutorial, guide, controller, programming) use **play from hand** only: reusable cards run `on_play` without leaving the hand.
-
-### C.4 Programming cards for containers (programs)
-
-| Programming card | IR / op |
-|------------------|---------|
-| `On Play` | Event |
-| `Unload Inner` | `unload_inner` → inner → hand |
-| `On Store` | Event when card dropped onto this container |
-| `Accept Store` | `store_from_hand`, `store_from_field` |
-
-Founders build a **Container template** with `programs.on_play = unload_inner` and `tags: [container]`.
-
-### C.5 Meta-rule document card (recommended)
-
-One **Rules** card on Field (or in Settings deck) lists platform rules in Text slot; versions with `version` imprint. Players change rules by publishing new Rules packs, not by editing JS.
-
----
-
-## D. What we do **not** have yet
-
-- `inner` zone in VM state
-- Drop-on-card targeting (only drop on zones)
-- `unload_inner` / `store` ops
-- Response chains (“when X plays, Y may respond”)
-- Card storage limits, ordering inside container
-
----
-
-## E. Suggested order of work
-
-1. **VM:** `instance.inner[]`, `containedIn` pointer  
-2. **Drop target:** container cards accept drag  
-3. **Ops:** `unload_inner`, `store_into`  
-4. **Sample:** Box + A + B Founders pack  
-5. **Highlight:** after unload, hint “drag A to Field”; after play, hint “store A into Box”  
-6. **Rules card** in Settings deck explaining Store/Play/Take  
-
----
-
-## F. Highlight guide steps (v0.3.1)
-
-Dynamic `hintTarget` slug — one card pulsed at a time:
-
-1. `founders.world_controller` (hand)  
-2. `content.door` (field, after bootstrap)  
-3. `founders.settings` (field)  
-4. `founders.language_settings` (hand, after settings played)  
-5. `founders.lang_zh` or `founders.lang_en` (hand, after language settings played)  
-
-Toggle off with **Highlight Off** card.
-
-## G. Play styles (meta-rules + tags)
+### C.4 Play styles (engine reads tags / `playStyle`)
 
 | Style | Hand → Field |
 |-------|----------------|
-| **consume** (default) | Card moves to Field, `on_play` runs |
-| **reusable** | Stays in Hand, `on_play` runs |
-| **enter** | Stays in Hand, `on_play` opens tool UI (`art.editor.open`, `music.embed.open`); never stashed into open backpack |
-| **echo** | To Field + play, copy back to Hand |
+| **consume** (default) | Card moves to field, `on_play` runs |
+| **reusable** | Stays in hand, `on_play` runs |
+| **enter** | Stays in hand, opens tool UI; not stashed into open backpack |
+| **echo** | To field + play, copy back to hand |
 
-Tags: `reusable`, `echo`, or field `playStyle`. Enter tools are also detected by `programs.on_play`.
+Players cannot define new styles until **Rule kit** + registry land (**CREATOR-DECK.md** §4).
 
-## H. Shop Script
+---
 
-**Shop Script** on Field starts guided highlights — one target card at a time until you play it.
+## D. Not implemented yet
+
+### VM / engine
+
+- `define_card` — runtime card definitions
+- `programDraft` / Program Desk session
+- `on_tick` program loop
+- `if` and conditions (e.g. `tick_mod_30`)
+- `unload_inner`, `store_into` as IR ops (behavior exists imperatively only)
+- Drop-on-card targeting (zone-only drops today)
+- Response chains
+- Pack install UI
+- `state.ruleOverrides` registry
+
+### Content
+
+- **Creator Deck** in starter hand
+- **Backpack** card (`seed.starter_deck` / `founders.backpack`) in definitions
+- **Computer** entry card in world
+- In-game `prog.export` (dev script: `npm run export-program`)
+
+See **ROADMAP.md** for order.
+
+---
+
+## E. Highlight guide (current default)
+
+`guide.start` steps (`seed/programs/guide.start.json`):
+
+1. `founders.settings` (hand)  
+2. `founders.language_settings` (field, after settings)  
+3. `founders.lang_zh` (hand, after language menu)
+
+Toggle hints with **Highlight On/Off** inside Settings.  
+**Shop Script** card plays `guide.start`.
+
+(Legacy docs that listed `world_controller` → `door` are obsolete.)
+
+---
+
+## F. Shop Script
+
+**Shop Script** (`founders.shop_script`): drag to field → `guide.start` → one highlighted card at a time until played.
+
+---
+
+## G. Related docs
+
+| Doc | Topic |
+|-----|-------|
+| **CREATOR-DECK.md** | Make cards and rules in-game |
+| **DEMO.md** | What works in the current build |
+| **ROADMAP.md** | Phase order |

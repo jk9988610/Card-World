@@ -6,9 +6,10 @@ Everything is a card. The page is only **Field**, **Hand**, and **cards**.
 
 https://jk9988610.github.io/Card-World/
 
-1. Click **World Controller** on the Field.
-2. Click **Door** when it appears.
-3. Click **Copy Log** to copy the **Log** card text.
+1. Drag **Settings** from Hand to Field — pour the menu.
+2. Drag a menu item to Hand to apply (language, fullscreen, reset, …).
+3. Drag **Pixel Board** or **HarmonyForge** to Field (or double-tap) — open a creation tool; the card stays in Hand.
+4. Optional: play **Shop Script** for step-by-step highlights.
 
 ## Local
 
@@ -19,5 +20,12 @@ npx serve . -p 3000
 
 ## Docs
 
-- [docs/DEMO.md](docs/DEMO.md)
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+| Doc | Purpose |
+|-----|---------|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Platform principles and phases |
+| [docs/RULES.md](docs/RULES.md) | Play rules, IR ops, meta-rules (current vs planned) |
+| [docs/DEMO.md](docs/DEMO.md) | What works today and acceptance checks |
+| [docs/CREATOR-DECK.md](docs/CREATOR-DECK.md) | **Next:** Creator Deck — make cards and rules in-game |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Prioritized roadmap |
+| [docs/OFFLINE.md](docs/OFFLINE.md) | Offline-first and cloud |
+| [docs/SUPABASE_ART.md](docs/SUPABASE_ART.md) | Art shop backend setup |
