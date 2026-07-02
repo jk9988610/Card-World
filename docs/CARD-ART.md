@@ -111,6 +111,8 @@ C. Import image → crop 5:7 → downsample to 500×700 → edit → export
 
 **Rule:** New official Card World faces are **authored in 征战三国 tooling** (or a shared module extracted later), not redrawn at 8×8 in `definitions.json`.
 
+**Registry:** `seed/art-registry.json` + **ART-REGISTRY.md** map each `definitions.json` slug → `artKey` and track `ready` / `todo`.
+
 ### 4.2 Card layout target
 
 | Slot | Target |
@@ -230,4 +232,5 @@ Until alignment ships, `seed/definitions.json` may keep tiny 8×8 `pixel/v1` swa
 | 征战三国 | `docs/art-assets.md` |
 | Card World | `js/app.js` (`ART_GRID_*`, `artPixelImageFromEditor`, `drawPixelImage`) |
 | Card World | `css/main.css` (`--card-image-ratio-*`) |
+| Card World | `seed/art-registry.json`, `docs/ART-REGISTRY.md` |
 | Card World | `docs/SUPABASE_ART.md` |

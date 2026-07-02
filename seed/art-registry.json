@@ -1,0 +1,231 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-02",
+  "manifestUrl": "https://yjqkotqmglxjhlrhynsu.supabase.co/storage/v1/object/public/card-art/manifest.json",
+  "cttkRepo": "https://github.com/jk9988610/Conquer-the-Three-Kingdoms",
+  "cttkPaintUrl": "https://jk9988610.github.io/Conquer-the-Three-Kingdoms/",
+  "entries": [
+    {
+      "artKey": "generic",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": [],
+      "title": { "en": "Generic placeholder", "zh-Hans": "默认占位" },
+      "status": "ready",
+      "notes": "征战三国内置默认块；未登记 slug 前可临时引用"
+    },
+    {
+      "artKey": "lvbu",
+      "cttkCatalogId": "char-lvbu",
+      "cardWorldSlugs": [],
+      "title": { "en": "Lü Bu", "zh-Hans": "吕布" },
+      "status": "ready",
+      "notes": "征战三国手牌默认角色；Card World 三国包可复用"
+    },
+    {
+      "artKey": "liu",
+      "cttkCatalogId": "char-liu",
+      "cardWorldSlugs": [],
+      "title": { "en": "Liu Bei", "zh-Hans": "刘备" },
+      "status": "ready",
+      "notes": "征战三国敌方默认"
+    },
+    {
+      "artKey": "guan",
+      "cttkCatalogId": "char-guan",
+      "cardWorldSlugs": [],
+      "title": { "en": "Guan Yu", "zh-Hans": "关羽" },
+      "status": "ready",
+      "notes": "征战三国敌方默认"
+    },
+    {
+      "artKey": "zhang",
+      "cttkCatalogId": "char-zhang",
+      "cardWorldSlugs": [],
+      "title": { "en": "Zhang Fei", "zh-Hans": "张飞" },
+      "status": "ready",
+      "notes": "征战三国敌方默认"
+    },
+    {
+      "artKey": "heal-potion",
+      "cttkCatalogId": "item-heal-potion",
+      "cardWorldSlugs": [],
+      "title": { "en": "Heal potion", "zh-Hans": "治疗药水" },
+      "status": "ready",
+      "notes": "征战三国商店"
+    },
+    {
+      "artKey": "fangtian",
+      "cttkCatalogId": "equip-fangtian",
+      "cardWorldSlugs": [],
+      "title": { "en": "Fangtian halberd", "zh-Hans": "方天画戟" },
+      "status": "ready",
+      "notes": "征战三国商店装备"
+    },
+    {
+      "artKey": "attack-red",
+      "cttkCatalogId": "action-attack-red",
+      "cardWorldSlugs": [],
+      "title": { "en": "Crimson slash", "zh-Hans": "赤刃斩" },
+      "status": "ready",
+      "notes": "征战三国攻击牌"
+    },
+    {
+      "artKey": "attack-orange",
+      "cttkCatalogId": "action-attack-orange",
+      "cardWorldSlugs": [],
+      "title": { "en": "Sun assault", "zh-Hans": "烈阳突击" },
+      "status": "ready",
+      "notes": "征战三国攻击牌"
+    },
+    {
+      "artKey": "attack-purple",
+      "cttkCatalogId": "action-attack-purple",
+      "cardWorldSlugs": [],
+      "title": { "en": "Violet strike", "zh-Hans": "紫电一击" },
+      "status": "ready",
+      "notes": "征战三国攻击牌"
+    },
+    {
+      "artKey": "door",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["content.door"],
+      "title": { "en": "Door", "zh-Hans": "门" },
+      "status": "todo",
+      "notes": "在征战三国绘制页新建 artKey；示例内容卡"
+    },
+    {
+      "artKey": "settings",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["founders.settings"],
+      "title": { "en": "Settings", "zh-Hans": "设置" },
+      "status": "todo",
+      "notes": "齿轮/滑块意象；容器卡"
+    },
+    {
+      "artKey": "guide-script",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["founders.shop_script"],
+      "title": { "en": "Shop Script", "zh-Hans": "引导脚本" },
+      "status": "todo",
+      "notes": "卷轴或箭头脉冲"
+    },
+    {
+      "artKey": "pixel-board",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["art.tool.pixel"],
+      "title": { "en": "Pixel board", "zh-Hans": "像素画板" },
+      "status": "todo",
+      "notes": "画笔+网格"
+    },
+    {
+      "artKey": "music-studio",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["music.tool.studio"],
+      "title": { "en": "HarmonyForge", "zh-Hans": "音乐台" },
+      "status": "todo",
+      "notes": "琴键或波形"
+    },
+    {
+      "artKey": "back",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["founders.back"],
+      "title": { "en": "Back", "zh-Hans": "返回" },
+      "status": "todo",
+      "notes": "左箭头/关门"
+    },
+    {
+      "artKey": "lang-globe",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["founders.language_settings"],
+      "title": { "en": "Language", "zh-Hans": "语言" },
+      "status": "todo",
+      "notes": "地球或 A/文"
+    },
+    {
+      "artKey": "lang-en",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["founders.lang_en"],
+      "title": { "en": "English", "zh-Hans": "English" },
+      "status": "todo",
+      "notes": "EN 字样"
+    },
+    {
+      "artKey": "lang-zh",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["founders.lang_zh"],
+      "title": { "en": "中文", "zh-Hans": "中文" },
+      "status": "todo",
+      "notes": "中 字样"
+    },
+    {
+      "artKey": "fullscreen",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["founders.fullscreen"],
+      "title": { "en": "Fullscreen", "zh-Hans": "全屏" },
+      "status": "todo",
+      "notes": "四角外扩"
+    },
+    {
+      "artKey": "exit-fullscreen",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["founders.exit_fullscreen"],
+      "title": { "en": "Exit fullscreen", "zh-Hans": "退出全屏" },
+      "status": "todo",
+      "notes": "四角内收"
+    },
+    {
+      "artKey": "highlight-on",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["founders.highlight_on"],
+      "title": { "en": "Highlight on", "zh-Hans": "高亮开启" },
+      "status": "todo",
+      "notes": "发光边框"
+    },
+    {
+      "artKey": "highlight-off",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["founders.highlight_off"],
+      "title": { "en": "Highlight off", "zh-Hans": "高亮关闭" },
+      "status": "todo",
+      "notes": "暗淡边框"
+    },
+    {
+      "artKey": "reset-world",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["founders.reset_world"],
+      "title": { "en": "Reset world", "zh-Hans": "重置世界" },
+      "status": "todo",
+      "notes": "循环箭头"
+    },
+    {
+      "artKey": "world-controller",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["founders.world_controller"],
+      "title": { "en": "World controller", "zh-Hans": "世界控制器" },
+      "status": "todo",
+      "notes": "遗留卡；新开局已移除，保留定义供旧存档"
+    },
+    {
+      "artKey": "guide-weave",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": [
+        "founders.guide_weave_1",
+        "founders.guide_weave_2",
+        "founders.guide_weave_3",
+        "founders.guide_weave_4",
+        "founders.guide_weave_5"
+      ],
+      "title": { "en": "Guide weave", "zh-Hans": "引导编织" },
+      "status": "todo",
+      "notes": "五张可共用一个 artKey 或拆为 guide-weave-1…5"
+    },
+    {
+      "artKey": "art-blank",
+      "cttkCatalogId": null,
+      "cardWorldSlugs": ["art.work.blank"],
+      "title": { "en": "Blank work", "zh-Hans": "空白作品" },
+      "status": "todo",
+      "notes": "空白画框"
+    }
+  ]
+}

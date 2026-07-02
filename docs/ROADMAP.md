@@ -51,7 +51,7 @@ Seed faces are **8×8 placeholders**; the pixel editor uses **35×25 (7:5)** whi
 | 0.6.4 | `artKey` + `card-art` manifest loader + cache | Engine |
 | 0.6.5 | Image import (crop 5:7, downsample) | Engine/UI |
 | 0.6.6 | PNG + `meta.json` export | Engine |
-| 0.6.7 | Official seed: `artKey` refs instead of 8×8 | Content |
+| 0.6.7 | Official seed: `artKey` refs per **ART-REGISTRY.md** | Content |
 
 **Until 0.6 ships:** author official art in 征战三国绘制; track `artKey` in pack notes.
 
