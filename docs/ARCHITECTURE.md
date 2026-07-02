@@ -34,12 +34,14 @@ Today, steps 1–2 work. Step 3 is blocked: meta-rules and card authoring are mo
 |-------|-------|--------|
 | **0** | Hand/Field, VM `on_play`, save/load, guide highlights | Done |
 | **0.5** | Settings container, art editor, HarmonyForge embed, scenes | Done |
-| **1** | **Creator Deck** — define cards, compose programs, attach rules | **Next** |
+| **0.5-content** | Paint P0 faces in 征战三国; art-registry | **Now (no code)** |
+| **0.6** | Card art engine alignment (5:7, 60×84, manifest) | Next code |
+| **1** | Creator Deck — define cards, compose programs, attach rules | Planned |
 | **2** | Pack install UI, Computer desktop entry, example worlds | Planned |
 | **3** | Player publish / browse packs (no economy) | Planned |
 | **4+** | Optional tip, auth-hardened cloud | Later |
 
-See **ROADMAP.md** for ordered work items.
+See **PLAN.md** for dependencies, parallel tracks, and milestones M1–M6.
 
 ## Card art
 

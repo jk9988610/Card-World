@@ -22,6 +22,7 @@ npx serve . -p 3000
 
 | Doc | Purpose |
 |-----|---------|
+| [docs/PLAN.md](docs/PLAN.md) | **完整规划步骤**（总览、依赖、里程碑） |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Platform principles and phases |
 | [docs/RULES.md](docs/RULES.md) | Play rules, IR ops, meta-rules (current vs planned) |
 | [docs/DEMO.md](docs/DEMO.md) | What works today and acceptance checks |

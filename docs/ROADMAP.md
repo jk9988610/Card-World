@@ -1,6 +1,8 @@
 # Card World — Roadmap
 
-Prioritized work. **Current app version:** see `index.html` `cw-app-version` / `js/app.js` `APP_VERSION`.
+Prioritized work. **Full step-by-step plan (中文):** **[PLAN.md](PLAN.md)**.
+
+**Current app version:** see `index.html` `cw-app-version` / `js/app.js` `APP_VERSION`.
 
 ---
 
