@@ -1,0 +1,60 @@
+From 860d19dc7fb7f94bc6ba589322d139d3ae6ec86e Mon Sep 17 00:00:00 2001
+From: Cursor Agent <cursoragent@cursor.com>
+Date: Thu, 2 Jul 2026 23:29:58 +0000
+Subject: [PATCH] =?UTF-8?q?feat(pixel-editor):=20add=20=E6=9F=A5=E7=9C=8B?=
+ =?UTF-8?q?=E5=95=86=E5=BA=97=20button=20next=20to=20=E4=B8=8A=E4=BC=A0?=
+ =?UTF-8?q?=E4=BA=91=E7=AB=AF?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Opens Card World art shop in a new tab (?gallery=shop).
+---
+ src/art/cloudConfig.ts | 4 ++++
+ src/ui/pixelEditor.ts  | 6 ++++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/src/art/cloudConfig.ts b/src/art/cloudConfig.ts
+index 23df199..ab1cb89 100644
+--- a/src/art/cloudConfig.ts
++++ b/src/art/cloudConfig.ts
+@@ -17,3 +17,7 @@ export function getCardArtManifestUrl(): string {
+ export function isCloudArtConfigured(): boolean {
+   return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+ }
++
++/** Card World 美术商店（UGC）；绘制页「查看商店」打开此页并定位到商店 Tab */
++export const CARD_WORLD_ART_SHOP_URL =
++  'https://jk9988610.github.io/Card-World/?gallery=shop';
+diff --git a/src/ui/pixelEditor.ts b/src/ui/pixelEditor.ts
+index 29aa07f..cadc23f 100644
+--- a/src/ui/pixelEditor.ts
++++ b/src/ui/pixelEditor.ts
+@@ -1,4 +1,5 @@
+ import { uploadArtToCloud } from '../art/artCloudUpload';
++import { CARD_WORLD_ART_SHOP_URL } from '../art/cloudConfig';
+ import { createArtCardMeta, downloadJsonFile } from '../art/artMeta';
+ import { formatArtMemoryReport } from '../art/artMemoryStats';
+ import {
+@@ -631,6 +632,7 @@ export function openPixelEditor(onApplied: () => void): void {
+             <button type="button" class="btn" data-export>导出 PNG</button>
+             <button type="button" class="btn" data-export-bundle title="下载 PNG + 渲染层 meta.json">导出资源包</button>
+             <button type="button" class="btn btn--accent" data-upload-cloud title="上传至 Supabase，玩家刷新后自动加载">上传云端</button>
++            <button type="button" class="btn" data-view-shop title="打开 Card World 美术商店">查看商店</button>
+           </div>
+         </div>
+     </section>
+@@ -2034,6 +2036,10 @@ export function openPixelEditor(onApplied: () => void): void {
+     })();
+   });
+ 
++  panel.querySelector('[data-view-shop]')?.addEventListener('click', () => {
++    window.open(CARD_WORLD_ART_SHOP_URL, '_blank', 'noopener,noreferrer');
++  });
++
+   function updateTransparentFlashBtn(): void {
+     transparentFlashBtn.classList.toggle('pixel-editor__topbar-btn--active', transparentFlash);
+     transparentFlashBtn.textContent = transparentFlash ? '停止闪烁' : '透明闪烁';
+-- 
+2.43.0
+
