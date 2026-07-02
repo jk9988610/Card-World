@@ -1952,6 +1952,14 @@ function closeWorksGallery() {
   els.artWorksGallery?.setAttribute("aria-hidden", "true");
 }
 
+/** Deep link: ?gallery=shop opens art works gallery on Shop tab (CTTK 绘制页「查看商店」). */
+function maybeOpenGalleryFromQuery() {
+  const tab = new URLSearchParams(location.search).get("gallery");
+  if (tab !== "shop") return;
+  artEditor.galleryTab = "shop";
+  void openWorksGallery();
+}
+
 function musicEmbedHintForMode(mode) {
   const t = locales[currentLocale]?.music_embed || locales.en?.music_embed || {};
   return t[`hint_${mode}`] || t.hint_default || "";
@@ -2927,6 +2935,7 @@ async function init() {
   }
 
   setupAutoFullscreenOnLoad();
+  maybeOpenGalleryFromQuery();
 }
 
 init();
