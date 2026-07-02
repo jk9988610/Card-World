@@ -84,8 +84,17 @@ In-game `prog.export` is planned with Creator Deck (Phase 1).
 
 ## 6. Card layout
 
-250×350 px, ratio **5:7**; Title ~14%, Image ~48%, Text ~31%.  
-Pixel images: `image.type = "pixel/v1"` (see art editor output).
+250×350 px shell, ratio **5:7**; Title ~14%, Image ~48%, Text ~31%.
+
+**Card faces (today vs target):**
+
+| | Today | Target ([征战三国](https://github.com/jk9988610/Conquer-the-Three-Kingdoms)) |
+|---|--------|--------|
+| Image frame | 7:5 landscape | **5:7** portrait |
+| Editor grid | 35×25 | **60×84** display |
+| Seed art | 8×8 `pixel/v1` placeholders | `artKey` + PNG from `card-art` manifest |
+
+See **CARD-ART.md**.
 
 ---
 

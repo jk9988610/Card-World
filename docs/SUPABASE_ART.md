@@ -33,10 +33,11 @@ App UI is **English by default** (`locales/en.json`). Chinese is only in `locale
 
 Storage paths stay under prefix `art-store/` in bucket `art`.
 
-## Shared Supabase project (arrangement + art)
+## Shared Supabase project (arrangement + art + 征战三国卡图)
 
 - HarmonyForge publish: bucket `audio`, table `published_works`  
 - Card World art shop: bucket `art`, table `art_shop_works`  
+- **[Conquer-the-Three-Kingdoms](https://github.com/jk9988610/Conquer-the-Three-Kingdoms) official card faces:** bucket `card-art`, manifest `manifest.json` — see that repo `docs/art-assets.md` and **CARD-ART.md**  
 - Shared: `js/cloud-config.js` URL + anon key (built-in)
 
 ## Production

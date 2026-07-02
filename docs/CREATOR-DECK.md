@@ -115,7 +115,7 @@ P1 can ship without full registry by only supporting **per-definition** tags and
 **Define Card** play flow:
 
 1. Prompt slots (modal or sequential play of sub-cards): **slug**, **title**, **text**.
-2. Optional: **Paint Image** — opens art editor, writes `image: pixel/v1` on definition.
+2. Optional: **Paint Image** — opens art editor; writes `image` on definition per **CARD-ART.md** (target: **60×84**, 5:7, same as [征战三国](https://github.com/jk9988610/Conquer-the-Three-Kingdoms)).
 3. Optional: **Add Tags** — pick from list or type slug prefix (`content.*`, `game.*`).
 4. VM op `define_card` registers into runtime `defBySlug` and `state.customDefinitions[]`.
 5. **Spawn Copy** — `spawn` one instance to hand for testing.
@@ -200,7 +200,7 @@ Once E1–E5 exist, most expansion is **data**:
 - New recipe cards = one IR node each.
 - Example worlds = `starter-world` variants + `deal` programs.
 - Quest packs = `define_card` + `attach` sequences exported as packs.
-- Pixel card faces = `pixel/v1` blobs in definitions.
+- **Card faces** = paint in 征战三国绘制 or AI at **60×84 / 5:7** → `artKey` or `pixel/v1` (**CARD-ART.md** §5.3).
 - Locale strings in `locales/*.json`.
 
 AI should **not** need to touch `app.js` for new player content.
@@ -217,3 +217,13 @@ AI should **not** need to touch `app.js` for new player content.
 6. Export downloads valid pack JSON; `validate-seed` passes on merged bundle.
 
 See **ROADMAP.md** for sprint order.
+
+---
+
+## 10. Related docs
+
+| Doc | Topic |
+|-----|-------|
+| **CARD-ART.md** | Card face grid, PNG/manifest, 征战三国 alignment |
+| **ROADMAP.md** | Phase 0.6 (art) before / parallel to Creator Deck |
+| **RULES.md** | IR ops and meta-rules |

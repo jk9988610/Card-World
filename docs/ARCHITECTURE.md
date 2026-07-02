@@ -41,10 +41,16 @@ Today, steps 1–2 work. Step 3 is blocked: meta-rules and card authoring are mo
 
 See **ROADMAP.md** for ordered work items.
 
+## Card art
+
+Official and player card faces follow the **[Conquer-the-Three-Kingdoms](https://github.com/jk9988610/Conquer-the-Three-Kingdoms)** pipeline: **5:7** TCG inner art, **60×84** display PNG, optional `meta.json` effects, Supabase bucket `card-art`.
+
+Card World’s editor and image frame are **not yet aligned** (today: 7:5 frame, 35×25 grid, 8×8 seed placeholders). See **CARD-ART.md** and **ROADMAP.md** Phase 0.6.
+
 ## Embedded apps
 
 - **HarmonyForge** (`embedded/harmonyforge/`) — step sequencer / music production. Opened via `music.tool.studio` card. Vendored copy; sync optional via `tools/sync-harmonyforge.mjs`.
-- **Pixel board** — in-host editor in `js/app.js` (`art.tool.pixel`).
+- **Pixel board** — in-host editor in `js/app.js` (`art.tool.pixel`). Target: same grid spec as 征战三国绘制.
 
 ## Repo map
 

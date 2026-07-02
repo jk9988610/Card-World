@@ -17,7 +17,9 @@ Prioritized work. **Current app version:** see `index.html` `cw-app-version` / `
 
 ---
 
-## Gap (why we need Creator Deck)
+## Gaps
+
+### Meta-rules / authoring
 
 Meta-rules are **documented as card-defined** but **implemented in engine code**. Players cannot:
 
@@ -28,15 +30,40 @@ Meta-rules are **documented as card-defined** but **implemented in engine code**
 
 **CREATOR-DECK.md** is the authoritative plan to close this gap.
 
+### Card art
+
+Seed faces are **8×8 placeholders**; the pixel editor uses **35×25 (7:5)** while the card shell is **5:7**.  
+**[Conquer-the-Three-Kingdoms](https://github.com/jk9988610/Conquer-the-Three-Kingdoms)** already defines the target: **60×84 display**, **500×700 logical**, PNG + `meta.json`, Supabase `card-art` manifest.
+
+**CARD-ART.md** is the authoritative alignment spec. Card art work should **precede or run in parallel with Creator Deck** so Define Card paints at the final resolution.
+
 ---
 
-## Phase 1 — Creator Deck (next)
+## Phase 0.6 — Card art alignment (with 征战三国)
+
+**Outcome:** Card World displays and edits faces the same way as 征战三国.
+
+| Order | Item | Type |
+|-------|------|------|
+| 0.6.1 | Document spec (**CARD-ART.md**) | Docs ✓ |
+| 0.6.2 | Image frame CSS 7:5 → **5:7** | Engine/CSS |
+| 0.6.3 | Editor grid **60×84** + transparent alpha | Engine |
+| 0.6.4 | `artKey` + `card-art` manifest loader + cache | Engine |
+| 0.6.5 | Image import (crop 5:7, downsample) | Engine/UI |
+| 0.6.6 | PNG + `meta.json` export | Engine |
+| 0.6.7 | Official seed: `artKey` refs instead of 8×8 | Content |
+
+**Until 0.6 ships:** author official art in 征战三国绘制; track `artKey` in pack notes.
+
+---
+
+## Phase 1 — Creator Deck (after 0.6.2 minimum)
 
 **Outcome:** Founder can make a card, give it an `on_play` program, and save the world.
 
 | Order | Item | Type |
 |-------|------|------|
-| 1.1 | `define_card` op + `customDefinitions` in save | Engine |
+| 1.1 | `define_card` op + `customDefinitions` in save (image per **CARD-ART.md**) | Engine |
 | 1.2 | `programDraft` session + attach `programs.*` to definitions | Engine |
 | 1.3 | Program Desk minimal UI (list + Test + Attach) | Engine/UI |
 | 1.4 | `founders.creator_deck` container + inner cards (seed) | Content |

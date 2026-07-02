@@ -139,4 +139,5 @@ Toggle hints with **Highlight On/Off** inside Settings.
 |-----|-------|
 | **CREATOR-DECK.md** | Make cards and rules in-game |
 | **DEMO.md** | What works in the current build |
+| **CARD-ART.md** | Card face spec; 征战三国 alignment |
 | **ROADMAP.md** | Phase order |
