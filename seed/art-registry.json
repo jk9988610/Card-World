@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-02",
+  "updatedAt": "2026-07-02T13:01:00.000Z",
   "manifestUrl": "https://yjqkotqmglxjhlrhynsu.supabase.co/storage/v1/object/public/card-art/manifest.json",
   "cttkRepo": "https://github.com/jk9988610/Conquer-the-Three-Kingdoms",
   "cttkPaintUrl": "https://jk9988610.github.io/Conquer-the-Three-Kingdoms/",
@@ -90,16 +90,16 @@
       "cttkCatalogId": null,
       "cardWorldSlugs": ["content.door"],
       "title": { "en": "Door", "zh-Hans": "门" },
-      "status": "todo",
-      "notes": "在征战三国绘制页新建 artKey；示例内容卡"
+      "status": "ready",
+      "notes": "P0 generated public/card-art/door.png — upload card-art bucket to go live on CDN"
     },
     {
       "artKey": "settings",
       "cttkCatalogId": null,
       "cardWorldSlugs": ["founders.settings"],
       "title": { "en": "Settings", "zh-Hans": "设置" },
-      "status": "todo",
-      "notes": "齿轮/滑块意象；容器卡"
+      "status": "ready",
+      "notes": "P0 generated public/card-art/settings.png"
     },
     {
       "artKey": "guide-script",
@@ -114,16 +114,16 @@
       "cttkCatalogId": null,
       "cardWorldSlugs": ["art.tool.pixel"],
       "title": { "en": "Pixel board", "zh-Hans": "像素画板" },
-      "status": "todo",
-      "notes": "画笔+网格"
+      "status": "ready",
+      "notes": "P0 generated public/card-art/pixel-board.png"
     },
     {
       "artKey": "music-studio",
       "cttkCatalogId": null,
       "cardWorldSlugs": ["music.tool.studio"],
       "title": { "en": "HarmonyForge", "zh-Hans": "音乐台" },
-      "status": "todo",
-      "notes": "琴键或波形"
+      "status": "ready",
+      "notes": "P0 generated public/card-art/music-studio.png"
     },
     {
       "artKey": "back",

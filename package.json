@@ -8,6 +8,9 @@
     "validate-seed": "node tools/validate-seed.mjs",
     "build-seed": "node tools/build-seed.mjs",
     "build-hf-locales": "node tools/build-hf-locales.mjs",
-    "vendor:supabase": "node tools/vendor-supabase.mjs"
+    "vendor:supabase": "node tools/vendor-supabase.mjs",
+    "generate-p0-art": "node tools/generate-p0-card-art.mjs",
+    "build-card-art-manifest": "node tools/build-card-art-manifest.mjs",
+    "upload-card-art": "node tools/upload-card-art.mjs"
   }
 }

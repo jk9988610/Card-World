@@ -73,8 +73,8 @@ Engine resolves via `manifestUrl` in `art-registry.json` → PNG + optional `met
 
 | Status | Count | Meaning |
 |--------|-------|---------|
-| **ready** | 10 | On 征战三国 CDN / built-in (`lvbu` … `attack-purple`, `generic`) |
-| **todo** | 17 | Card World official slugs still on 8×8 placeholders |
+| **ready** | 14 | 征战三国内置 10 + Card World P0 四张（`public/card-art/`） |
+| **todo** | 13 | 其余官方 slug 待绘制 |
 
 ---
 
@@ -97,14 +97,16 @@ Engine resolves via `manifestUrl` in `art-registry.json` → PNG + optional `met
 
 ## 5. Card World 官方 slug → artKey 映射（待绘制）
 
+**P0 四张已生成：** 见 **[P0-CARD-ART.md](P0-CARD-ART.md)**（含上传 Supabase 命令）。
+
 Priority for first paint batch (**P0 faces** — in default hand or tutorial path):
 
-| Priority | cardWorldSlug | artKey | 画面提示 |
-|----------|---------------|--------|----------|
-| P0 | `founders.settings` | `settings` | 齿轮 / 滑块，灰紫色调 |
-| P0 | `art.tool.pixel` | `pixel-board` | 画笔 + 像素网格 |
-| P0 | `music.tool.studio` | `music-studio` | 琴键或绿色波形 |
-| P0 | `content.door` | `door` | 木门 / 城门，示例内容 |
+| Priority | cardWorldSlug | artKey | 状态 |
+|----------|---------------|--------|------|
+| P0 | `founders.settings` | `settings` | **ready** — `public/card-art/settings.png` |
+| P0 | `art.tool.pixel` | `pixel-board` | **ready** |
+| P0 | `music.tool.studio` | `music-studio` | **ready** |
+| P0 | `content.door` | `door` | **ready** |
 | P1 | `founders.shop_script` | `guide-script` | 卷轴 + 脉冲箭头 |
 | P1 | `founders.language_settings` | `lang-globe` | 地球或 A/文 |
 | P1 | `founders.lang_en` | `lang-en` | “EN” |

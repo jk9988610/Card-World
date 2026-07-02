@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-02T13:01:33.724Z",
+  "baseUrl": "https://yjqkotqmglxjhlrhynsu.supabase.co/storage/v1/object/public/card-art",
+  "entries": {
+    "door": {
+      "png": "door.png",
+      "updatedAt": "2026-07-02T13:01:33.724Z"
+    },
+    "music-studio": {
+      "png": "music-studio.png",
+      "updatedAt": "2026-07-02T13:01:33.724Z"
+    },
+    "pixel-board": {
+      "png": "pixel-board.png",
+      "updatedAt": "2026-07-02T13:01:33.724Z"
+    },
+    "settings": {
+      "png": "settings.png",
+      "updatedAt": "2026-07-02T13:01:33.724Z"
+    }
+  }
+}
