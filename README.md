@@ -27,7 +27,7 @@ npx serve . -p 3000
 | [docs/RULES.md](docs/RULES.md) | Play rules, IR ops, meta-rules (current vs planned) |
 | [docs/DEMO.md](docs/DEMO.md) | What works today and acceptance checks |
 | [docs/CARD-ART.md](docs/CARD-ART.md) | Card art — align with [征战三国](https://github.com/jk9988610/Conquer-the-Three-Kingdoms) |
-| [docs/P0-CARD-ART.md](docs/P0-CARD-ART.md) | P0 四张资源与 Supabase 上传步骤 |
+| [docs/CTTK-GITHUB-WEB-ONLY.md](docs/CTTK-GITHUB-WEB-ONLY.md) | 征战三国：纯 GitHub 网页部署（无需本地 Git） |
 | [docs/ART-REGISTRY.md](docs/ART-REGISTRY.md) | Official `artKey` ↔ slug registry |
 | [docs/CREATOR-DECK.md](docs/CREATOR-DECK.md) | Creator Deck — make cards and rules in-game |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Prioritized roadmap |
